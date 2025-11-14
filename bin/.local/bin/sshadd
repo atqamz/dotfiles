@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Make sure there's no TTY so ssh-add triggers askpass
+for k in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
+  [ -f "$k" ] && ssh-add -q "$k" </dev/null
+done
