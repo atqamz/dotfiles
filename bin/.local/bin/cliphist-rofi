@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        printf 'cliphist: required command "%s" not found in PATH\n' "$1" >&2
+        exit 1
+    fi
+}
+
+require_cmd cliphist
+require_cmd wl-copy
+
+rofi_bin=${CLIPHIST_ROFI_BIN:-rofi}
+require_cmd "$rofi_bin"
+
+prompt=${CLIPHIST_PROMPT:-clipboard}
+rofi_font=${CLIPHIST_ROFI_FONT:-"monospace 12"}
+default_theme_str=$'window {\n    width: 40em;\n    padding: 20px;\n    border-radius: 12px;\n}\nlistview {\n    lines: 12;\n    columns: 1;\n}\nelement {\n    padding: 6px 10px;\n    border-radius: 6px;\n}\nelement-text {\n    horizontal-align: 0.0;\n}\n'
+rofi_theme_str=${CLIPHIST_ROFI_THEME_STR:-"$default_theme_str"}
+# shellcheck disable=SC2206
+extra_args=( ${CLIPHIST_ROFI_ARGS:-} )
+rofi_cmd=(
+    "$rofi_bin"
+    -dmenu
+    -i
+    -p "$prompt"
+    -normal-window
+    -matching fuzzy
+    -sort
+    -show-icons
+    -width 40
+    -lines 12
+    -line-margin 4
+    -line-padding 6
+    -font "$rofi_font"
+    -theme-str "$rofi_theme_str"
+)
+rofi_cmd+=( "${extra_args[@]}" )
+
+list_output=$(cliphist list)
+[[ -n "$list_output" ]] || exit 0
+
+selection=$(printf '%s\n' "$list_output" | "${rofi_cmd[@]}")
+
+[[ -n "$selection" ]] || exit 0
+
+entry_id=${selection%%$'\t'*}
+[[ -n "$entry_id" ]] || exit 0
+
+cliphist decode "$entry_id" | wl-copy
+
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Clipboard history" "Copied selection back to clipboard"
+fi
