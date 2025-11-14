@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        printf 'emoji-picker: required command "%s" not found in PATH\n' "$1" >&2
+        exit 1
+    fi
+}
+
+require_cmd rofimoji
+require_cmd wl-paste
+require_cmd wtype
+
+prompt=${EMOJI_PICKER_PROMPT:-Emoji}
+rofi_font=${EMOJI_PICKER_ROFI_FONT:-"monospace 12"}
+default_theme_str='window { width: 40em; padding: 20px; border-radius: 12px; } listview { lines: 12; columns: 1; } element { padding: 6px 10px; border-radius: 6px; } element-text { horizontal-align: 0.0; }'
+rofi_theme_str=${EMOJI_PICKER_ROFI_THEME_STR:-"$default_theme_str"}
+# shellcheck disable=SC2206
+extra_args=( ${EMOJI_PICKER_ROFI_ARGS:-} )
+
+selector_args=(
+    -dmenu -i
+    -p "$prompt"
+    -normal-window
+    -matching normal
+    -show-icons
+    -width 40
+    -lines 12
+    -line-margin 4
+    -line-padding 6
+    -font "$rofi_font"
+    -theme-str "$rofi_theme_str"
+)
+selector_args+=( "${extra_args[@]}" )
+
+quote_args() {
+    local out="" arg
+    for arg in "$@"; do
+        [[ -n "$out" ]] && out+=" "
+        if [[ "$arg" == *[[:space:]]* ]]; then
+            out+="\"${arg//\"/\\\"}\""
+        else
+            out+="$arg"
+        fi
+    done
+    printf '%s' "$out"
+}
+
+selector_args_string=$(quote_args "${selector_args[@]}")
+
+selection=$(rofimoji --selector rofi --selector-args "$selector_args_string" --action copy print)
+selection=${selection%$'\n'}
+[[ -z "$selection" ]] && exit 0
+
+wl-paste --no-newline | wtype -
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Emoji picker" "Inserted emoji from rofimoji"
+fi
