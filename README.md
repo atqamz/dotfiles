@@ -20,15 +20,20 @@ tracked files can be symlinked straight into the home directory.
     the capture straight to the clipboard. Used by the Sway bindings described
     below for area-to-clipboard (`$mod+Shift+s`) and full-screen-to-file (`F12`)
     captures.
-  - `cliphist-rofi`: clipboard history picker powered by `cliphist`, `wl-copy`,
+  - `cliphistory`: clipboard history picker powered by `cliphist`, `wl-copy`,
     and the same rofi theme as the launcher. Invoked via `Mod+Ctrl+v` in Sway
     and restores whatever entry you select back onto the clipboard.
   - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
     selection, and immediately injects it into the focused window via `wtype`.
     Bound to `Mod+.`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
-  consistent, binds `Mod+Alt+p` to launch `passmenu`, and autostarts `sshadd`
-  once the session is up.
+  consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
+  autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
+  default wallpaper/session background is set to pure black to keep the setup
+  minimal.
+- `waybar/` – Status bar configuration and CSS paired with the Sway colors.
+  Clock output uses the `dd/MM/yyyy` format, and modules cover workspaces, audio,
+  network, battery, and a tray.
 
 ## Bootstrapping
 
@@ -37,7 +42,7 @@ tracked files can be symlinked straight into the home directory.
 2. Clone this repo into `~/dotfiles`.
 3. From inside the repo, stow whichever modules you want, e.g.
    ```sh
-   stow shell git bin sway
+   stow shell git bin sway waybar
    ```
    Re-run `stow` whenever you add new modules or update configs.
 
@@ -45,5 +50,7 @@ tracked files can be symlinked straight into the home directory.
 
 - `bin/.local/bin/sshadd` expects KDE's `ksshaskpass` (or another askpass
   program) to be available so it can add keys without a TTY.
-- Clipboard workflow relies on `cliphist`, `wl-clipboard`, `rofi`
-  (wayland build), plus `rofimoji` and `wtype` for the emoji picker.
+- Clipboard workflow relies on `cliphist`, `wl-clipboard`, `rofi` (Wayland
+  build), plus `rofimoji` and `wtype` for the emoji picker.
+- Waybar + the themed autostart expect `waybar`, `pavucontrol` (optional),
+  `wpctl` (PipeWire), `playerctl`, and `libinput-gestures` to be installed.

@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] Configure Sway theme/look for window decorations and general styling.
-- [ ] Configure Waybar appearance/layout.
-- [ ] Set Sway session manager background to black.
-- [ ] Change Sway date format to dd/MM/yyyy.
+- [x] Configure Sway theme/look for window decorations and general styling.
+- [x] Configure Waybar appearance/layout.
+- [x] Set Sway session manager background to black.
+- [x] Change Sway date format to dd/MM/yyyy.

@@ -1,0 +1,83 @@
+@define-color bg #0a0a0e;
+@define-color surface #15161b;
+@define-color text #dfe3ec;
+@define-color muted #7f849c;
+@define-color accent #f0f0f5;
+@define-color urgent #ff5f6d;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", "monospace";
+  font-size: 12px;
+  color: @text;
+}
+
+menu,
+menu * {
+  color: @text;
+  background-color: @surface;
+}
+
+window#waybar {
+  background-color: transparent;
+}
+
+#waybar {
+  padding: 0;
+}
+
+.modules-left,
+.modules-center,
+.modules-right {
+  margin: 0;
+}
+
+#workspaces button {
+  background-color: transparent;
+  color: @muted;
+  padding: 0;
+  margin: 0;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#workspaces button.focused {
+  background-color: alpha(@accent, 0.1);
+  color: @accent;
+}
+
+#workspaces button.urgent {
+  background-color: @urgent;
+  color: @surface;
+}
+
+#workspaces button:hover {
+  background-color: alpha(@accent, 0.15);
+  color: @text;
+}
+
+#window {
+  padding: 0 6px;
+  background-color: @surface;
+  color: @muted;
+}
+
+#clock,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+  background-color: @surface;
+  padding: 0 20px;
+  margin: 0 1px;
+}
+
+#pulseaudio.muted {
+  color: @muted;
+}
+
+#battery.warning,
+#battery.critical,
+#battery.low {
+  background-color: @urgent;
+  color: @bg;
+}

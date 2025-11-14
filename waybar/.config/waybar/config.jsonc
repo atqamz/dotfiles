@@ -1,0 +1,57 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "margin": "4 10 0",
+  "modules-left": ["sway/workspaces", "sway/window"],
+  "modules-center": ["clock"],
+  "modules-right": ["pulseaudio", "network", "battery", "tray"],
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true,
+    "format": "{name}",
+    "format-icons": {
+      "default": "",
+      "focused": "",
+      "urgent": ""
+    }
+  },
+  "sway/window": {
+    "max-length": 48,
+    "format": "{title}"
+  },
+  "clock": {
+    "interval": 60,
+    "format": "{:%d/%m/%Y  %H:%M}",
+    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<b>{:%H:%M:%S}</b>"
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": " mute",
+    "scroll-step": 3,
+    "on-click": "pavucontrol",
+    "format-icons": {
+      "default": ["", "", ""]
+    }
+  },
+  "network": {
+    "format-wifi": " {essid} {signalStrength}%",
+    "format-ethernet": " {ifname}",
+    "format-disconnected": " offline",
+    "tooltip": true
+  },
+  "battery": {
+    "states": {
+      "warning": 25,
+      "critical": 10
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": " {capacity}%",
+    "format-plugged": " {capacity}%",
+    "format-alt": "{time}",
+    "format-icons": ["", "", "", "", ""]
+  },
+  "tray": {
+    "spacing": 10
+  }
+}
