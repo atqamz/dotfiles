@@ -15,6 +15,17 @@ tracked files can be symlinked straight into the home directory.
   - `sshadd`: loads `~/.ssh/id_ed25519` and `~/.ssh/id_rsa` non-interactively;
     it expects `ksshaskpass` (or any `SSH_ASKPASS`) to satisfy passphrase
     prompts.
+  - `screenshot`: saves Wayland screenshots to `~/Pictures/Screenshots`
+    (`grim`, `slurp`, `wl-copy`, `notify-send` optional). Pass `--copy` to send
+    the capture straight to the clipboard. Used by the Sway bindings described
+    below for area-to-clipboard (`$mod+Shift+s`) and full-screen-to-file (`F12`)
+    captures.
+  - `cliphist-rofi`: clipboard history picker powered by `cliphist`, `wl-copy`,
+    and the same rofi theme as the launcher. Invoked via `Mod+Ctrl+v` in Sway
+    and restores whatever entry you select back onto the clipboard.
+  - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
+    selection, and immediately injects it into the focused window via `wtype`.
+    Bound to `Mod+.`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
   consistent, binds `Mod+Alt+p` to launch `passmenu`, and autostarts `sshadd`
   once the session is up.
@@ -34,3 +45,5 @@ tracked files can be symlinked straight into the home directory.
 
 - `bin/.local/bin/sshadd` expects KDE's `ksshaskpass` (or another askpass
   program) to be available so it can add keys without a TTY.
+- Clipboard workflow relies on `cliphist`, `wl-clipboard`, `rofi`
+  (wayland build), plus `rofimoji` and `wtype` for the emoji picker.
