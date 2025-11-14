@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<EOF >&2
+Usage: ${0##*/} [area|full] [filename] [--copy]
+
+Options:
+  --copy     Send the capture to the clipboard instead of writing a file.
+             Requires wl-copy (wl-clipboard).
+EOF
+}
+
+mode=${1:-area}
+if [[ $# -gt 0 ]]; then
+    shift
+fi
+
+copy=0
+filename=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --copy)
+            copy=1
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        -*)
+            usage
+            exit 1
+            ;;
+        *)
+            filename=$1
+            ;;
+    esac
+    shift
+done
+
+output_dir=${SCREENSHOT_DIR:-"$HOME/Pictures/Screenshots"}
+timestamp=$(date +"%Y%m%d-%H%M%S")
+default_filename="screenshot-$mode-$timestamp.png"
+filename=${filename:-$default_filename}
+filepath="$output_dir/$filename"
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        printf 'screenshot: required command "%s" not found in PATH\n' "$1" >&2
+        exit 1
+    fi
+}
+
+require_cmd grim
+
+capture_area() {
+    require_cmd slurp
+    geometry=$(slurp)
+    [[ -n "$geometry" ]] || exit 0
+    if (( copy )); then
+        require_cmd wl-copy
+        grim -g "$geometry" - | wl-copy --type image/png
+    else
+        mkdir -p "$output_dir"
+        grim -g "$geometry" "$filepath"
+    fi
+}
+
+capture_full() {
+    if (( copy )); then
+        require_cmd wl-copy
+        grim - | wl-copy --type image/png
+    else
+        mkdir -p "$output_dir"
+        grim "$filepath"
+    fi
+}
+
+case "$mode" in
+    area)
+        capture_area
+        ;;
+    full|screen)
+        capture_full
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+if (( copy )); then
+    message="Screenshot copied to clipboard"
+else
+    message="Screenshot saved to $filepath"
+fi
+
+if [[ ${SCREENSHOT_NOTIFY:-1} -eq 1 ]] && command -v notify-send >/dev/null 2>&1; then
+    notify-send "Screenshot" "$message"
+fi
