@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 5 ]]; then
+  printf 'yazi-filechooser: expected 5 arguments, got %s\n' "$#" >&2
+  exit 1
+fi
+
+multiple=$1
+directory=$2
+save=$3
+path=$4
+out=$5
+
+yazi_bin=${YAZI_BIN:-yazi}
+if ! command -v "$yazi_bin" >/dev/null 2>&1; then
+  printf 'yazi-filechooser: required command "%s" not found in PATH\n' "$yazi_bin" >&2
+  exit 1
+fi
+
+term_spec=${TERMCMD:-${TERMINAL:-kitty}}
+if [[ -z "$term_spec" ]]; then
+  term_spec="kitty"
+fi
+read -r -a term_cmd <<<"$term_spec"
+if [[ ${#term_cmd[@]} -eq 0 ]]; then
+  term_cmd=(kitty)
+fi
+if ! command -v "${term_cmd[0]}" >/dev/null 2>&1; then
+  printf 'yazi-filechooser: terminal "%s" not found in PATH\n' "${term_cmd[0]}" >&2
+  exit 1
+fi
+
+expand_path() {
+  python3 -c 'import os, sys; print(os.path.abspath(os.path.expanduser(sys.argv[1])))' "$1"
+}
+
+initial_target=""
+placeholder=""
+
+if [[ "$save" == "1" ]]; then
+  recommended=$path
+  if [[ -z "$recommended" ]]; then
+    recommended="$HOME/Downloads/untitled"
+  fi
+  expanded=$(expand_path "$recommended")
+  expanded=${expanded%$'\n'}
+  candidate=$expanded
+  while [[ -e "$candidate" ]]; do
+    candidate="${candidate}_"
+  done
+  mkdir -p "$(dirname "$candidate")"
+  cat >"$candidate" <<'EOF'
+Yazi portal placeholder
+========================
+
+This file lets you pick the location/name when an app asks to save a file.
+Move or rename it freely, then open it (press <Enter>) inside yazi to confirm.
+If you quit without opening it, the save operation gets cancelled.
+EOF
+  placeholder="$candidate"
+  initial_target="$candidate"
+elif [[ -n "$path" ]]; then
+  expanded=$(expand_path "$path")
+  expanded=${expanded%$'\n'}
+  if [[ -d "$expanded" || -f "$expanded" ]]; then
+    initial_target="$expanded"
+  else
+    parent=$(dirname "$expanded")
+    if [[ -d "$parent" ]]; then
+      initial_target="$parent"
+    fi
+  fi
+fi
+
+yazi_args=("$yazi_bin" "--chooser-file=$out")
+if [[ -n "$initial_target" ]]; then
+  yazi_args+=("$initial_target")
+fi
+
+selection_kind="file"
+[[ "$directory" == "1" ]] && selection_kind="directory"
+mode="open"
+[[ "$save" == "1" ]] && mode="save"
+
+printf 'yazi-filechooser: launched for %s selection (%s, multi=%s)\n' \
+  "$selection_kind" "$mode" "$multiple" >&2
+
+"${term_cmd[@]}" -- "${yazi_args[@]}"
+
+if [[ "$save" == "1" && -n "$placeholder" && ! -s "$out" ]]; then
+  rm -f "$placeholder"
+fi

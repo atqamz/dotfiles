@@ -28,6 +28,12 @@ for your distro.
 | Exit prompt (`$mod+Shift+e`) | `sway/.config/sway/config.d/50-keybindings.conf` | `swaynag` (ships with sway). | No extra setup beyond sway itself. |
 | Audio settings (`Waybar pulseaudio on-click`, possibly manual) | `waybar/.config/waybar/config.jsonc` | `pavucontrol`. | Launches PulseAudio volume control GUI when clicked. |
 
+## xdg-desktop-portal / File dialogs
+
+| Feature | File | Required tools | Notes |
+| --- | --- | --- | --- |
+| Terminal-based file dialog | `xdg/.config/xdg-desktop-portal/portals.conf`, `xdg/.config/xdg-desktop-portal-termfilechooser/config`, `bin/.local/bin/yazi-filechooser` | `xdg-desktop-portal-wlr`, `xdg-desktop-portal-termfilechooser`, `yazi`, a terminal emulator (`kitty` by default, override via `TERMCMD`) | Routes portal file-open/save requests through Yazi. GTK/Qt apps must use portals (`GTK_USE_PORTAL=1` if needed). |
+
 ## Other helper scripts
 
 | Script | File | External requirements | Notes |
@@ -39,6 +45,7 @@ for your distro.
 | `sshadd` | `bin/.local/bin/sshadd` | OpenSSH client (`ssh-add`). | Non-interactive add so sway askpass can prompt. |
 | `waybar_cpustatus` | `bin/.local/bin/waybar_cpustatus` | `python3`, readable CPU hwmon node. | Used exclusively by Waybar. |
 | `waybar_gpustatus` | `bin/.local/bin/waybar_gpustatus` | `python3`, `nvidia-smi`. | Used exclusively by Waybar. |
+| `yazi-filechooser` | `bin/.local/bin/yazi-filechooser` | `yazi`, `python3`, terminal emulator (defaults to `kitty`). | Wrapper invoked by `xdg-desktop-portal-termfilechooser` to make portal dialogs open Yazi. |
 
 > Tip: use your distro’s package manager to install the required CLIs (e.g.
 > `sudo pacman -S cliphist wl-clipboard rofi grim slurp python3 nvidia-utils` on

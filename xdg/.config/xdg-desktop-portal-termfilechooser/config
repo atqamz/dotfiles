@@ -1,0 +1,3 @@
+[filechooser]
+cmd=/home/atqa/.local/bin/yazi-filechooser
+default_dir=/home/atqa/Downloads

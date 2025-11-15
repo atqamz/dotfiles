@@ -26,6 +26,8 @@ tracked files can be symlinked straight into the home directory.
   - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
     selection, and immediately injects it into the focused window via `wtype`.
     Bound to `Mod+.`.
+  - `yazi-filechooser`: wrapper used by `xdg-desktop-portal-termfilechooser` to
+    launch Yazi in chooser mode (supports save dialogs, multi-select, etc.).
   - `waybar_cpustatus`: Python helper emitting Waybar-friendly JSON that shows
     CPU usage plus package temperature (reads `/proc/stat` and
     `/sys/class/hwmon/.../temp*_input`).
@@ -34,13 +36,16 @@ tracked files can be symlinked straight into the home directory.
     module falls back to `--% --°C`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
   consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
-  autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
-  default wallpaper/session background is set to pure black to keep the setup
-  minimal.
+  autostarts helpers like Waybar, clipboard history, and libinput-gestures. It
+  also exports `GTK_USE_PORTAL=1`/`XDG_*_DESKTOP=sway` so GTK/Qt apps discover
+  the Yazi-based file chooser. The default wallpaper/session background is set
+  to pure black to keep the setup minimal.
 - `waybar/` – Status bar configuration and CSS paired with the Sway colors.
   Clock output uses the `dd/MM/yyyy` format. Modules cover workspaces, audio,
   network, battery/tray, plus combined CPU + GPU status blocks powered by the
   helpers above.
+- `xdg/` – Portal configuration. It forces `xdg-desktop-portal` to prefer the
+  wlroots backend for everything and termfilechooser + Yazi for file dialogs.
 
 ## Bootstrapping
 
@@ -49,7 +54,7 @@ tracked files can be symlinked straight into the home directory.
 2. Clone this repo into `~/dotfiles`.
 3. From inside the repo, stow whichever modules you want, e.g.
    ```sh
-   stow shell git bin sway waybar
+   stow shell git bin sway waybar xdg
    ```
    Re-run `stow` whenever you add new modules or update configs.
 
@@ -65,3 +70,6 @@ tracked files can be symlinked straight into the home directory.
   installed.
 - Need instructions for switching from Nouveau to the proprietary NVIDIA stack
   (so `nvidia-smi` exists)? See `docs/NVIDIA.md`.
+- File dialogs rely on `xdg-desktop-portal-termfilechooser` plus `yazi`; check
+  `xdg/.config/xdg-desktop-portal*`, `bin/yazi-filechooser`, or the step-by-step
+  guide in `docs/YAZI-FILE-DIALOG.md` if you want to tweak or recreate it from scratch.
