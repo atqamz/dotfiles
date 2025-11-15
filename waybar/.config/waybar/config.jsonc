@@ -4,7 +4,7 @@
   "height": 30,
   "margin": "4 10 0",
   "modules-left": ["sway/workspaces", "sway/window"],
-  "modules-center": ["clock"],
+  "modules-center": ["custom/clock"],
   "modules-right": ["pulseaudio", "network", "battery", "tray"],
   "sway/workspaces": {
     "disable-scroll": true,
@@ -20,10 +20,10 @@
     "max-length": 48,
     "format": "{title}"
   },
-  "clock": {
-    "interval": 60,
-    "format": "{:%d/%m/%Y  %H:%M}",
-    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<b>{:%H:%M:%S}</b>"
+  "custom/clock": {
+    "exec": "~/.local/bin/waybarclock",
+    "return-type": "json",
+    "interval": 1
   },
   "pulseaudio": {
     "format": "{icon} {volume}%",
