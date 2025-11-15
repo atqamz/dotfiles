@@ -5,7 +5,9 @@ tracked files can be symlinked straight into the home directory.
 
 ## Layout
 
-- `shell/` – Bash environment (`.bashrc`, `.bash_profile`, `.inputrc`, etc.).
+- `shell/` – Bash environment (`.bashrc`, `.bash_profile`, `.inputrc`, etc.) plus
+  `~/.config/environment.d/90-portals.conf`, which exports the portal-related
+  environment variables for every user session.
 - `git/` – Git configuration (`.gitconfig`).
 - `bin/` – Helper scripts exposed via `~/.local/bin`. Notable utilities:
   - `passmenu`: themes `rofi -dmenu` with the same look Sway uses and reads from
@@ -21,8 +23,9 @@ tracked files can be symlinked straight into the home directory.
     below for area-to-clipboard (`$mod+Shift+s`) and full-screen-to-file (`F12`)
     captures.
   - `cliphistory`: clipboard history picker powered by `cliphist`, `wl-copy`,
-    and the same rofi theme as the launcher. Invoked via `Mod+Ctrl+v` in Sway
-    and restores whatever entry you select back onto the clipboard.
+    and the same rofi theme as the launcher. Invoked via `Mod+Ctrl+v` in Sway,
+    restores whatever entry you select back onto the clipboard, and auto-types
+    it via `wtype` when available.
   - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
     selection, and immediately injects it into the focused window via `wtype`.
     Bound to `Mod+.`.
@@ -36,10 +39,9 @@ tracked files can be symlinked straight into the home directory.
     module falls back to `--% --°C`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
   consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
-  autostarts helpers like Waybar, clipboard history, and libinput-gestures. It
-  also exports `GTK_USE_PORTAL=1`/`XDG_*_DESKTOP=sway` so GTK/Qt apps discover
-  the Yazi-based file chooser. The default wallpaper/session background is set
-  to pure black to keep the setup minimal.
+  autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
+  default wallpaper/session background is set to pure black to keep the setup
+  minimal.
 - `waybar/` – Status bar configuration and CSS paired with the Sway colors.
   Clock output uses the `dd/MM/yyyy` format. Modules cover workspaces, audio,
   network, battery/tray, plus combined CPU + GPU status blocks powered by the

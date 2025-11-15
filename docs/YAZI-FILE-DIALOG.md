@@ -48,17 +48,18 @@ chmod +x ~/.local/bin/yazi-filechooser
 You can override which terminal it launches via `TERMCMD="alacritty -e"` or
 change the Yazi binary via `YAZI_BIN=/path/to/yazi`.
 
-## 5. Environment variables inside Sway
+## 5. Environment variables
 
-`sway/.config/sway/config.d/15-env.conf` exports:
+The `shell/` module installs `~/.config/environment.d/90-portals.conf` with:
 
 ```
-setenv GTK_USE_PORTAL 1
-setenv XDG_CURRENT_DESKTOP sway
-setenv XDG_SESSION_DESKTOP sway
+GTK_USE_PORTAL=1
+XDG_CURRENT_DESKTOP=sway
+XDG_SESSION_DESKTOP=sway
 ```
 
-Reload Sway (`Mod+Shift+c`) or log out/in so every application sees these vars.
+Log out/in (or restart the user systemd session) so the new environment file is
+picked up before launching Sway.
 
 ## 6. Restart user portal services
 
