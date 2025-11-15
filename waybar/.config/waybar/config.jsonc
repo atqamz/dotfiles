@@ -5,10 +5,10 @@
   "margin": "4 10 0",
   "modules-left": [
     "clock",
-    "sway/workspaces" 
+    "sway/workspaces",
+    "sway/window"
   ],
   "modules-center": [
-    "sway/window"
   ],
   "modules-right": [
     "network",
@@ -39,7 +39,7 @@
     "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<b>{:%H:%M:%S}</b>"
   },
   "pulseaudio": {
-    "format": "{icon}  {volume}%",
+    "format": "{icon}   {volume}%",
     "format-muted": " mute",
     "scroll-step": 3,
     "on-click": "pavucontrol",
@@ -76,7 +76,7 @@
       "warning": 25,
       "critical": 10
     },
-    "format": "{icon}  {capacity}%",
+    "format": "{icon}   {capacity}%",
     "format-charging": "  {capacity}%",
     "format-plugged": "  {capacity}%",
     "format-alt": "{time}",
