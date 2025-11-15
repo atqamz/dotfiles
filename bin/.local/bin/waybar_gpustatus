@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Emit GPU usage + temperature info for a Waybar custom module."""
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from typing import Optional, Tuple
+
+NVIDIA_SMI = shutil.which("nvidia-smi")
+
+
+def query_nvidia() -> Tuple[Optional[float], Optional[float]]:
+    if not NVIDIA_SMI:
+        return None, None
+    cmd = [
+        NVIDIA_SMI,
+        "--query-gpu=temperature.gpu,utilization.gpu",
+        "--format=csv,noheader,nounits",
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            check=True,
+            text=True,
+            capture_output=True,
+            timeout=0.5,
+        )
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        return None, None
+    line = result.stdout.strip().splitlines()[0] if result.stdout else ""
+    if not line:
+        return None, None
+    parts = [piece.strip() for piece in line.split(",")]
+    if len(parts) != 2:
+        return None, None
+    try:
+        temp = float(parts[0])
+        usage = float(parts[1])
+    except ValueError:
+        return None, None
+    return usage, temp
+
+
+def icon_for_usage(usage: Optional[float]) -> str:
+    if usage is None:
+        return ""
+    if usage < 25:
+        return ""
+    if usage < 60:
+        return ""
+    return ""
+
+
+def main() -> None:
+    usage, temp = query_nvidia()
+    icon = icon_for_usage(usage)
+    usage_text = f"{usage:.0f}%" if usage is not None else "--%"
+    temp_text = f"{temp:.0f}°C" if temp is not None else "--°C"
+    tooltip_lines = []
+    if usage is not None:
+        tooltip_lines.append(f"Usage: {usage:.1f}%")
+    if temp is not None:
+        tooltip_lines.append(f"Temperature: {temp:.1f}°C")
+    if not tooltip_lines:
+        tooltip_lines.append("GPU stats unavailable")
+    classes = ["gpu-status"]
+    if temp is not None:
+        if temp >= 85:
+            classes.append("critical")
+        elif temp >= 75:
+            classes.append("warning")
+    payload = {
+        "text": f"{icon}  {usage_text} {temp_text}",
+        "tooltip": "\n".join(tooltip_lines),
+        "class": classes,
+    }
+    print(json.dumps(payload))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Emit combined CPU usage + temperature info for a Waybar custom module."""
+from __future__ import annotations
+
+import json
+import time
+from pathlib import Path
+
+PROC_STAT = Path("/proc/stat")
+CPU_TEMP = Path("/sys/class/hwmon/hwmon5/temp1_input")
+
+
+def read_cpu_times() -> tuple[int, int]:
+    with PROC_STAT.open() as fh:
+        parts = fh.readline().split()
+    if parts[0] != "cpu":
+        raise RuntimeError("Unexpected /proc/stat format")
+    values = [int(x) for x in parts[1:]]
+    idle = values[3] + values[4]
+    total = sum(values[:8])  # user..steal
+    return total, idle
+
+
+def cpu_usage_percent() -> float:
+    total1, idle1 = read_cpu_times()
+    time.sleep(0.1)
+    total2, idle2 = read_cpu_times()
+    delta_total = total2 - total1
+    delta_idle = idle2 - idle1
+    if delta_total <= 0:
+        return 0.0
+    return (delta_total - delta_idle) * 100.0 / delta_total
+
+
+def cpu_temperature_c() -> float | None:
+    try:
+        raw = CPU_TEMP.read_text().strip()
+    except FileNotFoundError:
+        return None
+    if not raw:
+        return None
+    try:
+        value = float(raw)
+    except ValueError:
+        return None
+    return value / 1000.0 if value > 1000 else value
+
+
+def icon_for_usage(usage: float) -> str:
+    if usage < 25:
+        return ""
+    if usage < 60:
+        return ""
+    return ""
+
+
+def main() -> None:
+    usage = cpu_usage_percent()
+    temp = cpu_temperature_c()
+    icon = icon_for_usage(usage)
+    usage_text = f"{usage:.0f}"
+    temp_text = f"{temp:.0f}" if temp is not None else "--"
+    tooltip_temp = f"{temp:.1f}°C" if temp is not None else "N/A"
+    text = f"{icon}  {usage_text}% {temp_text}°C"
+    tooltip = {
+        "CPU": "CPU Status",
+        "Usage": f"{usage:.1f}%",
+        "Temperature": tooltip_temp,
+    }
+    payload = {
+        "text": text,
+        "tooltip": "\n".join(f"{k}: {v}" for k, v in tooltip.items()),
+        "class": ["cpu-status"],
+    }
+    print(json.dumps(payload))
+
+
+if __name__ == "__main__":
+    main()
