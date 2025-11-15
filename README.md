@@ -26,14 +26,21 @@ tracked files can be symlinked straight into the home directory.
   - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
     selection, and immediately injects it into the focused window via `wtype`.
     Bound to `Mod+.`.
+  - `waybar_cpustatus`: Python helper emitting Waybar-friendly JSON that shows
+    CPU usage plus package temperature (reads `/proc/stat` and
+    `/sys/class/hwmon/.../temp*_input`).
+  - `waybar_gpustatus`: Python helper that shells out to `nvidia-smi` for GPU
+    utilization + temperature. Without the proprietary NVIDIA CLI installed the
+    module falls back to `--% --°C`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
   consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
   autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
   default wallpaper/session background is set to pure black to keep the setup
   minimal.
 - `waybar/` – Status bar configuration and CSS paired with the Sway colors.
-  Clock output uses the `dd/MM/yyyy` format, and modules cover workspaces, audio,
-  network, battery, and a tray.
+  Clock output uses the `dd/MM/yyyy` format. Modules cover workspaces, audio,
+  network, battery/tray, plus combined CPU + GPU status blocks powered by the
+  helpers above.
 
 ## Bootstrapping
 
@@ -53,4 +60,6 @@ tracked files can be symlinked straight into the home directory.
 - Clipboard workflow relies on `cliphist`, `wl-clipboard`, `rofi` (Wayland
   build), plus `rofimoji` and `wtype` for the emoji picker.
 - Waybar + the themed autostart expect `waybar`, `pavucontrol` (optional),
-  `wpctl` (PipeWire), `playerctl`, and `libinput-gestures` to be installed.
+  `wpctl` (PipeWire), `playerctl`, `libinput-gestures`, and the Waybar helper
+  dependencies noted in `DEPENDENCIES.md` (e.g. `python3`, `nvidia-smi`) to be
+  installed.
