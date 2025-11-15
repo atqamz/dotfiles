@@ -1,17 +1,21 @@
 # .bashrc
 
-# Source global definitions
+# source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
 fi
 
-# User specific environment
+# user specific environment
 if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
     PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 fi
 export PATH
 
-# Ensure Wayland-aware clients launched from shells outside the compositor
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  eval "$(ssh-agent -s)" >/dev/null
+fi
+
+# ensure wayland-aware clients launched from shells outside the compositor
 # (e.g. a lingering TTY or SSH session) can still discover the active sockets.
 _uid="$(id -u)"
 if [ -z "$XDG_RUNTIME_DIR" ] && [ -d "/run/user/$_uid" ]; then
@@ -31,10 +35,7 @@ if [ -z "$SWAYSOCK" ] && [ -n "$XDG_RUNTIME_DIR" ]; then
 fi
 unset _uid _wayland_sock _sway_sock
 
-# Uncomment the following line if you don't like systemctl's auto-paging feature:
-# export SYSTEMD_PAGER=
-
-# User specific aliases and functions
+# user specific aliases and functions
 if [ -d ~/.bashrc.d ]; then
     for rc in ~/.bashrc.d/*; do
         if [ -f "$rc" ]; then
@@ -44,6 +45,9 @@ if [ -d ~/.bashrc.d ]; then
 fi
 unset rc
 
+export GOPATH="$HOME/go"
+export PATH="$PATH:$GOPATH/bin"
+
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # this loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # this loads nvm bash_completion

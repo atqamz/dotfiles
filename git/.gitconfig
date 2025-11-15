@@ -13,3 +13,7 @@
 	clean = git-lfs clean -- %f
 [init]
 	defaultBranch = master
+[fetch]
+	prune = true
+[tag]
+	gpgsign = true
