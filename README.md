@@ -63,3 +63,5 @@ tracked files can be symlinked straight into the home directory.
   `wpctl` (PipeWire), `playerctl`, `libinput-gestures`, and the Waybar helper
   dependencies noted in `DEPENDENCIES.md` (e.g. `python3`, `nvidia-smi`) to be
   installed.
+- Need instructions for switching from Nouveau to the proprietary NVIDIA stack
+  (so `nvidia-smi` exists)? See `docs/NVIDIA.md`.
