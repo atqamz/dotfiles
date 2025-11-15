@@ -26,7 +26,7 @@
     "interval": 1
   },
   "pulseaudio": {
-    "format": "{icon} {volume}%",
+    "format": "{icon}  {volume}%",
     "format-muted": " mute",
     "scroll-step": 3,
     "on-click": "pavucontrol",
@@ -35,7 +35,7 @@
     }
   },
   "network": {
-    "format-wifi": " {essid} {signalStrength}%",
+    "format-wifi": "  {essid} {signalStrength}%",
     "format-ethernet": " {ifname}",
     "format-disconnected": " offline",
     "tooltip": true
@@ -45,9 +45,9 @@
       "warning": 25,
       "critical": 10
     },
-    "format": "{icon} {capacity}%",
-    "format-charging": " {capacity}%",
-    "format-plugged": " {capacity}%",
+    "format": "{icon}  {capacity}%",
+    "format-charging": "  {capacity}%",
+    "format-plugged": "  {capacity}%",
     "format-alt": "{time}",
     "format-icons": ["", "", "", "", ""]
   },
