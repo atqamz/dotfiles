@@ -48,7 +48,16 @@ selection=$(printf '%s\n' "$list_output" | "${rofi_cmd[@]}")
 entry_id=${selection%%$'\t'*}
 [[ -n "$entry_id" ]] || exit 0
 
-cliphist decode "$entry_id" | wl-copy
+tmp_file=$(mktemp)
+trap 'rm -f "$tmp_file"' EXIT
+
+cliphist decode "$entry_id" >"$tmp_file"
+cat "$tmp_file" | wl-copy
+
+auto_paste=${CLIPHIST_AUTO_PASTE:-1}
+if [[ "$auto_paste" != "0" ]] && command -v wtype >/dev/null 2>&1; then
+    wtype - <"$tmp_file"
+fi
 
 if command -v notify-send >/dev/null 2>&1; then
     notify-send "Clipboard history" "Copied selection back to clipboard"

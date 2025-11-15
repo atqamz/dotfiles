@@ -20,7 +20,7 @@ for your distro.
 | Terminal + launcher | `sway/.config/sway/config.d/10-variables.conf` | `kitty`, `rofi-wayland` (for `$menu`), Nerd Font such as `Iosevka Nerd Font` for icons. | `$menu` builds a themed rofi invocation, so rofi must include dmenu/Wayland support. |
 | Autostarted clipboard + gestures | `sway/.config/sway/config.d/60-autostart.conf` | `libinput-gestures`, `cliphist`, `wl-clipboard` (`wl-paste`, `wl-copy`). | `libinput-gestures` handles touchpad gestures, and the two `wl-paste ... cliphist store` commands feed the clipboard history. |
 | SSH key helper | `bin/.local/bin/sshadd`, referenced from `60-autostart.conf` | `ssh-agent`/`ssh-add` from OpenSSH. | Adds `~/.ssh/id_ed25519`/`id_rsa` if they exist. |
-| Clipboard picker (`$mod+Ctrl+v`) | `bin/.local/bin/cliphistory` | `cliphist`, `wl-copy`, `rofi (Wayland build)` | Provides a rofi interface to the cliphist history. |
+| Clipboard picker (`$mod+Ctrl+v`) | `bin/.local/bin/cliphistory` | `cliphist`, `wl-copy`, `rofi (Wayland build)`, `wtype` (optional, for auto-paste) | Provides a rofi interface to the cliphist history and auto-types the selection when `wtype` is available. |
 | Emoji picker (`$mod+.`) | `bin/.local/bin/emojipicker` | `rofimoji`, `rofi`, `wl-paste`, `wtype` | Launches rofimoji inside a rofi dmenu for inserting emoji. |
 | Pass menu (`$mod+Mod1+p`) | `bin/.local/bin/passmenu` | `pass`, `rofi`, working `gpg` setup | Wraps `pass` entries in a themed rofi selector. |
 | Screenshot commands (`$mod+Shift+s`, `F12`) | `bin/.local/bin/screenshot` | `grim`, `slurp` (for area selection), `wl-clipboard` (`wl-copy`), `notify-send` (optional). | Captures area/fullscreen shots, optionally copies to clipboard, and can send a desktop notification. |
@@ -38,7 +38,7 @@ for your distro.
 
 | Script | File | External requirements | Notes |
 | --- | --- | --- | --- |
-| `cliphistory` | `bin/.local/bin/cliphistory` | See entry above (rofi, cliphist, wl-copy). | Uses env vars `CLIPHIST_*` for customization. |
+| `cliphistory` | `bin/.local/bin/cliphistory` | See entry above (rofi, cliphist, wl-copy, optional `wtype`). | Auto-pastes via `wtype` and honors env vars `CLIPHIST_*`. |
 | `emojipicker` | `bin/.local/bin/emojipicker` | See entry above. | Wraps `rofimoji` with rofi and simulates typing via `wtype`. |
 | `passmenu` | `bin/.local/bin/passmenu` | See entry above. | Requires `.password-store` populated. |
 | `screenshot` | `bin/.local/bin/screenshot` | `grim`, `slurp`, `wl-copy`, `notify-send` (optional). | Saves captures under `$HOME/Pictures/Screenshots` by default. |
