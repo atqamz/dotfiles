@@ -3,9 +3,22 @@
   "position": "top",
   "height": 30,
   "margin": "4 10 0",
-  "modules-left": ["sway/workspaces", "sway/window"],
-  "modules-center": ["custom/clock"],
-  "modules-right": ["pulseaudio", "network", "battery", "tray"],
+  "modules-left": [
+    "clock",
+    "sway/workspaces" 
+  ],
+  "modules-center": [
+    "sway/window"
+  ],
+  "modules-right": [
+    "network",
+    "custom/cpu_status",
+    "custom/gpu_status",
+    "memory",
+    "pulseaudio",
+    "battery",
+    "tray"
+  ],
   "sway/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
@@ -20,10 +33,10 @@
     "max-length": 48,
     "format": "{title}"
   },
-  "custom/clock": {
-    "exec": "~/.local/bin/waybarclock",
-    "return-type": "json",
-    "interval": 1
+  "clock": {
+    "interval": 1,
+    "format": "{:%d/%m/%Y  %H:%M}",
+    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<b>{:%H:%M:%S}</b>"
   },
   "pulseaudio": {
     "format": "{icon}  {volume}%",
@@ -34,11 +47,29 @@
       "default": ["", "", ""]
     }
   },
+  "custom/cpu_status": {
+    "exec": "~/.local/bin/waybar_cpustatus",
+    "return-type": "json",
+    "interval": 5
+  },
+  "custom/gpu_status": {
+    "exec": "~/.local/bin/waybar_gpustatus",
+    "return-type": "json",
+    "interval": 5
+  },
   "network": {
     "format-wifi": "  {essid} {signalStrength}%",
     "format-ethernet": " {ifname}",
     "format-disconnected": " offline",
     "tooltip": true
+  },
+  "memory": {
+    "interval": 5,
+    "format": "{icon}  {percentage}%",
+    "format-alt": "RAM {used:0.1f}G/{total:0.1f}G",
+    "format-alt-click": "click-right",
+    "tooltip-format": "RAM {used:0.1f}G/{total:0.1f}G",
+    "format-icons": [""]
   },
   "battery": {
     "states": {
