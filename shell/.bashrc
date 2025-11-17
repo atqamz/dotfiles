@@ -45,6 +45,9 @@ if [ -d ~/.bashrc.d ]; then
 fi
 unset rc
 
+# enable Electron apps to use the appropriate Ozone platform
+export ELECTRON_OZONE_PLATFORM_HINT=auto
+
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
 
