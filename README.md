@@ -42,6 +42,10 @@ tracked files can be symlinked straight into the home directory.
   autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
   default wallpaper/session background is set to pure black to keep the setup
   minimal.
+- `sddm/` – Login screen overrides. Run `sudo ./sddm/install.sh` to copy the
+  drop-in plus a black background + Breeze theme overrides into `/etc` and
+  `/usr/share` (SDDM runs as the `sddm` user, so it cannot follow symlinks into
+  this repo directly). Use `sudo ./sddm/uninstall.sh` to remove them.
 - `waybar/` – Status bar configuration and CSS paired with the Sway colors.
   Clock output uses the `dd/MM/yyyy` format. Modules cover workspaces, audio,
   network, battery/tray, plus combined CPU + GPU status blocks powered by the
