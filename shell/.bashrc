@@ -11,10 +11,6 @@ if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
 fi
 export PATH
 
-if [ -z "$SSH_AUTH_SOCK" ]; then
-  eval "$(ssh-agent -s)" >/dev/null
-fi
-
 # ensure wayland-aware clients launched from shells outside the compositor
 # (e.g. a lingering TTY or SSH session) can still discover the active sockets.
 _uid="$(id -u)"
