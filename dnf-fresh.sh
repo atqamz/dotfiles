@@ -25,3 +25,8 @@ sudo dnf install git git-lfs fastfetch -y
 sudo dnf install cliphist wl-copy wl-paste pavucontrol wl-clipboard wtype grim slurp -y
 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+source ~/.bashrc
+nvm install node
+nvm use node
+npm install -g @google/gemini-cli
+npm install -g @openai/codex
