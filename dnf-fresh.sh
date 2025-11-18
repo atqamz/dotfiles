@@ -14,6 +14,10 @@ fi
 
 # copr repos
 sudo dnf copr enable alternateved/cliphist -y
+sudo dnf copr enable rafatosta/zapzap -y
+
+curl -fsSl https://pkg.cloudflareclient.com/cloudflare-warp-ascii.repo | sudo tee /etc/yum.repos.d/cloudflare-warp.repo
+sudo dnf install cloudflare-warp -y
 
 # update system
 sudo dnf upgrade --refresh -y
@@ -23,6 +27,7 @@ sudo dnf install golang -y
 sudo dnf install php php-cli php-fpm -y
 sudo dnf install git git-lfs fastfetch -y
 sudo dnf install cliphist wl-copy wl-paste pavucontrol wl-clipboard wtype grim slurp -y
+sudo dnf install zapzap -y
 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 source ~/.bashrc
