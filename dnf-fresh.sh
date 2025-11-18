@@ -23,6 +23,7 @@ sudo dnf install cloudflare-warp -y
 sudo dnf upgrade --refresh -y
 
 # install packages
+sudo dnf install dotnet-sdk-9.0 dotnet-runtime-9.0 aspnetcore-runtime-9.0 -y #https://developer.fedoraproject.org/tech/languages/dotnet/dotnetcore.html
 sudo dnf install golang -y
 sudo dnf install php php-cli php-fpm -y
 sudo dnf install git git-lfs fastfetch -y
