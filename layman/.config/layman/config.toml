@@ -1,0 +1,11 @@
+### Layman configuration
+#
+# Default to the Autotiling layout manager so newly created windows alternate
+# splits in a Hyprland-style pattern without needing custom swaymsg scripts.
+
+[layman]
+defaultLayout = "Autotiling"
+debug = false
+depthLimit = 0
+excludedWorkspaces = []
+excludedOutputs = []

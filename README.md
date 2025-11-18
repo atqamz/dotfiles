@@ -39,9 +39,12 @@ tracked files can be symlinked straight into the home directory.
     module falls back to `--% --°C`.
 - `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
   consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
-  autostarts helpers like Waybar, clipboard history, and libinput-gestures. The
-  default wallpaper/session background is set to pure black to keep the setup
-  minimal.
+  autostarts helpers like Waybar, clipboard history, libinput-gestures, and the
+  Layman daemon (see below) for Hyprland-style autotiling. The default
+  wallpaper/session background is set to pure black to keep the setup minimal.
+- `layman/` – Configuration for the Layman workspace layout daemon. The included
+  `config.toml` sets the default layout to `Autotiling`, which mimics the split
+  logic Hyprland uses when opening new windows.
 - `sddm/` – Login screen overrides. Run `sudo ./sddm/install.sh` to copy the
   drop-in plus a black background + Breeze theme overrides into `/etc` and
   `/usr/share` (SDDM runs as the `sddm` user, so it cannot follow symlinks into
@@ -74,6 +77,9 @@ tracked files can be symlinked straight into the home directory.
   `wpctl` (PipeWire), `playerctl`, `libinput-gestures`, and the Waybar helper
   dependencies noted in `DEPENDENCIES.md` (e.g. `python3`, `nvidia-smi`) to be
   installed.
+- Hyprland-style tiling comes from the Layman daemon (`pip install --user layman`
+  or the `layman-git` AUR package). Keybindings call `nop layman …` commands so
+  the daemon needs to be running in your Sway session.
 - Need instructions for switching from Nouveau to the proprietary NVIDIA stack
   (so `nvidia-smi` exists)? See `docs/NVIDIA.md`.
 - File dialogs rely on `xdg-desktop-portal-termfilechooser` plus `yazi`; check
