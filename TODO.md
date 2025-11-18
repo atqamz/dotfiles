@@ -7,3 +7,6 @@
 - [ ] change swaylock background to black
 - [ ] change sddm background to black
 - [ ] populate dnf-fresh
+- [ ] figure out why SourceGit tends to be slow, maybe we're not handle XWayland correctly
+      (we can try to find how Fedora Sway Spins config and list of packages required)
+- [ ] find out why network system tray not showed (prev on Fedora Sway Spins it showed)
