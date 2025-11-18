@@ -3,3 +3,7 @@
 ln -s ~/password-store ~/.password-store
 ```
 
+# Autostart ssh-agent
+```sh
+systemctl --user enable --now ssh-agent.service
+```
