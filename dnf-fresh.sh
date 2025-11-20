@@ -18,6 +18,8 @@ sudo dnf copr enable rafatosta/zapzap -y
 
 curl -fsSl https://pkg.cloudflareclient.com/cloudflare-warp-ascii.repo | sudo tee /etc/yum.repos.d/cloudflare-warp.repo
 sudo dnf install cloudflare-warp -y
+sudo warp-cli registration new -y
+sudo warp-cli connect
 
 # update system
 sudo dnf upgrade --refresh -y
