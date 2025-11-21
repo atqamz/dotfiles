@@ -41,9 +41,14 @@ window#waybar {
   color: @muted;
   padding: 0;
   margin: 0;
+  min-width: 15px;
   font-weight: 500;
   border-radius: 0;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#workspaces button label {
+  min-width: 15px;
 }
 
 #workspaces button.focused {

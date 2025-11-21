@@ -4,8 +4,6 @@
 - [x] configure waybar appearance/layout
 - [x] change Sway date format to dd/MM/yyyy
 - [ ] change default file dialog, check first current option. I want to replace file manager fully with yazi, can we also use it for file dialogs?
-- [ ] change swaylock background to black
-- [ ] change sddm background to black
 - [ ] populate dnf-fresh
 - [ ] figure out why SourceGit tends to be slow, maybe we're not handle XWayland correctly
       (we can try to find how Fedora Sway Spins config and list of packages required)

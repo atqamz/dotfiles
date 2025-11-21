@@ -5,8 +5,8 @@
   "margin": "4 10 0",
   "modules-left": [
     "clock",
-    "sway/workspaces",
-    "sway/window"
+    "hyprland/workspaces",
+    "hyprland/window"
   ],
   "modules-center": [
   ],
@@ -19,7 +19,7 @@
     "battery",
     "tray"
   ],
-  "sway/workspaces": {
+  "hyprland/workspaces": {
     "disable-scroll": true,
     "all-outputs": true,
     "format": "{name}",
@@ -29,14 +29,14 @@
       "urgent": ""
     }
   },
-  "sway/window": {
+  "hyprland/window": {
     "max-length": 48,
     "format": "{title}"
   },
   "clock": {
     "interval": 1,
-    "format": "{:%d/%m/%Y  %H:%M}",
-    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\n<b>{:%H:%M:%S}</b>"
+    "format": "{:%d/%m/%Y %H:%M}",
+    "tooltip-format": "{:%A, %d %B %Y %H:%M:%S}"
   },
   "pulseaudio": {
     "format": "{icon}   {volume}%",

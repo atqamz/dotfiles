@@ -13,6 +13,7 @@ if ! grep -q '^max_parallel_downloads=' /etc/dnf/dnf.conf; then
 fi
 
 # copr repos
+sudo dnf copr enable solopasha/hyprland -y
 sudo dnf copr enable alternateved/cliphist -y
 sudo dnf copr enable rafatosta/zapzap -y
 
@@ -25,7 +26,8 @@ sudo warp-cli connect
 sudo dnf upgrade --refresh -y
 
 # install packages
-sudo dnf install dotnet-sdk-9.0 dotnet-runtime-9.0 aspnetcore-runtime-9.0 -y #https://developer.fedoraproject.org/tech/languages/dotnet/dotnetcore.html
+sudo dnf install hyprland hyprlock -y
+sudo dnf install dotnet-sdk-9.0 -y dotnet-runtime-9.0 aspnetcore-runtime-9.0 -y #https://developer.fedoraproject.org/tech/languages/dotnet/dotnetcore.html
 sudo dnf install golang -y
 sudo dnf install php php-cli php-fpm -y
 sudo dnf install git git-lfs fastfetch -y
