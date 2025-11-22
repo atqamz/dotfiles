@@ -19,3 +19,8 @@
 	gpgsign = true
 [url "ssh://git@github.com/"]
     insteadOf = https://github.com/
+[credential]
+	credentialStore = gpg
+	helper = /usr/local/bin/git-credential-manager
+[credential "https://dev.azure.com"]
+	useHttpPath = true
