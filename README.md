@@ -53,6 +53,8 @@ tracked files can be symlinked straight into the home directory.
   Clock output uses the `dd/MM/yyyy` format. Modules cover workspaces, audio,
   network, battery/tray, plus combined CPU + GPU status blocks powered by the
   helpers above.
+- `mako/` – Notification daemon styling that reuses the Waybar palette for a
+  consistent look across the desktop.
 - `xdg/` – Portal configuration. It forces `xdg-desktop-portal` to prefer the
   wlroots backend for everything and termfilechooser + Yazi for file dialogs.
 
