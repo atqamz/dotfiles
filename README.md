@@ -55,6 +55,8 @@ tracked files can be symlinked straight into the home directory.
   helpers above.
 - `mako/` – Notification daemon styling that reuses the Waybar palette for a
   consistent look across the desktop.
+- `swaync/` – Sway Notification Center config + CSS themed to match Waybar,
+  plus a Waybar module to toggle the drawer and DND status.
 - `xdg/` – Portal configuration. It forces `xdg-desktop-portal` to prefer the
   wlroots backend for everything and termfilechooser + Yazi for file dialogs.
 

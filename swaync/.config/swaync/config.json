@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ErikReider/SwayNotificationCenter/master/schemas/config.schema.json",
+  "positionX": "right",
+  "positionY": "top",
+  "layer": "overlay",
+  "control-center-margin-top": 8,
+  "control-center-margin-bottom": 12,
+  "control-center-margin-left": 8,
+  "control-center-margin-right": 8,
+  "control-center-width": 420,
+  "control-center-height": 540,
+  "notification-window-width": 420,
+  "notification-icon-size": 42,
+  "notification-body-image-height": 140,
+  "notification-body-image-width": 280,
+  "timeout": 6000,
+  "timeout-low": 5000,
+  "timeout-critical": 8000,
+  "keyboard-shortcuts": true,
+  "image-visibility": "when-available",
+  "markup": "full",
+  "scripts": {},
+  "widgets": [
+    "title",
+    "buttons-grid",
+    "dnd",
+    "notifications"
+  ],
+  "widget-config": {
+    "title": {
+      "text": "Notifications",
+      "clear-all-button": true
+    },
+    "buttons-grid": {
+      "actions": [
+        {
+          "label": "Do Not Disturb",
+          "action": "dnd"
+        },
+        {
+          "label": "Clear",
+          "action": "clear"
+        }
+      ],
+      "columns": 2
+    },
+    "dnd": {
+      "text": "Do Not Disturb"
+    },
+    "notifications": {
+      "max-visible": 8,
+      "sort": "descending"
+    }
+  }
+}

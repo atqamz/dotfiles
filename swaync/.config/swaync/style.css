@@ -1,0 +1,146 @@
+@define-color bg #0a0a0e;
+@define-color surface #15161b;
+@define-color text #dfe3ec;
+@define-color muted #7f849c;
+@define-color accent #f0f0f5;
+@define-color urgent #ff5f6d;
+
+* {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 12.5pt;
+}
+
+window {
+  background-color: transparent;
+}
+
+.control-center {
+  background-color: alpha(@bg, 0.9);
+  color: @text;
+  border: 1px solid alpha(@accent, 0.35);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.notification-row {
+  outline: none;
+}
+
+.notification {
+  background: @surface;
+  color: @text;
+  border-radius: 10px;
+  border: 1px solid alpha(@accent, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+  padding: 10px 12px;
+  margin: 6px 4px;
+}
+
+.notification.low {
+  border-color: alpha(@muted, 0.5);
+}
+
+.notification.critical {
+  background: alpha(@urgent, 0.12);
+  border-color: @urgent;
+}
+
+.notification .header {
+  margin-bottom: 6px;
+}
+
+.notification .summary {
+  font-weight: bold;
+  color: @accent;
+}
+
+.notification .time {
+  color: @muted;
+}
+
+.notification .body {
+  color: @text;
+}
+
+.notification .image {
+  border-radius: 6px;
+}
+
+.action-row .button {
+  border-radius: 6px;
+  border: 1px solid alpha(@accent, 0.3);
+  background: alpha(@accent, 0.08);
+  color: @text;
+  padding: 6px 10px;
+}
+
+.action-row .button:hover {
+  background: alpha(@accent, 0.15);
+  border-color: alpha(@accent, 0.5);
+}
+
+.widget-title {
+  margin: 6px 4px 2px;
+  color: @accent;
+  font-weight: bold;
+}
+
+.widget-title button {
+  border-radius: 6px;
+  border: 1px solid alpha(@accent, 0.35);
+  color: @text;
+  background: alpha(@accent, 0.08);
+  padding: 4px 10px;
+}
+
+.widget-title button:hover {
+  background: alpha(@accent, 0.15);
+}
+
+.dnd-button {
+  border-radius: 8px;
+  background: alpha(@accent, 0.08);
+  border: 1px solid alpha(@accent, 0.35);
+  color: @text;
+  padding: 8px 10px;
+  margin: 6px 4px;
+}
+
+.dnd-button:checked {
+  background: alpha(@accent, 0.22);
+  border-color: alpha(@accent, 0.55);
+}
+
+.buttons-grid {
+  margin: 6px 4px;
+}
+
+.buttons-grid > button {
+  border-radius: 8px;
+  background: alpha(@accent, 0.08);
+  border: 1px solid alpha(@accent, 0.35);
+  color: @text;
+  padding: 10px;
+}
+
+.buttons-grid > button:hover {
+  background: alpha(@accent, 0.15);
+  border-color: alpha(@accent, 0.5);
+}
+
+.progressbar,
+.progress {
+  border-radius: 999px;
+}
+
+.progressbar {
+  background: alpha(@muted, 0.25);
+}
+
+.progress {
+  background: @accent;
+}
+
+.image {
+  border-radius: 8px;
+}

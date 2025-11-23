@@ -9,13 +9,15 @@
     "hyprland/window"
   ],
   "modules-center": [
+    "custom/cpu_status",
+    "custom/gpu_status",
+    "memory"
   ],
   "modules-right": [
     "network",
-    "custom/cpu_status",
-    "custom/gpu_status",
-    "memory",
+    "backlight",
     "pulseaudio",
+    "custom/notifications",
     "battery",
     "tray"
   ],
@@ -63,6 +65,12 @@
     "format-disconnected": " offline",
     "tooltip": true
   },
+  "backlight": {
+    "format": "  {percent}%",
+    "tooltip-format": "Brightness: {percent}%",
+    "on-scroll-up": "brightnessctl set 5%+",
+    "on-scroll-down": "brightnessctl set 5%-"
+  },
   "memory": {
     "interval": 5,
     "format": "{icon}  {percentage}%",
@@ -70,6 +78,15 @@
     "format-alt-click": "click-right",
     "tooltip-format": "RAM {used:0.1f}G/{total:0.1f}G",
     "format-icons": [""]
+  },
+  "custom/notifications": {
+    "exec": "swaync-client -swb",
+    "return-type": "json",
+    "format": "{icon}",
+    "tooltip": false,
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "on-click-middle": "swaync-client -D -sw"
   },
   "battery": {
     "states": {
