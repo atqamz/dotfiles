@@ -17,8 +17,6 @@
 	prune = true
 [tag]
 	gpgsign = true
-[url "ssh://git@github.com/"]
-    insteadOf = https://github.com/
 [credential]
 	credentialStore = gpg
 	helper = /usr/local/bin/git-credential-manager
