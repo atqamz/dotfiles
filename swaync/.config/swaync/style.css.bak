@@ -1,0 +1,19 @@
+@define-color background #0a0a0e;
+@define-color text #dfe3ec;
+@define-color accent #f0f0f5;
+@define-color muted #c3c7cf;
+@define-color surface #1c1e24;
+
+@define-color mpris-album-art-overlay #0a0a0e;
+@define-color mpris-button-hover #12141c;
+@define-color bg #0a0a0e;
+@define-color bg-hover #12141c;
+@define-color mycolor #f0f0f5;
+@define-color border-color rgba(240, 240, 245, 0.35);
+
+* {
+  outline: none;
+  font-family: "JetbrainsMono Nerd Font Propo", monospace;
+  border-radius: 0;
+}
+
