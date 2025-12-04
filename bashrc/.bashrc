@@ -1,10 +1,5 @@
 # .bashrc
 
-# start the ssh-agent if not already running
-if [ -z "$SSH_AUTH_SOCK" ]; then
-  eval "$(ssh-agent -s)" >/dev/null
-fi
-
 # source global definitions
 if [ -f /etc/bashrc ]; then
     . /etc/bashrc
