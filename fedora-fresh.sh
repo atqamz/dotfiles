@@ -117,6 +117,24 @@ sudo dnf install cloudflare-warp -y
 # sudo warp-cli registration new -y
 # sudo warp-cli connect
 
+# docker
+sudo dnf install \
+    dnf-plugins-core -y
+sudo dnf config-manager \
+    --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin -y
+
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo groupadd docker
+sudo usermod -aG docker $USER
+# newgrp docker
+
 # dotnet sdk and runtimes
 # https://developer.fedoraproject.org/tech/languages/dotnet/dotnetcore.html
 sudo dnf install \
