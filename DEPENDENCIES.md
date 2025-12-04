@@ -1,3 +1,5 @@
+# TODO: UPDATE ME PLS
+
 # Dependencies
 
 This repo is mostly configuration and small helper scripts. The table below lists
@@ -17,7 +19,7 @@ for your distro.
 
 | Feature | File | Required tools | Notes |
 | --- | --- | --- | --- |
-| Terminal + launcher | `sway/.config/sway/config.d/10-variables.conf` | `kitty`, `rofi-wayland` (for `$menu`), Nerd Font such as `Iosevka Nerd Font` for icons. | `$menu` builds a themed rofi invocation, so rofi must include dmenu/Wayland support. |
+| Terminal + launcher | `sway/.config/sway/config.d/10-variables.conf` | `kitty`, `rofi-wayland` (for `$menu`), Nerd Font such as `Iosevka Nerd Font Propo` for icons. | `$menu` builds a themed rofi invocation, so rofi must include dmenu/Wayland support. |
 | Autostarted clipboard + gestures | `sway/.config/sway/config.d/60-autostart.conf` | `libinput-gestures`, `cliphist`, `wl-clipboard` (`wl-paste`, `wl-copy`). | `libinput-gestures` handles touchpad gestures, and the two `wl-paste ... cliphist store` commands feed the clipboard history. |
 | SSH key helper | `bin/.local/bin/sshadd`, referenced from `60-autostart.conf` | `ssh-agent`/`ssh-add` from OpenSSH. | Adds `~/.ssh/id_ed25519`/`id_rsa` if they exist. |
 | Hyprland-style tiling | `layman/.config/layman/config.toml`, `sway/.config/sway/config.d/60-autostart.conf` | `python3`; `pip install --user layman` (or the `layman-git` AUR pkg). | Layman daemon provides the Autotiling workspace layout manager. |
