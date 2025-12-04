@@ -1,31 +1,10 @@
 #!/usr/bin/env bash
 
-# Prefer the systemd socket so every session shares one agent
-if [ -z "$SSH_AUTH_SOCK" ] && [ -n "$XDG_RUNTIME_DIR" ]; then
-  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
-fi
-if [ -n "$SSH_AUTH_SOCK" ] && [ ! -S "$SSH_AUTH_SOCK" ]; then
-  systemctl --user start ssh-agent.socket >/dev/null 2>&1 || eval "$(ssh-agent -s)" >/dev/null
-fi
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
-# Ensure an askpass exists so we don't fail silently
-if [ -z "$SSH_ASKPASS" ]; then
-  if command -v ksshaskpass >/dev/null 2>&1; then
-    export SSH_ASKPASS=ksshaskpass
-  elif [ -x /usr/libexec/seahorse/ssh-askpass ]; then
-    export SSH_ASKPASS=/usr/libexec/seahorse/ssh-askpass
-  elif command -v ssh-askpass >/dev/null 2>&1; then
-    export SSH_ASKPASS=ssh-askpass
-  elif [ -x /usr/libexec/openssh/ssh-askpass ]; then
-    export SSH_ASKPASS=/usr/libexec/openssh/ssh-askpass
-  fi
+if [ ! -S "$SSH_AUTH_SOCK" ]; then
+    # clean up any stale socket file
+    rm -f "$SSH_AUTH_SOCK"
+    # start agent and bind to this specific socket
+    eval "$(ssh-agent -s -a "$SSH_AUTH_SOCK")" >/dev/null
 fi
-if [ -z "$SSH_ASKPASS" ]; then
-  echo "sshadd: no askpass helper found. install openssh-askpass, seahorse (GNOME askpass), or ksshaskpass." >&2
-  exit 1
-fi
-
-# Make sure there's no TTY so ssh-add triggers askpass
-for k in ~/.ssh/id_ed25519 ~/.ssh/id_rsa; do
-  [ -f "$k" ] && ssh-add -q "$k" </dev/null
-done
