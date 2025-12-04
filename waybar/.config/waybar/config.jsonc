@@ -17,9 +17,9 @@
     "network",
     "backlight",
     "pulseaudio",
-    "custom/notifications",
     "battery",
-    "tray"
+    "tray",
+    "custom/notifications"
   ],
   "hyprland/workspaces": {
     "disable-scroll": true,
@@ -41,7 +41,7 @@
     "tooltip-format": "{:%A, %d %B %Y %H:%M:%S}"
   },
   "pulseaudio": {
-    "format": "{icon}   {volume}%",
+    "format": "{icon} {volume}%",
     "format-muted": " mute",
     "scroll-step": 3,
     "on-click": "pavucontrol",
@@ -60,14 +60,16 @@
     "interval": 5
   },
   "network": {
-    "format-wifi": "  {essid} {signalStrength}%",
+    "format-wifi": " {signalStrength}%",
     "format-ethernet": " {ifname}",
     "format-disconnected": " offline",
-    "tooltip": true
+    "tooltip": true,
+    "tooltip-format": " {essid} {signalStrength}%\n{ipaddr}",
+    "on-click": "kitty nmtui"
   },
   "backlight": {
-    "format": "  {percent}%",
-    "tooltip-format": "Brightness: {percent}%",
+    "format": "󰃟 {percent}%",
+    "tooltip": false,
     "on-scroll-up": "brightnessctl set 5%+",
     "on-scroll-down": "brightnessctl set 5%-"
   },
@@ -82,7 +84,13 @@
   "custom/notifications": {
     "exec": "swaync-client -swb",
     "return-type": "json",
-    "format": "{icon}",
+    "format": "{icon} {text}",
+    "format-icons": {
+      "none": "󰂚",
+      "notification": "󰂚",
+      "dnd-none": "󰂛",
+      "dnd-notification": "󰂛"
+    },
     "tooltip": false,
     "on-click": "swaync-client -t -sw",
     "on-click-right": "swaync-client -d -sw",
@@ -93,9 +101,9 @@
       "warning": 25,
       "critical": 10
     },
-    "format": "{icon}   {capacity}%",
-    "format-charging": "  {capacity}%",
-    "format-plugged": "  {capacity}%",
+    "format": "{icon} {capacity}%",
+    "format-charging": " {capacity}%",
+    "format-plugged": " {capacity}%",
     "format-alt": "{time}",
     "format-icons": ["", "", "", "", ""]
   },
