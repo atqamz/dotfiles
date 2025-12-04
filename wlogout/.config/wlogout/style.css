@@ -20,7 +20,7 @@ window {
 }
 
 button {
-    font-family: 'JetBrainsMono Nerd Font', monospace;
+    font-family: 'JetBrainsMono Nerd Font Propo', monospace;
     background-color: @surface;
     border: 1px solid alpha(@accent, 0.35);
     border-radius: 6px;
@@ -89,7 +89,7 @@ button:not(#lock):not(#shutdown):not(#logout):not(#reboot):not(#suspend):not(#hi
 #reboot:focus {
     margin: 12px;
 }
-button:hover, button:focus {
+button:focus {
     background-color: alpha(@accent,0.15);
     color: @bg;
     border-color: alpha(@accent, 0.7);
