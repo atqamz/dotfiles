@@ -1,7 +1,7 @@
-STOW_DIRS = bashrc bin gitconfig hypr inputrc kitty mako rofi swaync waybar wlogout
+STOW_DIRS = bashrc bin gitconfig hypr inputrc kitty rofi swaync waybar wlogout
 
 # files or directories that might conflict with stow and should be backed up
-BACKUP_TARGETS = .bashrc .gitconfig .inputrc .config/hypr .config/kitty .config/mako .config/rofi .config/swaync .config/waybar .config/wlogout
+BACKUP_TARGETS = .bashrc .gitconfig .inputrc .config/hypr .config/kitty .config/rofi .config/swaync .config/waybar .config/wlogout
 
 all: stow
 
@@ -17,7 +17,4 @@ stow:
 delete:
 	stow --verbose --target=$$HOME --delete $(STOW_DIRS)
 
-sddm:
-	sudo ./sddm/install.sh
-
-.PHONY: all stow delete sddm
+.PHONY: all stow delete

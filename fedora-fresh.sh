@@ -3,11 +3,14 @@
 
 # set /etc/dnf/dnf.conf to include fastestmirror and max_parallel_downloads
 # but check if they are already set
+if ! grep -q '^max_parallel_downloads=' /etc/dnf/dnf.conf; then
+    echo 'max_parallel_downloads=10' | sudo tee -a /etc/dnf/dnf.conf
+fi
 if ! grep -q '^fastestmirror=' /etc/dnf/dnf.conf; then
     echo 'fastestmirror=True' | sudo tee -a /etc/dnf/dnf.conf
 fi
-if ! grep -q '^max_parallel_downloads=' /etc/dnf/dnf.conf; then
-    echo 'max_parallel_downloads=10' | sudo tee -a /etc/dnf/dnf.conf
+if ! grep -q '^keepcache=' /etc/dnf/dnf.conf; then
+    echo 'keepcache=True' | sudo tee -a /etc/dnf/dnf.conf
 fi
 
 # rpm fusion repos
@@ -19,6 +22,8 @@ sudo dnf update @core -y
 sudo dnf update kernel -y
 sudo dnf install rpmfusion-\*-appstream-data -y
 
+sudo dnf install @hardware-support @c-development @development-tools @development-libs
+
 # essential packages for wifi
 sudo dnf install \
     linux-firmware \
@@ -29,6 +34,7 @@ sudo dnf install \
 
 # essential packages for audio
 sudo dnf install \
+    @audio \
     pavucontrol \
     pipewire \
     pipewire-alsa \
@@ -36,20 +42,15 @@ sudo dnf install \
     wireplumber \
     alsa-sof-firmware \
     alsa-plugins-pulseaudio \
-    alsa-ucm-conf \
     alsa-utils -y
 
 # essential packages for video
 sudo dnf install \
     akmod-nvidia \
-    xorg-x11-drv-nvidia \
-    xorg-x11-drv-nvidia-cuda \
-    vulkan-nvidia -y
+    xorg-x11-drv-nvidia-cuda -y
 
 sudo dnf install \
-    ffmpeg \
-    ffmpeg-libs.i686 \
-    ffmpeg-libs.x86_64 -y
+    ffmpeg --allowerasing -y
 
 # essential packages for bluetooth
 sudo dnf install \
@@ -95,7 +96,9 @@ sudo dnf install \
     hyprland \
     hyprlock \
     hypridle \
-    hyprpolkitagent -y
+    hyprpolkitagent \
+    waybar \
+    wlogout -y
 
 # git and fastfetch
 sudo dnf install \
@@ -104,24 +107,24 @@ sudo dnf install \
     fastfetch -y
 
 # fonts
+sudo dnf install @fonts @legacy-fonts
 sudo dnf install \
     fontawesome-fonts-all \
-    google-noto-sans-fonts \
-    google-noto-serif-fonts \
-    google-noto-emoji-fonts \
     jetbrains-mono-fonts -y
+
+# libreoffice
+sudo dnf install libreoffice -y
 
 # cloudflare warp
 curl -fsSl https://pkg.cloudflareclient.com/cloudflare-warp-ascii.repo | sudo tee /etc/yum.repos.d/cloudflare-warp.repo
 sudo dnf install cloudflare-warp -y
-# sudo warp-cli registration new -y
+# warp-cli registration new
 # sudo warp-cli connect
+# TODO: make warp-cli as service on startup
 
 # docker
-sudo dnf install \
-    dnf-plugins-core -y
-sudo dnf config-manager \
-    --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install dnf-plugins-core -y
+sudo dnf config-manager addrepo --from-repofile https://download.docker.com/linux/fedora/docker-ce.repo
 sudo dnf install \
     docker-ce \
     docker-ce-cli \
@@ -169,8 +172,12 @@ sudo dnf install \
     wl-copy \
     wl-paste \
     pavucontrol \
-    cliphist \
     wl-clipboard \
     wtype \
     grim \
+    rofimoji \
     slurp -y
+
+# unityhub
+sudo sh -c 'echo -e "[unityhub-beta]\nname=Unity Hub Beta\nbaseurl=https://hub.unity3d.com/linux/repos/rpm/unstable\nenabled=1\ngpgcheck=1\ngpgkey=https://hub.unity3d.com/linux/repos/rpm/unstable/repodata/repomd.xml.key\nrepo_gpgcheck=1" > /etc/yum.repos.d/unityhub_beta.repo'
+sudo dnf install unityhub
