@@ -21,4 +21,22 @@ find ~/.gnupg -type f -exec chmod 600 {} \;
 find ~/.gnupg -type d -exec chmod 700 {} \;
 
 restorecon -Rv ~/.ssh ~/.gnupg
+
+# install pinentry-rofi
+# add this to ~/.gnupg/gpg-agent.conf
+pinentry-program /usr/bin/pinentry-rofi
 ```
+
+# install fonts
+```sh
+mkdir -p ~/.local/share/fonts
+
+# place fonts there
+
+fc-cache -fv
+```
+
+# disable some default command firefox
+- open firefox > `about:config`
+- find `middlemouse.paste` set to false
+- find `dom.events.testing.asyncClipboard` set to true
