@@ -165,6 +165,7 @@ npm install -g @openai/codex
 
 # install other packages
 sudo dnf install \
+    7zip \
     htop \
     btop \
     nvtop \
@@ -181,8 +182,14 @@ sudo dnf install \
 # unityhub
 sudo sh -c 'echo -e "[unityhub-beta]\nname=Unity Hub Beta\nbaseurl=https://hub.unity3d.com/linux/repos/rpm/unstable\nenabled=1\ngpgcheck=1\ngpgkey=https://hub.unity3d.com/linux/repos/rpm/unstable/repodata/repomd.xml.key\nrepo_gpgcheck=1" > /etc/yum.repos.d/unityhub_beta.repo'
 sudo dnf install unityhub
+mkdir -p ~/.local/share/unity3d
+mkdir -p ~/.cache/unity3d
 
 # vscode
 sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc &&
 echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
 sudo dnf install code -y
+
+# pinentry-rofi
+sudo dnf copr enable alebastr/sway-extras -y
+sudo dnf install pinentry-rofi -y
