@@ -106,6 +106,15 @@ sudo dnf install \
     git-lfs \
     fastfetch -y
 
+curl https://codeberg.org/api/packages/yataro/rpm.repo | sed -e 's/gpgcheck=1/gpgcheck=0/' > ~/sourcegit.repo
+sudo dnf config-manager addrepo --from-repofile=$HOME/sourcegit.repo -y
+sudo dnf install sourcegit -y
+rm ~/sourcegit.repo
+
+sudo dnf copr enable dejan/lazygit -y
+sudo dnf install lazygit -y
+
+
 # fonts
 sudo dnf install @fonts @legacy-fonts
 sudo dnf install \
