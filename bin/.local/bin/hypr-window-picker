@@ -1,49 +1,105 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-theme="${ROFI_LAUNCHER_THEME:-$HOME/.config/rofi/launchers/themes/type-1-style-5.rasi}"
-prompt="${1:-Window}"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${ROFI_COMMON:-$script_dir/rofi-common}"
 
-if ! command -v jq >/dev/null 2>&1; then
-  echo "jq is required for hypr-window-picker" >&2
-  exit 1
-fi
+main() {
+  require_cmd hyprctl
+  require_cmd jq
+  rofi_init "${HYPR_WINDOW_PICKER_ROFI_BIN:-}"
 
-clients_json="$(hyprctl clients -j 2>/dev/null || true)"
-if [[ -z "$clients_json" || "$clients_json" == "[]" ]]; then
-  exit 0
-fi
+  prompt="${1:-${HYPR_WINDOW_PICKER_PROMPT:-window}}"
+  # shellcheck disable=SC2206
+  extra_args=( ${HYPR_WINDOW_PICKER_ROFI_ARGS:-} )
 
-active_addr="$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty')"
+  rofi_cmd=(
+    -dmenu
+    -p "$prompt"
+  )
+  rofi_cmd+=( "${extra_args[@]}" )
 
-lines="$(
-  printf '%s' "$clients_json" | jq -r --arg active "$active_addr" '
-    map({
-      addr: .address,
-      class: (.class // ""),
-      title: (.title // ""),
-      ws: (.workspace.name // ""),
-      tags: (.tags // [])
-    })
-    | sort_by(.addr != $active)
-    | .[]
-    | (.tags | map(tostring)) as $tags
-    | ($tags | join(",")) as $tagstr
-    | ($tags | if length > 0 then .[0] else "-" end) as $tagprefix
-    | (.class | gsub("[\\t\\n\\r]"; " ")) as $class
-    | (.title | gsub("[\\t\\n\\r]"; " ")) as $title
-    | (.ws | gsub("[\\t\\n\\r]"; " ")) as $ws
-    | ($tagstr | if length > 0 then " {" + . + "}" else "" end) as $tagsuffix
-    | "\($tagprefix) - \($class) - \($title) [\($ws)]\($tagsuffix) (addr:\(.addr))"
-  '
-)"
+  clients_json="$(hyprctl clients -j 2>/dev/null || true)"
+  if [[ -z "$clients_json" || "$clients_json" == "[]" ]]; then
+    exit 0
+  fi
 
-selection="$(printf '%s\n' "$lines" | rofi -dmenu -p "$prompt" -theme "$theme")"
-if [[ -z "$selection" ]]; then
-  exit 0
-fi
+  active_addr="$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty')"
 
-address="$(printf '%s' "$selection" | sed -n 's/.*addr:\(0x[0-9a-fA-F]\+\).*/\1/p')"
-if [[ -n "$address" ]]; then
-  hyprctl dispatch focuswindow "address:$address"
-fi
+  mapfile -t items < <(
+    printf '%s' "$clients_json" | jq -r --arg active "$active_addr" '
+      map({
+        addr: .address,
+        class: (.class // ""),
+        title: (.title // ""),
+        ws: (.workspace.name // ""),
+        tags: (.tags // [])
+      })
+      | sort_by(.addr != $active)
+      | .[]
+      | (.tags | map(tostring)) as $tags
+      | ($tags | join(",")) as $tagstr
+      | ($tags | if length > 0 then .[0] else "-" end) as $tagprefix
+      | (.class | gsub("[\\t\\n\\r]"; " ")) as $class
+      | (.title | gsub("[\\t\\n\\r]"; " ")) as $title
+      | (.ws | gsub("[\\t\\n\\r]"; " ")) as $ws
+      | ($tagstr | if length > 0 then " {" + . + "}" else "" end) as $tagsuffix
+      | "\($tagprefix) - \($class) - \($title) [\($ws)]\($tagsuffix) (addr:\(.addr))"
+    '
+  )
+
+  (( ${#items[@]} )) || exit 0
+
+  selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
+  selection=${selection%$'\n'}
+  [[ -n "$selection" ]] || exit 0
+
+  address="$(printf '%s' "$selection" | sed -n 's/.*addr:\(0x[0-9a-fA-F]\+\).*/\1/p')"
+  if [[ -n "$address" ]]; then
+    hyprctl dispatch focuswindow "address:$address"
+  fi
+
+  rows_csv="${HYPR_WS_ROWS:-A,B,C,D}"
+  cols="${HYPR_WS_COLS:-10}"
+  IFS=',' read -r -a rows <<< "$rows_csv"
+  if [[ -n "$address" ]] && [[ "${#rows[@]}" -gt 0 ]] && [[ "$cols" =~ ^[0-9]+$ ]] && [[ "$cols" -ge 1 ]]; then
+    ws_name="$(printf '%s' "$clients_json" | jq -r --arg addr "$address" '.[] | select(.address == $addr) | .workspace.name // empty' | head -n1)"
+    ws_id="$(printf '%s' "$clients_json" | jq -r --arg addr "$address" '.[] | select(.address == $addr) | .workspace.id // empty' | head -n1)"
+    ws_name="${ws_name#name:}"
+    ws_name="${ws_name#special:}"
+
+    row_index=""
+    col=""
+    if [[ "$ws_name" =~ ^([A-Za-z]+)([0-9]+)$ ]]; then
+      candidate_row="${BASH_REMATCH[1]}"
+      candidate_col="${BASH_REMATCH[2]}"
+      if [[ "$candidate_col" -ge 1 && "$candidate_col" -le "$cols" ]]; then
+        for i in "${!rows[@]}"; do
+          if [[ "${rows[$i]^^}" == "${candidate_row^^}" ]]; then
+            row_index="$i"
+            col="$candidate_col"
+            break
+          fi
+        done
+      fi
+    fi
+
+    if [[ -z "$row_index" && "$ws_id" =~ ^-?[0-9]+$ ]]; then
+      max_id=$((cols * ${#rows[@]}))
+      if (( ws_id >= 1 && ws_id <= max_id )); then
+        row_index=$(( (ws_id - 1) / cols ))
+        col=$(( (ws_id - 1) % cols + 1 ))
+      fi
+    fi
+
+    if [[ "$row_index" =~ ^[0-9]+$ ]] && [[ "$col" =~ ^[0-9]+$ ]]; then
+      state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/hypr-workspace-grid"
+      state_file="${state_dir}/state"
+      mkdir -p "$state_dir"
+      printf 'row_index=%s\ncol=%s\n' "$row_index" "$col" > "$state_file"
+    fi
+  fi
+}
+
+main "$@"

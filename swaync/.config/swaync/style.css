@@ -1,27 +1,28 @@
-@define-color cc-bg #282828;
-@define-color noti-border-color #ebdbb2;
-@define-color noti-bg #282828;
-@define-color noti-bg-darker #1d2021;
-@define-color noti-bg-hover #3c3836;
+@define-color cc-bg #0a0a0e;
+@define-color noti-border-color #15161b;
+@define-color noti-bg #15161b;
+@define-color noti-bg-darker #0a0a0e;
+@define-color noti-bg-hover #1b1d24;
 @define-color noti-bg-focus transparent;
-@define-color noti-close-bg rgba(255, 255, 255, 0.1);
-@define-color noti-close-bg-hover rgba(255, 255, 255, 0.15);
-@define-color text-color #ebdbb2;
-@define-color text-color-disabled #a89984;
-@define-color bg-selected #3c3836;
-@define-color accent-bg-color #689d6a;
-@define-color accent-fg-color #8ec07c;
+@define-color noti-close-bg rgba(240, 240, 245, 0.08);
+@define-color noti-close-bg-hover rgba(240, 240, 245, 0.16);
+@define-color text-color #dfe3ec;
+@define-color text-color-disabled #7f849c;
+@define-color bg-selected #1b1d24;
+@define-color accent-bg-color #f0f0f5;
+@define-color accent-fg-color #0a0a0e;
 
 /* GTK3 does not support CSS custom properties, so colors are defined above */
 
 * {
   font-family: "JetbrainsMono Nerd Font Propo", monospace;
+  font-size: 12px;
+  color: @text-color;
   border-radius: 0;
 }
 
 .close-button {
     border-radius: 0;
-    border-top-right-radius: 3px;
     margin-top: 1px;
     margin-right: 1px;
 }
@@ -35,7 +36,7 @@
 }
 
 .notification-row .notification-background .notification {
-    border-radius: 8px;
+    border-radius: 0;
     background: @noti-bg;
     padding: 0;
     margin: 0;
@@ -74,7 +75,7 @@
 }
 
 .notification-row .notification-background .notification .notification-alt-actions {
-    background: @text-color;
+    background: @noti-bg-hover;
     padding: 0;
 }
 
@@ -83,7 +84,7 @@
 }
 
 .notification-row .notification-background .notification .notification-action > button {
-    color: @noti-bg;
+    color: @text-color;
 }
 
 
@@ -121,49 +122,49 @@
 
 .widget-title {
     padding: 4px;
-    background: @text-color;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+    background: @noti-bg;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 
 .widget-title > label {
     margin-left: 8px;
     font-size: 24px;
-    color: @cc-bg;
+    color: @text-color;
 }
 
 .widget-title > button {
-    border-radius: 4px;
-    background: @text-color;
-    color: @cc-bg;
+    border-radius: 0;
+    background: @noti-bg-hover;
+    color: @text-color;
     font-weight: 400;
     font-size: 16px;
 }
 
 .widget-title > button:hover {
-    background: @text-color-disabled;
+    background: @bg-selected;
 }
 
 
 
 .widget-dnd {
     padding: 4px;
-    background: @text-color;
+    background: @noti-bg;
 }
 
 .widget-dnd label {
     margin-left: 8px;
     font-size: 16px;
     font-weight: 400;
-    color: @cc-bg;
+    color: @text-color;
 }
 
 .widget-dnd switch {
-    border-radius: 4px;
+    border-radius: 0;
     padding: 0;
     min-width: 48px;
     min-height: 24px;
-    background: @noti-bg;
+    background: @noti-bg-darker;
 }
 
 .widget-dnd switch:checked {
@@ -171,8 +172,8 @@
 }
 
 .widget-dnd switch slider {
-    background: @noti-close-bg-hover;
-    border-radius: 4px;
+    background: @text-color-disabled;
+    border-radius: 0;
     box-shadow: none;
 }
 
@@ -183,13 +184,14 @@
 
 
 .widget-label {
-    background: @text-color;
+    background: @noti-bg;
     padding: 4px;
 }
 
 .widget-label label {
     font-size: 16px;
     font-weight: 400;
+    color: @text-color;
 }
 
 
@@ -198,9 +200,9 @@
     padding: 0;
     margin: 0;
     margin-bottom: 4px;
-    background: @text-color;
+    background: @noti-bg;
     border: 1px solid @noti-border-color;
-    border-radius: 8px;
+    border-radius: 0;
 }
 
 .widget-mpris carouselindicatordots {
@@ -230,7 +232,7 @@
 }
 
 .widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-album-art {
-    border-radius: 4px;
+    border-radius: 0;
     margin: 4px;
 }
 
@@ -245,7 +247,7 @@
 }
 
 .widget-mpris .widget-mpris-player .mpris-overlay > box > button {
-    border-radius: 4px;
+    border-radius: 0;
     margin: 4px 2px;
     margin-bottom: 24px;
 }
@@ -258,7 +260,7 @@
 
 .widget-volume,
 .widget-backlight {
-    background: @text-color;
+    background: @noti-bg;
     padding: 2px 4px;
 }
 
@@ -268,14 +270,14 @@
 
 .widget-volume label,
 .widget-backlight label {
-    color: @cc-bg;
+    color: @text-color;
     font-size: 20px;
     margin-left: 6px;
     margin-right: 10px;
 }
 
 scale {
-    border-radius: 4px;
+    border-radius: 0;
     margin: 0;
     padding: 0;
 }
@@ -287,12 +289,12 @@ scale trough highlight {
 }
 
 scale trough {
-    background-color: @accent-bg-color;
+    background-color: @noti-bg-hover;
     border-radius: inherit;
 }
 
 scale trough highlight {
-    background-color: @accent-fg-color;
+    background-color: @text-color;
     border-radius: 0;
 }
 
@@ -303,7 +305,7 @@ scale trough slider {
 
 
 .widget-buttons-grid {
-    background: @text-color;
+    background: @noti-bg;
 }
 
 .widget-buttons-grid flowboxchild {
@@ -311,7 +313,7 @@ scale trough slider {
 }
 
 .widget-buttons-grid flowboxchild > button {
-    border-radius: 4px;
+    border-radius: 0;
     background-color: @noti-bg;
     margin: 2px;
     font-size: 20px;
@@ -326,10 +328,11 @@ scale trough slider {
 
 .widget-buttons-grid flowboxchild > button.toggle:checked {
     background-color: @accent-bg-color;
+    color: @accent-fg-color;
 }
 
 .widget-buttons-grid flowboxchild > button.toggle:checked:hover {
-    background-color: @accent-fg-color;
+    background-color: @text-color;
 }
 
 .widget-buttons-grid flowboxchild:last-child > button {
@@ -341,7 +344,7 @@ scale trough slider {
 }
 
 .widget-buttons-grid.power {
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     padding-bottom: 2px;
 }

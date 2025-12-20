@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
-if [ ! -S "$SSH_AUTH_SOCK" ]; then
-    # clean up any stale socket file
-    rm -f "$SSH_AUTH_SOCK"
-    # start agent and bind to this specific socket
-    eval "$(ssh-agent -s -a "$SSH_AUTH_SOCK")" >/dev/null
+if [[ ! -S "$SSH_AUTH_SOCK" ]]; then
+  # clean up any stale socket file
+  rm -f "$SSH_AUTH_SOCK"
+  # start agent and bind to this specific socket
+  eval "$(ssh-agent -s -a "$SSH_AUTH_SOCK")" >/dev/null
 fi

@@ -1,17 +1,37 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-prompt="${1:-Tag window}"
-tag="$(printf '' | rofi -dmenu -p "$prompt")"
-tag="${tag//$'\n'/}"
-tag="${tag//[[:space:]]/}"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${ROFI_COMMON:-$script_dir/rofi-common}"
 
-if [[ -z "$tag" ]]; then
-  exit 0
-fi
+main() {
+  require_cmd hyprctl
+  rofi_init "${HYPR_TAG_WINDOW_ROFI_BIN:-}"
 
-if [[ "$tag" == -* ]]; then
-  hyprctl dispatch tagwindow -- "$tag"
-else
-  hyprctl dispatch tagwindow "$tag"
-fi
+  prompt="${1:-${HYPR_TAG_WINDOW_PROMPT:-window}}"
+  # shellcheck disable=SC2206
+  extra_args=( ${HYPR_TAG_WINDOW_ROFI_ARGS:-} )
+
+  rofi_cmd=(
+    -dmenu
+    -p "$prompt"
+  )
+  rofi_cmd+=( "${extra_args[@]}" )
+
+  items=()
+
+  selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
+  selection=${selection%$'\n'}
+  selection="${selection//[[:space:]]/}"
+  [[ -n "$selection" ]] || exit 0
+
+  tag="$selection"
+  if [[ "$tag" == -* ]]; then
+    hyprctl dispatch tagwindow -- "$tag"
+  else
+    hyprctl dispatch tagwindow "$tag"
+  fi
+}
+
+main "$@"

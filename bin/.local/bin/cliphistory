@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-require_cmd() {
-    if ! command -v "$1" >/dev/null 2>&1; then
-        printf 'cliphist: required command "%s" not found in PATH\n' "$1" >&2
-        exit 1
-    fi
-}
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${ROFI_COMMON:-$script_dir/rofi-common}"
 
-require_cmd cliphist
-require_cmd wl-copy
+main() {
+  require_cmd cliphist
+  require_cmd wl-copy
+  rofi_init "${CLIPHIST_ROFI_BIN:-}"
 
-rofi_bin=${CLIPHIST_ROFI_BIN:-rofi}
-require_cmd "$rofi_bin"
+  prompt="${1:-${CLIPHIST_PROMPT:-clipboard}}"
+  # shellcheck disable=SC2206
+  extra_args=( ${CLIPHIST_ROFI_ARGS:-} )
 
-prompt=${CLIPHIST_PROMPT:-clipboard}
-rofi_font=${CLIPHIST_ROFI_FONT:-"monospace 12"}
-default_theme_str=$'window {\n    width: 40em;\n    padding: 20px;\n    border-radius: 12px;\n}\nlistview {\n    lines: 12;\n    columns: 1;\n}\nelement {\n    padding: 6px 10px;\n    border-radius: 6px;\n}\nelement-text {\n    horizontal-align: 0.0;\n}\n'
-rofi_theme_str=${CLIPHIST_ROFI_THEME_STR:-"$default_theme_str"}
-# shellcheck disable=SC2206
-extra_args=( ${CLIPHIST_ROFI_ARGS:-} )
-rofi_cmd=(
-    "$rofi_bin"
+  rofi_cmd=(
     -dmenu
     -i
     -p "$prompt"
@@ -33,32 +26,28 @@ rofi_cmd=(
     -lines 12
     -line-margin 4
     -line-padding 6
-    -font "$rofi_font"
-    -theme-str "$rofi_theme_str"
-)
-rofi_cmd+=( "${extra_args[@]}" )
+  )
+  rofi_cmd+=( "${extra_args[@]}" )
 
-list_output=$(cliphist list)
-[[ -n "$list_output" ]] || exit 0
+  mapfile -t items < <(cliphist list)
+  (( ${#items[@]} )) || exit 0
 
-selection=$(printf '%s\n' "$list_output" | "${rofi_cmd[@]}")
+  selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
+  selection=${selection%$'\n'}
+  [[ -n "$selection" ]] || exit 0
 
-[[ -n "$selection" ]] || exit 0
+  entry_id=${selection%%$'\t'*}
+  [[ -n "$entry_id" ]] || exit 0
 
-entry_id=${selection%%$'\t'*}
-[[ -n "$entry_id" ]] || exit 0
+  tmp_file=$(mktemp)
+  trap 'rm -f "$tmp_file"' EXIT
 
-tmp_file=$(mktemp)
-trap 'rm -f "$tmp_file"' EXIT
+  cliphist decode "$entry_id" > "$tmp_file"
+  wl-copy < "$tmp_file"
 
-cliphist decode "$entry_id" >"$tmp_file"
-cat "$tmp_file" | wl-copy
-
-auto_paste=${CLIPHIST_AUTO_PASTE:-1}
-if [[ "$auto_paste" != "0" ]] && command -v wtype >/dev/null 2>&1; then
-    wtype - <"$tmp_file"
-fi
-
-if command -v notify-send >/dev/null 2>&1; then
+  if has_cmd notify-send; then
     notify-send "Clipboard history" "Copied selection back to clipboard"
-fi
+  fi
+}
+
+main "$@"

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+rofi_common_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${BASH_COMMON:-$rofi_common_dir/bash-common}"
+
+rofi_init() {
+  local fallback_bin="${1:-}"
+  rofi_bin="${ROFI_BIN:-${fallback_bin:-rofi}}"
+  rofi_theme_args=()
+  if [[ -n "${ROFI_THEME:-}" ]]; then
+    rofi_theme_args+=( -theme "$ROFI_THEME" )
+  fi
+  if [[ -n "${ROFI_FONTS:-}" ]]; then
+    rofi_theme_args+=( -font "$ROFI_FONTS" )
+  fi
+  require_cmd "$rofi_bin"
+}
+
+rofi_run() {
+  local -a cmd=( "$rofi_bin" "$@" )
+  cmd+=( "${rofi_theme_args[@]}" )
+  "${cmd[@]}"
+}
+
+rofi_quote_args() {
+  local out="" arg
+  for arg in "$@"; do
+    [[ -n "$out" ]] && out+=" "
+    if [[ "$arg" == *[[:space:]]* ]]; then
+      out+="\"${arg//\"/\\\"}\""
+    else
+      out+="$arg"
+    fi
+  done
+  printf '%s' "$out"
+}
+
+rofi_args_string() {
+  rofi_quote_args "$@" "${rofi_theme_args[@]}"
+}

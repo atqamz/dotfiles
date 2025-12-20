@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${ROFI_COMMON:-$script_dir/rofi-common}"
+
+main() {
+  rofi_init "${LAUNCHER_ROFI_BIN:-}"
+
+  mode="${1:-${LAUNCHER_MODE:-drun}}"
+  case "$mode" in
+    drun|window) ;;
+    *) mode="drun" ;;
+  esac
+
+  # shellcheck disable=SC2206
+  extra_args=( ${LAUNCHER_ROFI_ARGS:-} )
+
+  rofi_cmd=(
+    -show "$mode"
+    -modi "drun,window"
+  )
+  rofi_cmd+=( "${extra_args[@]}" )
+
+  rofi_run "${rofi_cmd[@]}"
+}
+
+main "$@"

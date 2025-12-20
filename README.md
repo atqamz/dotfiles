@@ -10,10 +10,9 @@ tracked files can be symlinked straight into the home directory.
   environment variables for every user session.
 - `git/` – Git configuration (`.gitconfig`).
 - `bin/` – Helper scripts exposed via `~/.local/bin`. Notable utilities:
-  - `passmenu`: themes `rofi -dmenu` with the same look Sway uses and reads from
-    `pass`. The prompt, font, theme string, and extra rofi options can be
-    overridden via `PASSMENU_PROMPT`, `PASSMENU_ROFI_FONT`,
-    `PASSMENU_ROFI_THEME_STR`, and `PASSMENU_ROFI_ARGS`.
+  - `passmenu`: wraps `rofi -dmenu` around `pass`. The prompt and extra rofi
+    options can be overridden via `PASSMENU_PROMPT` and `PASSMENU_ROFI_ARGS`.
+    Shared rofi styling can be set with `ROFI_THEME` and `ROFI_FONTS`.
   - `sshadd`: loads `~/.ssh/id_ed25519` and `~/.ssh/id_rsa` non-interactively;
     it expects `ksshaskpass` (or any `SSH_ASKPASS`) to satisfy passphrase
     prompts.
@@ -23,12 +22,12 @@ tracked files can be symlinked straight into the home directory.
     below for area-to-clipboard (`$mod+Shift+s`) and full-screen-to-file (`F12`)
     captures.
   - `cliphistory`: clipboard history picker powered by `cliphist`, `wl-copy`,
-    and the same rofi theme as the launcher. Invoked via `Mod+Ctrl+v` in Sway,
-    restores whatever entry you select back onto the clipboard, and auto-types
-    it via `wtype` when available.
-  - `emoji-picker`: wraps `rofimoji` with the shared rofi theme, copies the
-    selection, and immediately injects it into the focused window via `wtype`.
-    Bound to `Mod+.`.
+    and rofi. Invoked via `Mod+Ctrl+v` in Sway, restores whatever entry you
+    select back onto the clipboard, and auto-types it via `wtype` when
+    available.
+  - `emoji-picker`: wraps `rofimoji` with rofi, copies the selection, and
+    immediately injects it into the focused window via `wtype`. Bound to
+    `Mod+.`.
   - `yazi-filechooser`: wrapper used by `xdg-desktop-portal-termfilechooser` to
     launch Yazi in chooser mode (supports save dialogs, multi-select, etc.).
   - `waybar_cpustatus`: Python helper emitting Waybar-friendly JSON that shows
@@ -37,11 +36,11 @@ tracked files can be symlinked straight into the home directory.
   - `waybar_gpustatus`: Python helper that shells out to `nvidia-smi` for GPU
     utilization + temperature. Without the proprietary NVIDIA CLI installed the
     module falls back to `--% --°C`.
-- `sway/` – Wayland compositor configuration. It keeps every `rofi` invocation
-  consistent, binds `Mod+Alt+p` to launch `passmenu`, themes window borders, and
-  autostarts helpers like Waybar, clipboard history, libinput-gestures, and the
-  Layman daemon (see below) for Hyprland-style autotiling. The default
-  wallpaper/session background is set to pure black to keep the setup minimal.
+- `sway/` – Wayland compositor configuration. It binds `Mod+Alt+p` to launch
+  `passmenu`, themes window borders, and autostarts helpers like Waybar,
+  clipboard history, libinput-gestures, and the Layman daemon (see below) for
+  Hyprland-style autotiling. The default wallpaper/session background is set to
+  pure black to keep the setup minimal.
 - `layman/` – Configuration for the Layman workspace layout daemon. The included
   `config.toml` sets the default layout to `Autotiling`, which mimics the split
   logic Hyprland uses when opening new windows.

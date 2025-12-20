@@ -1,27 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-store_dir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
-if [[ ! -d "$store_dir" ]]; then
-    printf 'passmenu: password store not found at %s\n' "$store_dir" >&2
-    exit 1
-fi
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${ROFI_COMMON:-$script_dir/rofi-common}"
 
-rofi_bin=${PASSMENU_ROFI_BIN:-rofi}
-if ! command -v "$rofi_bin" >/dev/null 2>&1; then
-    printf 'passmenu: "%s" is not installed or not in PATH\n' "$rofi_bin" >&2
-    exit 1
-fi
+main() {
+  require_cmd pass
+  rofi_init "${PASSMENU_ROFI_BIN:-}"
 
-prompt=${PASSMENU_PROMPT:-pass}
-rofi_font=${PASSMENU_ROFI_FONT:-"monospace 12"}
-default_theme_str=$'window {\n    width: 40em;\n    padding: 20px;\n    border-radius: 12px;\n}\nlistview {\n    lines: 12;\n    columns: 1;\n}\nelement {\n    padding: 6px 10px;\n    border-radius: 6px;\n}\nelement-text {\n    horizontal-align: 0.0;\n}\n'
-rofi_theme_str=${PASSMENU_ROFI_THEME_STR:-"$default_theme_str"}
-# Allow extra user-provided rofi arguments via PASSMENU_ROFI_ARGS.
-# shellcheck disable=SC2206 # Users provide space-separated args.
-extra_args=( ${PASSMENU_ROFI_ARGS:-} )
-rofi_cmd=(
-    "$rofi_bin"
+  prompt="${1:-${PASSMENU_PROMPT:-pass}}"
+  # Allow extra user-provided rofi arguments via PASSMENU_ROFI_ARGS.
+  # shellcheck disable=SC2206 # Users provide space-separated args.
+  extra_args=( ${PASSMENU_ROFI_ARGS:-} )
+
+  rofi_cmd=(
     -dmenu
     -i
     -p "$prompt"
@@ -33,20 +26,30 @@ rofi_cmd=(
     -lines 12
     -line-margin 4
     -line-padding 6
-    -font "$rofi_font"
-    -theme-str "$rofi_theme_str"
-)
-rofi_cmd+=( "${extra_args[@]}" )
+  )
+  rofi_cmd+=( "${extra_args[@]}" )
 
-# Build a sorted list of entries relative to $store_dir.
-mapfile -t password_files < <(
-    cd "$store_dir" && \
-    find . -type f -name '*.gpg' -printf '%P\n' | \
-    sed 's/\.gpg$//' | LC_ALL=C sort
-)
+  store_dir=${PASSWORD_STORE_DIR:-$HOME/.password-store}
+  if [[ ! -d "$store_dir" ]]; then
+    printf 'passmenu: password store not found at %s\n' "$store_dir" >&2
+    exit 1
+  fi
 
-(( ${#password_files[@]} )) || exit 0
+  # Build a sorted list of entries relative to $store_dir.
+  mapfile -t items < <(
+    cd "$store_dir" &&
+    find . -type f -name '*.gpg' -printf '%P\n' |
+    sed 's/\.gpg$//' |
+    LC_ALL=C sort
+  )
 
-chosen=$(printf '%s\n' "${password_files[@]}" | "${rofi_cmd[@]}")
+  (( ${#items[@]} )) || exit 0
 
-[[ -n "$chosen" ]] && pass show -c "$chosen" >/dev/null
+  selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
+  selection=${selection%$'\n'}
+  [[ -n "$selection" ]] || exit 0
+
+  pass show -c "$selection" >/dev/null
+}
+
+main "$@"

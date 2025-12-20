@@ -1,32 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v grim >/dev/null || ! command -v slurp >/dev/null || ! command -v wl-copy >/dev/null; then
-    printf 'hypr-screenshot: require grim, slurp, wl-copy\n' >&2
-    exit 1
-fi
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd grim
+require_cmd slurp
+require_cmd wl-copy
 
 annotator=""
-if command -v satty >/dev/null; then
-    annotator="satty"
-elif command -v swappy >/dev/null; then
-    annotator="swappy"
+if has_cmd satty; then
+  annotator="satty"
+elif has_cmd swappy; then
+  annotator="swappy"
 fi
 
 geometry="$(slurp)" || exit 1
 [[ -z "$geometry" ]] && exit 0
 
 if [[ "$annotator" == "satty" ]]; then
-    # Satty supports stdin; copy to clipboard after editing.
-    grim -g "$geometry" - | satty --filename - --copy-command "wl-copy --type image/png" --early-exit
+  # Satty supports stdin; copy to clipboard after editing.
+  grim -g "$geometry" - | satty --filename - --copy-command "wl-copy --type image/png" --early-exit
 elif [[ "$annotator" == "swappy" ]]; then
-    # Swappy edits a temp file; copy result back to clipboard.
-    tmpfile=$(mktemp --suffix=.png)
-    trap 'rm -f "$tmpfile"' EXIT
-    grim -g "$geometry" "$tmpfile"
-    swappy -f "$tmpfile"
-    [[ -f "$tmpfile" ]] && wl-copy --type image/png < "$tmpfile"
+  # Swappy edits a temp file; copy result back to clipboard.
+  tmpfile=$(mktemp --suffix=.png)
+  trap 'rm -f "$tmpfile"' EXIT
+  grim -g "$geometry" "$tmpfile"
+  swappy -f "$tmpfile"
+  [[ -f "$tmpfile" ]] && wl-copy --type image/png < "$tmpfile"
 else
-    # Fallback: just copy the region to clipboard.
-    grim -g "$geometry" - | wl-copy --type image/png
+  # Fallback: just copy the region to clipboard.
+  grim -g "$geometry" - | wl-copy --type image/png
 fi
