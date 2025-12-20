@@ -182,7 +182,7 @@ case "$cmd" in
       fi
       target_col="$arg2"
     else
-      target_col="$current_col"
+      target_col=1
     fi
     ;;
   cycle)
