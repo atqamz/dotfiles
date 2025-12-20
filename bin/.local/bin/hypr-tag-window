@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+prompt="${1:-Tag window}"
+tag="$(printf '' | rofi -dmenu -p "$prompt")"
+tag="${tag//$'\n'/}"
+tag="${tag//[[:space:]]/}"
+
+if [[ -z "$tag" ]]; then
+  exit 0
+fi
+
+if [[ "$tag" == -* ]]; then
+  hyprctl dispatch tagwindow -- "$tag"
+else
+  hyprctl dispatch tagwindow "$tag"
+fi

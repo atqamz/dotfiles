@@ -1,0 +1,215 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "usage: hypr-workspace-grid <goto|move|up|down> <col>" >&2
+  echo "       hypr-workspace-grid row <row|index> [col]" >&2
+  echo "       hypr-workspace-grid cycle" >&2
+}
+
+cmd="${1:-}"
+arg="${2:-}"
+arg2="${3:-}"
+
+if [[ -z "$cmd" ]]; then
+  usage
+  exit 2
+fi
+
+rows_csv="${HYPR_WS_ROWS:-A,B,C,D}"
+cols="${HYPR_WS_COLS:-10}"
+IFS=',' read -r -a rows <<< "$rows_csv"
+
+if [[ "${#rows[@]}" -eq 0 ]]; then
+  echo "HYPR_WS_ROWS is empty" >&2
+  exit 2
+fi
+if ! [[ "$cols" =~ ^[0-9]+$ ]] || [[ "$cols" -lt 1 ]]; then
+  echo "HYPR_WS_COLS must be a positive integer" >&2
+  exit 2
+fi
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/hypr-workspace-grid"
+state_file="${state_dir}/state"
+
+state_row=""
+state_col=""
+if [[ -f "$state_file" ]]; then
+  state_row="$(sed -n 's/^row_index=//p' "$state_file" | head -n1)"
+  state_col="$(sed -n 's/^col=//p' "$state_file" | head -n1)"
+fi
+
+ws_json="$(hyprctl activeworkspace -j 2>/dev/null || true)"
+if [[ -z "$ws_json" ]]; then
+  echo "hyprctl activeworkspace failed" >&2
+  exit 1
+fi
+
+ws_name="$(printf '%s' "$ws_json" | sed -n 's/.*"name":"\([^"]*\)".*/\1/p' | head -n1)"
+ws_id="$(printf '%s' "$ws_json" | sed -n 's/.*"id":\(-\?[0-9]\+\).*/\1/p' | head -n1)"
+ws_name="${ws_name#name:}"
+ws_name="${ws_name#special:}"
+
+name_row_index=""
+name_col=""
+if [[ "$ws_name" =~ ^([A-Za-z]+)([0-9]+)$ ]]; then
+  candidate_row="${BASH_REMATCH[1]}"
+  candidate_col="${BASH_REMATCH[2]}"
+  if [[ "$candidate_col" -ge 1 && "$candidate_col" -le "$cols" ]]; then
+    for i in "${!rows[@]}"; do
+      if [[ "${rows[$i]^^}" == "${candidate_row^^}" ]]; then
+        name_row_index="$i"
+        name_col="$candidate_col"
+        break
+      fi
+    done
+  fi
+fi
+
+id_row_index=""
+id_col=""
+max_id=$((cols * ${#rows[@]}))
+if [[ "$ws_id" =~ ^-?[0-9]+$ ]] && (( ws_id >= 1 && ws_id <= max_id )); then
+  id_row_index=$(( (ws_id - 1) / cols ))
+  id_col=$(( (ws_id - 1) % cols + 1 ))
+elif [[ "$ws_name" =~ ^[0-9]+$ ]]; then
+  id_col="$ws_name"
+fi
+
+current_index=0
+current_col=1
+
+if [[ -n "$name_row_index" ]]; then
+  current_index="$name_row_index"
+  current_col="$name_col"
+elif [[ -n "$id_row_index" ]] && [[ "$id_row_index" -ge 0 && "$id_row_index" -lt "${#rows[@]}" ]]; then
+  current_index="$id_row_index"
+  if [[ -n "$id_col" ]]; then
+    current_col="$id_col"
+  fi
+elif [[ "$state_row" =~ ^[0-9]+$ ]] && [[ "$state_row" -ge 0 && "$state_row" -lt "${#rows[@]}" ]]; then
+  current_index="$state_row"
+  if [[ "$state_col" =~ ^[0-9]+$ ]] && [[ "$state_col" -ge 1 && "$state_col" -le "$cols" ]]; then
+    current_col="$state_col"
+  fi
+fi
+
+if ! [[ "$current_col" =~ ^[0-9]+$ ]] || [[ "$current_col" -lt 1 || "$current_col" -gt "$cols" ]]; then
+  current_col=1
+fi
+target_row_index="$current_index"
+target_col="$current_col"
+update_state=1
+case "$cmd" in
+  goto|move)
+    if [[ -z "$arg" ]]; then
+      usage
+      exit 2
+    fi
+    if ! [[ "$arg" =~ ^[0-9]+$ ]]; then
+      echo "column must be a number" >&2
+      usage
+      exit 2
+    fi
+    if [[ "$arg" -lt 1 || "$arg" -gt "$cols" ]]; then
+      echo "column out of range (1-${cols})" >&2
+      exit 2
+    fi
+    target_row_index="$current_index"
+    target_col="$arg"
+    if [[ "$cmd" == "move" ]]; then
+      update_state=0
+    fi
+    ;;
+  up|down)
+    if [[ -z "$arg" ]]; then
+      usage
+      exit 2
+    fi
+    if ! [[ "$arg" =~ ^[0-9]+$ ]]; then
+      echo "column must be a number" >&2
+      usage
+      exit 2
+    fi
+    if [[ "$arg" -lt 1 || "$arg" -gt "$cols" ]]; then
+      echo "column out of range (1-${cols})" >&2
+      exit 2
+    fi
+    if [[ "${#rows[@]}" -gt 1 ]]; then
+      if [[ "$cmd" == "up" ]]; then
+        current_index=$(( (current_index - 1 + ${#rows[@]}) % ${#rows[@]} ))
+      else
+        current_index=$(( (current_index + 1) % ${#rows[@]} ))
+      fi
+      target_row_index="$current_index"
+    fi
+    target_col="$arg"
+    ;;
+  row)
+    if [[ -z "$arg" ]]; then
+      usage
+      exit 2
+    fi
+    target_row_index=""
+    if [[ "$arg" =~ ^[0-9]+$ ]]; then
+      row_index=$((arg - 1))
+      if (( row_index < 0 || row_index >= ${#rows[@]} )); then
+        echo "row index out of range" >&2
+        exit 2
+      fi
+      target_row_index="$row_index"
+    else
+      for i in "${!rows[@]}"; do
+        if [[ "${rows[$i]^^}" == "${arg^^}" ]]; then
+          target_row_index="$i"
+          break
+        fi
+      done
+    fi
+    if [[ -z "${target_row_index:-}" ]]; then
+      echo "row not found in HYPR_WS_ROWS" >&2
+      exit 2
+    fi
+    if [[ -n "$arg2" ]]; then
+      if ! [[ "$arg2" =~ ^[0-9]+$ ]]; then
+        echo "column must be a number" >&2
+        usage
+        exit 2
+      fi
+      if [[ "$arg2" -lt 1 || "$arg2" -gt "$cols" ]]; then
+        echo "column out of range (1-${cols})" >&2
+        exit 2
+      fi
+      target_col="$arg2"
+    else
+      target_col="$current_col"
+    fi
+    ;;
+  cycle)
+    if [[ "${#rows[@]}" -gt 1 ]]; then
+      target_row_index=$(( (current_index + 1) % ${#rows[@]} ))
+    fi
+    target_col="$current_col"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
+
+target_id=$((target_row_index * cols + target_col))
+if [[ "$cmd" == "move" ]]; then
+  hyprctl dispatch movetoworkspace "$target_id"
+else
+  hyprctl dispatch workspace "$target_id"
+fi
+
+if [[ "${HYPR_WS_RENAME:-1}" != "0" ]]; then
+  target_label="${rows[$target_row_index]}${target_col}"
+  hyprctl dispatch renameworkspace "$target_id" "$target_label" >/dev/null 2>&1 || true
+fi
+
+if [[ "$update_state" -eq 1 ]]; then
+  mkdir -p "$state_dir"
+  printf 'row_index=%s\ncol=%s\n' "$target_row_index" "$target_col" > "$state_file"
+fi

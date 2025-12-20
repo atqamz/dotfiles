@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+theme="${ROFI_LAUNCHER_THEME:-$HOME/.config/rofi/launchers/themes/type-1-style-5.rasi}"
+prompt="${1:-Window}"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq is required for hypr-window-picker" >&2
+  exit 1
+fi
+
+clients_json="$(hyprctl clients -j 2>/dev/null || true)"
+if [[ -z "$clients_json" || "$clients_json" == "[]" ]]; then
+  exit 0
+fi
+
+active_addr="$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty')"
+
+lines="$(
+  printf '%s' "$clients_json" | jq -r --arg active "$active_addr" '
+    map({
+      addr: .address,
+      class: (.class // ""),
+      title: (.title // ""),
+      ws: (.workspace.name // ""),
+      tags: (.tags // [])
+    })
+    | sort_by(.addr != $active)
+    | .[]
+    | (.tags | map(tostring)) as $tags
+    | ($tags | join(",")) as $tagstr
+    | ($tags | if length > 0 then .[0] else "-" end) as $tagprefix
+    | (.class | gsub("[\\t\\n\\r]"; " ")) as $class
+    | (.title | gsub("[\\t\\n\\r]"; " ")) as $title
+    | (.ws | gsub("[\\t\\n\\r]"; " ")) as $ws
+    | ($tagstr | if length > 0 then " {" + . + "}" else "" end) as $tagsuffix
+    | "\($tagprefix) - \($class) - \($title) [\($ws)]\($tagsuffix) (addr:\(.addr))"
+  '
+)"
+
+selection="$(printf '%s\n' "$lines" | rofi -dmenu -p "$prompt" -theme "$theme")"
+if [[ -z "$selection" ]]; then
+  exit 0
+fi
+
+address="$(printf '%s' "$selection" | sed -n 's/.*addr:\(0x[0-9a-fA-F]\+\).*/\1/p')"
+if [[ -n "$address" ]]; then
+  hyprctl dispatch focuswindow "address:$address"
+fi
