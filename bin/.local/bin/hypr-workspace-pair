@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "usage: hypr-workspace-pair <goto|row|cycle> <arg> [col]" >&2
+  echo "  goto <col>        Switch to the column on both monitors (A-D + E-H)" >&2
+  echo "  row <row|index>   Switch to the row on both monitors (A-D + E-H)" >&2
+  echo "  cycle             Cycle rows A-D and sync E-H" >&2
+}
+
+cmd="${1:-}"
+arg="${2:-}"
+arg2="${3:-}"
+
+if [[ -z "$cmd" ]]; then
+  usage
+  exit 2
+fi
+
+rows_csv="${HYPR_WS_ROWS:-A,B,C,D,E,F,G,H}"
+cols="${HYPR_WS_COLS:-10}"
+pair_offset="${HYPR_WS_PAIR_OFFSET:-4}"
+
+IFS=',' read -r -a rows <<< "$rows_csv"
+rows_count="${#rows[@]}"
+
+if [[ "$rows_count" -eq 0 ]]; then
+  echo "HYPR_WS_ROWS is empty" >&2
+  exit 2
+fi
+if ! [[ "$cols" =~ ^[0-9]+$ ]] || [[ "$cols" -lt 1 ]]; then
+  echo "HYPR_WS_COLS must be a positive integer" >&2
+  exit 2
+fi
+if ! [[ "$pair_offset" =~ ^[0-9]+$ ]] || [[ "$pair_offset" -lt 1 ]]; then
+  echo "HYPR_WS_PAIR_OFFSET must be a positive integer" >&2
+  exit 2
+fi
+if [[ "$pair_offset" -ge "$rows_count" ]]; then
+  echo "HYPR_WS_PAIR_OFFSET must be smaller than HYPR_WS_ROWS length" >&2
+  exit 2
+fi
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/hypr-workspace-grid"
+state_file="${state_dir}/state"
+
+read_state() {
+  state_row="0"
+  state_col="1"
+  if [[ -f "$state_file" ]]; then
+    state_row="$(sed -n 's/^row_index=//p' "$state_file" | head -n1)"
+    state_col="$(sed -n 's/^col=//p' "$state_file" | head -n1)"
+  fi
+  if ! [[ "$state_row" =~ ^[0-9]+$ ]]; then
+    state_row="0"
+  fi
+  if ! [[ "$state_col" =~ ^[0-9]+$ ]]; then
+    state_col="1"
+  fi
+  if [[ "$state_col" -lt 1 || "$state_col" -gt "$cols" ]]; then
+    state_col="1"
+  fi
+}
+
+primary_row_from_state() {
+  read_state
+  primary_row=$((state_row % pair_offset))
+}
+
+resolve_row_index() {
+  local row_arg="$1"
+  target_row_index=""
+  if [[ "$row_arg" =~ ^[0-9]+$ ]]; then
+    target_row_index=$((row_arg - 1))
+  else
+    for i in "${!rows[@]}"; do
+      if [[ "${rows[$i]^^}" == "${row_arg^^}" ]]; then
+        target_row_index="$i"
+        break
+      fi
+    done
+  fi
+
+  if [[ -z "${target_row_index:-}" ]]; then
+    echo "row not found in HYPR_WS_ROWS" >&2
+    exit 2
+  fi
+  if [[ "$target_row_index" -lt 0 || "$target_row_index" -ge "$pair_offset" ]]; then
+    echo "row must be within the first ${pair_offset} entries (A-D)" >&2
+    exit 2
+  fi
+}
+
+ensure_col() {
+  local col_arg="$1"
+  if ! [[ "$col_arg" =~ ^[0-9]+$ ]]; then
+    echo "column must be a number" >&2
+    exit 2
+  fi
+  if [[ "$col_arg" -lt 1 || "$col_arg" -gt "$cols" ]]; then
+    echo "column out of range (1-${cols})" >&2
+    exit 2
+  fi
+}
+
+case "$cmd" in
+  goto)
+    if [[ -z "$arg" ]]; then
+      usage
+      exit 2
+    fi
+    ensure_col "$arg"
+    primary_row_from_state
+    target_col="$arg"
+    pair_row_index=$((primary_row + pair_offset))
+    pair_id=$((pair_row_index * cols + target_col))
+    hyprctl dispatch workspace "$pair_id"
+    hypr-workspace-grid goto "$target_col"
+    ;;
+  row)
+    if [[ -z "$arg" ]]; then
+      usage
+      exit 2
+    fi
+    resolve_row_index "$arg"
+    if [[ -n "$arg2" ]]; then
+      ensure_col "$arg2"
+      target_col="$arg2"
+    else
+      target_col="1"
+    fi
+    pair_row_index=$((target_row_index + pair_offset))
+    pair_id=$((pair_row_index * cols + target_col))
+    hyprctl dispatch workspace "$pair_id"
+    hypr-workspace-grid row "$arg" "$target_col"
+    ;;
+  cycle)
+    primary_row_from_state
+    target_col="$state_col"
+    target_row_index=$(((primary_row + 1) % pair_offset))
+    pair_row_index=$((target_row_index + pair_offset))
+    pair_id=$((pair_row_index * cols + target_col))
+    hyprctl dispatch workspace "$pair_id"
+    hypr-workspace-grid row "$((target_row_index + 1))" "$target_col"
+    ;;
+  *)
+    usage
+    exit 2
+    ;;
+esac
