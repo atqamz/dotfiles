@@ -29,8 +29,23 @@ main() {
   )
   rofi_cmd+=( "${extra_args[@]}" )
 
-  mapfile -t items < <(cliphist list)
-  (( ${#items[@]} )) || exit 0
+  mapfile -t items < <(cliphist list 2>/dev/null || true)
+  if (( ${#items[@]} == 0 )); then
+    if has_cmd wl-paste; then
+      if wl-paste --type text >/dev/null 2>&1; then
+        wl-paste --type text 2>/dev/null | cliphist store >/dev/null 2>&1 || true
+      elif wl-paste --type image >/dev/null 2>&1; then
+        wl-paste --type image 2>/dev/null | cliphist store >/dev/null 2>&1 || true
+      fi
+    fi
+    mapfile -t items < <(cliphist list 2>/dev/null || true)
+  fi
+  if (( ${#items[@]} == 0 )); then
+    if has_cmd notify-send; then
+      notify-send "Clipboard history" "No entries yet. Copy something to populate cliphist."
+    fi
+    exit 0
+  fi
 
   selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
   selection=${selection%$'\n'}
@@ -42,8 +57,33 @@ main() {
   tmp_file=$(mktemp)
   trap 'rm -f "$tmp_file"' EXIT
 
-  cliphist decode "$entry_id" > "$tmp_file"
-  wl-copy < "$tmp_file"
+  if ! cliphist decode "$entry_id" > "$tmp_file"; then
+    if has_cmd notify-send; then
+      notify-send "Clipboard history" "Failed to decode entry ${entry_id}."
+    fi
+    exit 1
+  fi
+
+  mime_type=""
+  if has_cmd file; then
+    mime_type=$(file -b --mime-type "$tmp_file" 2>/dev/null || true)
+  fi
+
+  if [[ -n "$mime_type" ]]; then
+    if ! wl-copy --type "$mime_type" < "$tmp_file"; then
+      if has_cmd notify-send; then
+        notify-send "Clipboard history" "Failed to copy entry ${entry_id}."
+      fi
+      exit 1
+    fi
+  else
+    if ! wl-copy < "$tmp_file"; then
+      if has_cmd notify-send; then
+        notify-send "Clipboard history" "Failed to copy entry ${entry_id}."
+      fi
+      exit 1
+    fi
+  fi
 
   if has_cmd notify-send; then
     notify-send "Clipboard history" "Copied selection back to clipboard"
