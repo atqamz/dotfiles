@@ -3,7 +3,7 @@
 - **Read before writing:** Understand existing patterns before modifying code.
   Follow the project's conventions over personal preferences.
 - **Minimal changes:** Smallest change that solves the problem. No drive-by
-  refactors.
+  refactors (unless I asked you to refactor).
 - **Error handling:** Handle errors explicitly. Propagate with context.
 - **Naming:** Clear, descriptive. Match existing project conventions.
 - **Tests:** Add/update tests when the project has a test suite. Run existing
