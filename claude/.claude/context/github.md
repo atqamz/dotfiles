@@ -9,3 +9,7 @@
 - **Issues:** `gh issue view`, `gh issue list`, `gh issue create`.
 - **Alias available:** `gh co <number>` = `gh pr checkout`.
 - **Don't create PRs or push unless explicitly asked.**
+- **Post-merge cleanup:** After `gh pr merge`, always delete the remote branch
+  (`gh pr merge --delete-branch` or `git push origin --delete <branch>`), remove
+  the local worktree (`git worktree remove <path>`), and delete the local branch
+  (`git branch -d <branch>`).
