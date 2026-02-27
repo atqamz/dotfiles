@@ -29,3 +29,8 @@ never symlinked into `$HOME`.
 ## Adding dependencies
 
 List new dependencies in the module's `README.md` Dependencies section.
+
+## Git workflow
+
+Single maintainer — commit and push directly to `master`. No branches or PRs
+needed.
