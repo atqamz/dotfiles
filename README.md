@@ -6,6 +6,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
 - **bashrc**: Shell configuration and aliases
 - **bin**: Helper scripts (`~/.local/bin`)
+- **claude**: Claude Code settings and status line script
 - **gitconfig**: Git global configuration
 - **hypr**: Hyprland window manager settings
 - **inputrc**: Readline input configuration
