@@ -1,7 +1,7 @@
-STOW_DIRS = bashrc bin gitconfig hypr inputrc kitty rofi swaync tmux waybar wlogout
+STOW_DIRS = bashrc bin claude gitconfig hypr inputrc kitty rofi swaync tmux waybar wlogout
 
 # files or directories that might conflict with stow and should be backed up
-BACKUP_TARGETS = .bashrc .gitconfig .inputrc .tmux.conf .config/hypr .config/kitty .config/rofi .config/swaync .config/waybar .config/wlogout
+BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .gitconfig .inputrc .tmux.conf .config/hypr .config/kitty .config/rofi .config/swaync .config/waybar .config/wlogout
 
 all: stow
 
