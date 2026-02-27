@@ -6,6 +6,9 @@
 - **Branch naming:** `<issue-number>-<short-description>` (e.g.
   `42-fix-auth-timeout`). If no issue, use a descriptive slug.
 - **Worktrees:** When starting a new task, create a worktree for isolation.
+- **Multi-repo sessions:** When working across multiple repositories, create a
+  separate worktree for each repo. Never mix changes from different repos in the
+  same worktree.
 - **Focused commits:** One logical change per commit. Imperative mood, lowercase
   start, no trailing period. Body optional.
 - **GPG signing:** All commits/tags are signed via gitconfig. Never pass
