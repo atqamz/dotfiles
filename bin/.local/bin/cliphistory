@@ -29,6 +29,9 @@ main() {
   )
   rofi_cmd+=( "${extra_args[@]}" )
 
+  tmp_dir=$(mktemp -d)
+  trap 'rm -rf "$tmp_dir"' EXIT
+
   mapfile -t items < <(cliphist list 2>/dev/null || true)
   if (( ${#items[@]} == 0 )); then
     if has_cmd wl-paste; then
@@ -47,16 +50,44 @@ main() {
     exit 0
   fi
 
-  selection=$(printf '%s\n' "${items[@]}" | rofi_run "${rofi_cmd[@]}")
+  selection=$(
+    {
+      printf '/clear\n'
+      for item in "${items[@]}"; do
+        entry_id=${item%%$'\t'*}
+        preview=${item#*$'\t'}
+        if [[ "$preview" == *"[[ binary data"* ]]; then
+          thumb="$tmp_dir/$entry_id.png"
+          if cliphist decode "$entry_id" > "$thumb" 2>/dev/null; then
+            label="image"
+            if [[ "$preview" =~ \[\[\ binary\ data\ (.+)\ ([a-z]+)\ ([0-9]+x[0-9]+)\ \]\] ]]; then
+              label="${BASH_REMATCH[2]} ${BASH_REMATCH[3]} (${BASH_REMATCH[1]})"
+            fi
+            printf '%s\t%s\0icon\x1f%s\n' "$entry_id" "$label" "$thumb"
+          else
+            printf '%s\n' "$item"
+          fi
+        else
+          printf '%s\n' "$item"
+        fi
+      done
+    } | rofi_run "${rofi_cmd[@]}"
+  )
   selection=${selection%$'\n'}
   [[ -n "$selection" ]] || exit 0
+
+  if [[ "$selection" == "/clear" ]]; then
+    cliphist wipe
+    if has_cmd notify-send; then
+      notify-send "Clipboard history" "Clipboard history cleared"
+    fi
+    exit 0
+  fi
 
   entry_id=${selection%%$'\t'*}
   [[ -n "$entry_id" ]] || exit 0
 
-  tmp_file=$(mktemp)
-  trap 'rm -f "$tmp_file"' EXIT
-
+  tmp_file="$tmp_dir/decode"
   if ! cliphist decode "$entry_id" > "$tmp_file"; then
     if has_cmd notify-send; then
       notify-send "Clipboard history" "Failed to decode entry ${entry_id}."
