@@ -1,0 +1,119 @@
+* {
+    bg:       #0a0a0e;
+    surface:  #15161b;
+    text:     #dfe3ec;
+    muted:    #7f849c;
+    accent:   #f0f0f5;
+    urgent:   #ff5f6d;
+
+    background-color: transparent;
+    text-color:       @text;
+    font:             "JetBrainsMono Nerd Font Propo 12";
+}
+
+window {
+    background-color: @bg;
+    border:           1px;
+    border-color:     @surface;
+    border-radius:    0px;
+    width:            50%;
+}
+
+mainbox {
+    children: [ inputbar, message, listview ];
+}
+
+message {
+    background-color: @surface;
+    border:           0px 0px 1px 0px;
+    border-color:     @surface;
+    padding:          8px 14px;
+}
+
+textbox {
+    text-color: @muted;
+}
+
+inputbar {
+    background-color: @surface;
+    border:           0px 0px 1px 0px;
+    border-color:     @surface;
+    padding:          10px 14px;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color: @muted;
+    margin:     0px 8px 0px 0px;
+}
+
+entry {
+    text-color:        @text;
+    placeholder-color: @muted;
+}
+
+listview {
+    lines:        12;
+    padding:      4px 0px;
+    scrollbar:    true;
+    border:       0px;
+}
+
+scrollbar {
+    handle-width:  4px;
+    handle-color:  @surface;
+    border:        0px;
+}
+
+element {
+    padding:       8px 14px;
+    border-radius: 0px;
+}
+
+element normal.normal {
+    text-color: @text;
+}
+
+element normal.active {
+    text-color: @accent;
+}
+
+element normal.urgent {
+    text-color: @urgent;
+}
+
+element selected.normal {
+    background-color: #f0f0f519;
+    text-color:       @accent;
+}
+
+element selected.active {
+    background-color: #f0f0f519;
+    text-color:       @accent;
+}
+
+element selected.urgent {
+    background-color: #ff5f6d26;
+    text-color:       @urgent;
+}
+
+element alternate.normal {
+    text-color: @text;
+}
+
+element alternate.active {
+    text-color: @accent;
+}
+
+element alternate.urgent {
+    text-color: @urgent;
+}
+
+element-icon {
+    size: 1.2em;
+    margin: 0px 8px 0px 0px;
+}
+
+element-text {
+    text-color: inherit;
+}

@@ -8,6 +8,8 @@
 - **PR inspection:** `gh pr view`, `gh pr checks`, `gh pr diff`.
 - **Issues:** `gh issue view`, `gh issue list`, `gh issue create`.
 - **Alias available:** `gh co <number>` = `gh pr checkout`.
+- **Assignee:** Always assign `atqamz` on every PR and issue we create
+  (`--assignee atqamz`).
 - **Don't create PRs or push unless explicitly asked.**
 - **Post-merge cleanup:** After `gh pr merge`, always delete the remote branch
   (`gh pr merge --delete-branch` or `git push origin --delete <branch>`), remove
