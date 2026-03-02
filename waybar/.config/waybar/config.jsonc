@@ -53,12 +53,12 @@
     }
   },
   "custom/cpu_status": {
-    "exec": "~/.local/bin/waybar-cpustatus",
+    "exec": "~/.local/bin/scripts/waybar-cpustatus",
     "return-type": "json",
     "interval": 5
   },
   "custom/gpu_status": {
-    "exec": "~/.local/bin/waybar-gpustatus",
+    "exec": "~/.local/bin/scripts/waybar-gpustatus",
     "return-type": "json",
     "interval": 5
   },
