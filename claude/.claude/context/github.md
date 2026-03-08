@@ -11,6 +11,8 @@
 - **Assignee:** Always assign `atqamz` on every PR and issue we create
   (`--assignee atqamz`).
 - **Don't create PRs or push unless explicitly asked.**
+- **Merge strategy:** Always use normal merge (`gh pr merge --merge`), never
+  squash or rebase.
 - **Post-merge cleanup:** After `gh pr merge`, always delete the remote branch
   (`gh pr merge --delete-branch` or `git push origin --delete <branch>`), remove
   the local worktree (`git worktree remove <path>`), and delete the local branch
