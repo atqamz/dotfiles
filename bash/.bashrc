@@ -6,7 +6,7 @@ if [ -f /etc/bashrc ]; then
 fi
 
 # user specific environment
-if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]; then
+if ! [[ "$PATH" =~ "$HOME/.local/bin/scripts:$HOME/.local/bin:$HOME/bin:" ]]; then
     PATH="$HOME/.local/bin/scripts:$HOME/.local/bin:$HOME/bin:$PATH"
 fi
 export PATH
@@ -27,8 +27,11 @@ export PATH="$PATH:$GOPATH/bin"
 
 # nvm
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # this loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # this loads nvm bash_completion
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # rust
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
+# deno
+[ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"
