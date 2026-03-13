@@ -1,4 +1,4 @@
-# inputrc
+# readline
 
 Readline input configuration. Stows `~/.inputrc`.
 

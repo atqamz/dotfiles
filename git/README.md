@@ -1,4 +1,4 @@
-# gitconfig
+# git
 
 Global Git configuration. Stows `~/.gitconfig`.
 

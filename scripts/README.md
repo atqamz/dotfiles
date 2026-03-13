@@ -1,4 +1,4 @@
-# bin
+# scripts
 
 Custom scripts installed to `~/.local/bin/scripts/`. The parent directory
 `~/.local/bin/` is left for installer-managed binaries (claude, uv, etc.) so

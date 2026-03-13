@@ -6,14 +6,14 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
 | Module | Description |
 |--------|-------------|
-| `bashrc` | Shell configuration and aliases |
-| `bin` | Helper scripts (`~/.local/bin`) |
+| `bash` | Shell configuration and aliases |
 | `claude` | Claude Code settings and status line |
-| `gitconfig` | Git global configuration |
+| `git` | Git global configuration |
 | `hypr` | Hyprland window manager, lock, and idle |
-| `inputrc` | Readline input configuration |
 | `kitty` | Terminal emulator config |
+| `readline` | Readline input configuration |
 | `rofi` | Application launcher theme |
+| `scripts` | Helper scripts (`~/.local/bin/scripts`) |
 | `swaync` | Notification center |
 | `tmux` | Terminal multiplexer |
 | `waybar` | Status bar |
@@ -46,14 +46,6 @@ chmod 644 ~/.ssh/*.pub ~/.ssh/known_hosts ~/.ssh/config
 find ~/.gnupg -type f -exec chmod 600 {} \;
 find ~/.gnupg -type d -exec chmod 700 {} \;
 restorecon -Rv ~/.ssh ~/.gnupg
-```
-
-### GPG pinentry
-
-Add to `~/.gnupg/gpg-agent.conf`:
-
-```
-pinentry-program /usr/bin/pinentry-rofi
 ```
 
 ### Password store

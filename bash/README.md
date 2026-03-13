@@ -1,4 +1,4 @@
-# bashrc
+# bash
 
 Shell configuration and aliases. Stows `~/.bashrc`.
 
