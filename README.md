@@ -9,8 +9,10 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `bash` | Shell configuration and aliases |
 | `claude` | Claude Code settings and status line |
 | `git` | Git global configuration |
+| `gnupg` | GnuPG agent configuration |
 | `hypr` | Hyprland window manager, lock, and idle |
 | `kitty` | Terminal emulator config |
+| `opencode` | OpenCode AI assistant config |
 | `readline` | Readline input configuration |
 | `rofi` | Application launcher theme |
 | `scripts` | Helper scripts (`~/.local/bin/scripts`) |
