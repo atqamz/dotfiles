@@ -11,9 +11,11 @@
   same worktree.
 - **Focused commits:** One logical change per commit. Imperative mood, lowercase
   start, no trailing period. Body optional.
-- **No milestone jargon in commits:** Never use words like "phase", "step",
-  "milestone", "part X of Y", "stage", or spec-tracking language. Describe
-  what the commit actually does, not where it fits in a plan.
+- **No planning jargon in commits:** Never use words like "phase", "step",
+  "milestone", "part X of Y", "stage", or spec-tracking language. Never
+  include phase numbers, plan numbers, or task IDs (e.g. `02-01`, `phase-3`,
+  `01-02`) in commit messages or scopes. Describe what the commit actually
+  does, not where it fits in a plan.
 - **GPG signing:** All commits/tags are signed via gitconfig. Never pass
   `--no-gpg-sign` or `-c commit.gpgsign=false`.
 - **Never skip hooks:** No `--no-verify`.

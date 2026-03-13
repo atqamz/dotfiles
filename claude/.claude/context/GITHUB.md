@@ -13,6 +13,9 @@
 - **Don't create PRs or push unless explicitly asked.**
 - **Merge strategy:** Always use normal merge (`gh pr merge --merge`), never
   squash or rebase.
+- **No planning jargon in issues/PRs:** Never use words like "phase",
+  "milestone", "step", "stage", or spec-tracking language in issue/PR titles or
+  bodies. Describe the specific work being done.
 - **Post-merge cleanup:** After `gh pr merge`, always delete the remote branch
   (`gh pr merge --delete-branch` or `git push origin --delete <branch>`), remove
   the local worktree (`git worktree remove <path>`), and delete the local branch
