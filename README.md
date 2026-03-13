@@ -9,7 +9,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `bash` | Shell configuration and aliases |
 | `claude` | Claude Code settings and status line |
 | `git` | Git global configuration |
-| `gnupg` | GnuPG agent configuration |
+| `gnupg` | GnuPG agent configuration (symlinked manually, not stowed) |
 | `hypr` | Hyprland window manager, lock, and idle |
 | `kitty` | Terminal emulator config |
 | `opencode` | OpenCode AI assistant config |

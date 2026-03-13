@@ -3,3 +3,5 @@
 *.swo
 *~
 .DS_Store
+gnupg/.gnupg/*
+!gnupg/.gnupg/gpg-agent.conf
