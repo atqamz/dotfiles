@@ -23,7 +23,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "node \"/home/atqa/.claude/hooks/gsd-statusline.js\""
+    "command": "bash \"/home/atqa/.claude/statusline-command.sh\""
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true
