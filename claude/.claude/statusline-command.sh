@@ -24,7 +24,7 @@ esac
 
 input=$(cat)
 
-model=$(echo "$input" | jq -r '.model.display_name // .model.id // "?"')
+model=$(echo "$input" | jq -r '.model.display_name // .model.id // "?"' | sed 's/ ([0-9]*[KMkm] context)$//')
 MODEL_ID=$(echo "$input" | jq -r '.model.id')
 cwd=$(echo "$input" | jq -r '.cwd // empty')
 dir=$(basename "$cwd" 2>/dev/null || echo "?")
