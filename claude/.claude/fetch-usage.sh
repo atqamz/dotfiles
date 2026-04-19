@@ -160,16 +160,22 @@ fetch_usage_data() {
     local now_ts
     now_ts=$(now)
 
-    # Fresh cache?
+    # Fresh cache? Also invalidate if the cached sessionResetAt is in the past
+    # (the 5hr window has rolled over; stale numbers and reset time).
     if [[ -f "$CACHE_FILE" ]]; then
         local cache_age=$(( now_ts - $(file_mtime "$CACHE_FILE") ))
         if [[ $cache_age -lt $CACHE_MAX_AGE ]]; then
             local cached_data
             cached_data=$(cat "$CACHE_FILE" 2>/dev/null)
             if [[ -n "$cached_data" ]]; then
-                local has_error
+                local has_error session_reset_at session_reset_epoch
                 has_error=$(echo "$cached_data" | jq -r '.error // empty' 2>/dev/null)
-                [[ -z "$has_error" ]] && { echo "$cached_data"; return 0; }
+                session_reset_at=$(echo "$cached_data" | jq -r '.sessionResetAt // empty' 2>/dev/null)
+                session_reset_epoch=0
+                [[ -n "$session_reset_at" ]] && session_reset_epoch=$(date -d "$session_reset_at" +%s 2>/dev/null || echo 0)
+                if [[ -z "$has_error" && ( $session_reset_epoch -eq 0 || $session_reset_epoch -gt $now_ts ) ]]; then
+                    echo "$cached_data"; return 0
+                fi
             fi
         fi
     fi
