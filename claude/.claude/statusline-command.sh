@@ -3,7 +3,7 @@
 #
 # Line 1: Model (context size)
 # Line 2: progress bar pct% | dir (branch)
-# Line 3: 5 hours x% (HHh MMm SSs) | weekly x% (DDd HHh MMm)
+# Line 3: 5 hours x% (HHh MMm) | weekly x% (DDd HHh MMm)
 
 COLOR="blue"
 
@@ -113,10 +113,10 @@ usage_5hr=""
 usage_weekly=""
 usage_data=$(fetch_usage_data)
 
-# Helper: format seconds as zero-padded HHh MMm SSs
+# Helper: format seconds as zero-padded HHh MMm
 fmt_hms() {
     local s=$1
-    printf "%02dh %02dm %02ds" $((s / 3600)) $(((s % 3600) / 60)) $((s % 60))
+    printf "%02dh %02dm" $((s / 3600)) $(((s % 3600) / 60))
 }
 
 # Helper: format seconds as zero-padded DDd HHh MMm
@@ -172,7 +172,7 @@ dir_part="${C_GRAY}${dir}"
 [ -n "$branch" ] && dir_part="${dir_part} (${branch})"
 line2="${C_CTX}${bar} ${pct_prefix}${pct}%${C_RESET} ${C_GRAY}|${C_RESET} ${dir_part}${C_RESET}"
 
-# Line 3: 5 hours x% (HHh MMm SSs) | weekly x% (DDd HHh MMm)
+# Line 3: 5 hours x% (HHh MMm) | weekly x% (DDd HHh MMm)
 line3=""
 if [ -n "$usage_5hr" ] && [ -n "$usage_weekly" ]; then
     line3="${usage_5hr} ${C_GRAY}|${C_RESET} ${usage_weekly}${C_RESET}"
