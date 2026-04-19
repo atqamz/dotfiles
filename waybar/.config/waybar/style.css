@@ -76,6 +76,7 @@ window#waybar {
 #temperature,
 #custom-cpu_status,
 #custom-gpu_status,
+#custom-claude_usage,
 #backlight,
 #memory,
 #pulseaudio,
@@ -91,11 +92,25 @@ window#waybar {
 
 #custom-cpu_status,
 #custom-gpu_status,
+#custom-claude_usage,
 #backlight,
 #memory,
 #temperature {
   font-weight: bold;
   letter-spacing: 0.2px;
+}
+
+#custom-claude_usage.warning {
+  color: #f0a050;
+}
+
+#custom-claude_usage.critical {
+  background-color: alpha(@urgent, 0.15);
+  color: @urgent;
+}
+
+#custom-claude_usage.error {
+  color: @muted;
 }
 
 #custom-cpu_status,

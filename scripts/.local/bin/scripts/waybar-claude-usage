@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""Emit Claude Code session/weekly usage for a Waybar custom module.
+
+Reuses ~/.claude/fetch-usage.sh so cache + rate-limit lock are shared with
+Claude's own statusline (single source of truth, no extra API hits).
+"""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from datetime import datetime, timezone
+from pathlib import Path
+
+FETCH_SCRIPT = Path.home() / ".claude" / "fetch-usage.sh"
+
+
+def fetch() -> dict:
+    if not FETCH_SCRIPT.is_file():
+        return {"error": "no-fetch-script"}
+    try:
+        out = subprocess.run(
+            ["bash", "-c", f'source "{FETCH_SCRIPT}"; fetch_usage_data'],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout"}
+    if not out.stdout.strip():
+        return {"error": "empty"}
+    try:
+        return json.loads(out.stdout)
+    except json.JSONDecodeError:
+        return {"error": "parse"}
+
+
+def fmt_reset(iso: str | None) -> str:
+    if not iso:
+        return "--"
+    try:
+        dt = datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone()
+    except ValueError:
+        return iso
+    now = datetime.now(timezone.utc).astimezone()
+    delta = dt - now
+    total = int(delta.total_seconds())
+    if total <= 0:
+        return "now"
+    d, rem = divmod(total, 86400)
+    h, rem = divmod(rem, 3600)
+    m, _ = divmod(rem, 60)
+    if d:
+        return f"{d}d {h:02d}h {m:02d}m"
+    return f"{h:02d}h {m:02d}m"
+
+
+def severity(pct: float) -> str | None:
+    if pct >= 80:
+        return "critical"
+    if pct >= 50:
+        return "warning"
+    return None
+
+
+def main() -> None:
+    data = fetch()
+    err = data.get("error") if isinstance(data, dict) else "parse"
+    if err:
+        payload = {
+            "text": "󰚩 --",
+            "tooltip": f"Claude usage: {err}",
+            "class": "error",
+            "alt": err,
+        }
+        print(json.dumps(payload))
+        return
+
+    session = data.get("sessionUsage")
+    weekly = data.get("weeklyUsage")
+    session_reset = data.get("sessionResetAt")
+    weekly_reset = data.get("weeklyResetAt")
+
+    try:
+        s_pct = float(session) if session is not None else 0.0
+        w_pct = float(weekly) if weekly is not None else 0.0
+    except (TypeError, ValueError):
+        s_pct = w_pct = 0.0
+
+    text = f"󰚩 5h:{s_pct:.0f}% w:{w_pct:.0f}%"
+    tooltip_lines = [
+        f"5h usage: {s_pct:.1f}% (reset in {fmt_reset(session_reset)})",
+        f"weekly:   {w_pct:.1f}% (reset in {fmt_reset(weekly_reset)})",
+    ]
+    klass = severity(max(s_pct, w_pct)) or ""
+    payload = {
+        "text": text,
+        "tooltip": "\n".join(tooltip_lines),
+        "class": klass,
+        "alt": klass or "ok",
+    }
+    print(json.dumps(payload))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:
+        print(json.dumps({"text": "󰚩 !!", "tooltip": f"err: {exc}", "class": "error"}))
+        os._exit(0)
