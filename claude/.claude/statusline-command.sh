@@ -3,7 +3,9 @@
 #
 # Line 1: Model (context size)
 # Line 2: progress bar pct% | dir (branch)
-# Line 3: 5 hours x% (HHh MMm) | weekly x% (DDd HHh MMm)
+#
+# Usage limits (5hr + weekly) live in the waybar custom/claude_usage
+# module now — no point showing them twice.
 
 COLOR="blue"
 
@@ -103,65 +105,6 @@ if [ -n "$session" ]; then
         > "/tmp/claude-ctx-${session}.json" 2>/dev/null
 fi
 
-# -- API usage ----------------------------------------------------------------
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./fetch-usage.sh
-source "${SCRIPT_DIR}/fetch-usage.sh"
-
-usage_5hr=""
-usage_weekly=""
-usage_data=$(fetch_usage_data)
-
-# Helper: format seconds as zero-padded HHh MMm
-fmt_hms() {
-    local s=$1
-    printf "%02dh %02dm" $((s / 3600)) $(((s % 3600) / 60))
-}
-
-# Helper: format seconds as zero-padded DDd HHh MMm
-fmt_dhm() {
-    local s=$1
-    local d=$((s / 86400))
-    local rem=$((s % 86400))
-    printf "%02dd %02dh %02dm" "$d" $((rem / 3600)) $(((rem % 3600) / 60))
-}
-
-if [ -n "$usage_data" ]; then
-    error=$(echo "$usage_data" | jq -r '.error // empty' 2>/dev/null)
-
-    if [ -z "$error" ]; then
-        utilization=$(echo "$usage_data" | jq -r '.sessionUsage // empty' 2>/dev/null)
-        weekly_usage=$(echo "$usage_data" | jq -r '.weeklyUsage // empty' 2>/dev/null)
-        resets_at=$(echo "$usage_data" | jq -r '.sessionResetAt // empty' 2>/dev/null)
-        weekly_resets_at=$(echo "$usage_data" | jq -r '.weeklyResetAt // empty' 2>/dev/null)
-
-        now_ts=$(date +%s)
-
-        # 5-hour session usage
-        if [ -n "$utilization" ] && [ -n "$resets_at" ]; then
-            utilization_pct=$(printf "%.0f" "$utilization")
-            reset_epoch=$(date -d "$resets_at" +%s 2>/dev/null)
-            if [ -n "$reset_epoch" ]; then
-                diff=$((reset_epoch - now_ts))
-                [ "$diff" -lt 0 ] && diff=0
-                usage_5hr="${C_GRAY}5 hours ${C_ACCENT}${utilization_pct}%${C_GRAY} ($(fmt_hms "$diff"))"
-            fi
-        fi
-
-        # Weekly usage
-        if [ -n "$weekly_usage" ] && [ -n "$weekly_resets_at" ]; then
-            weekly_pct=$(printf "%.0f" "$weekly_usage")
-            weekly_reset_epoch=$(date -d "$weekly_resets_at" +%s 2>/dev/null)
-            if [ -n "$weekly_reset_epoch" ]; then
-                diff=$((weekly_reset_epoch - now_ts))
-                [ "$diff" -lt 0 ] && diff=0
-                usage_weekly="${C_GRAY}weekly ${C_ACCENT}${weekly_pct}%${C_GRAY} ($(fmt_dhm "$diff"))"
-            fi
-        fi
-    fi
-fi
-
 # -- Output -------------------------------------------------------------------
 
 # Line 1: Model (context size)
@@ -172,17 +115,4 @@ dir_part="${C_GRAY}${dir}"
 [ -n "$branch" ] && dir_part="${dir_part} (${branch})"
 line2="${C_CTX}${bar} ${pct_prefix}${pct}%${C_RESET} ${C_GRAY}|${C_RESET} ${dir_part}${C_RESET}"
 
-# Line 3: 5 hours x% (HHh MMm) | weekly x% (DDd HHh MMm)
-line3=""
-if [ -n "$usage_5hr" ] && [ -n "$usage_weekly" ]; then
-    line3="${usage_5hr} ${C_GRAY}|${C_RESET} ${usage_weekly}${C_RESET}"
-elif [ -n "$usage_5hr" ]; then
-    line3="${usage_5hr}${C_RESET}"
-elif [ -n "$usage_weekly" ]; then
-    line3="${usage_weekly}${C_RESET}"
-fi
-
-output="${line1}\n${line2}"
-[ -n "$line3" ] && output="${output}\n${line3}"
-
-printf '%b\n' "$output"
+printf '%b\n%b\n' "$line1" "$line2"
