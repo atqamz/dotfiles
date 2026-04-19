@@ -87,10 +87,10 @@ def main() -> None:
     except (TypeError, ValueError):
         s_pct = w_pct = 0.0
 
-    text = f"󰚩 5h:{s_pct:.0f}% w:{w_pct:.0f}%"
+    text = f"󰚩  {s_pct:.0f}%  {w_pct:.0f}%"
     tooltip_lines = [
-        f"5h usage: {s_pct:.1f}% (reset in {fmt_reset(session_reset)})",
-        f"weekly:   {w_pct:.1f}% (reset in {fmt_reset(weekly_reset)})",
+        f" 5h session: {s_pct:.1f}%  (reset in {fmt_reset(session_reset)})",
+        f" weekly:     {w_pct:.1f}%  (reset in {fmt_reset(weekly_reset)})",
     ]
     klass = severity(max(s_pct, w_pct)) or ""
     payload = {
