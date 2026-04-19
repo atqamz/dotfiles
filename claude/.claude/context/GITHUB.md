@@ -10,7 +10,6 @@
 - **Alias available:** `gh co <number>` = `gh pr checkout`.
 - **Assignee:** Always assign `atqamz` on every PR and issue we create
   (`--assignee atqamz`).
-- **Don't create PRs or push unless explicitly asked.**
 - **Merge strategy:** Always use normal merge (`gh pr merge --merge`), never
   squash or rebase.
 - **No planning jargon in issues/PRs:** Never use words like "phase",

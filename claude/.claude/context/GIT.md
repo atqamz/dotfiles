@@ -2,13 +2,9 @@
 
 - **No Co-Authored-By:** Never add `Co-Authored-By` lines to commit messages.
 - **Trunk-based development:** Always create a new branch from the default
-  branch. Never commit directly to `master` or `main`.
+  branch. Never commit directly to `master` or `main`. Except I ask you to.
 - **Branch naming:** `<issue-number>-<short-description>` (e.g.
   `42-fix-auth-timeout`). If no issue, use a descriptive slug.
-- **Worktrees:** When starting a new task, create a worktree for isolation.
-- **Multi-repo sessions:** When working across multiple repositories, create a
-  separate worktree for each repo. Never mix changes from different repos in the
-  same worktree.
 - **Focused commits:** One logical change per commit. Imperative mood, lowercase
   start, no trailing period. Body optional.
 - **No planning jargon in commits:** Never use words like "phase", "step",
