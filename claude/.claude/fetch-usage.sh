@@ -152,6 +152,26 @@ read_stale_cache() {
     cat "$CACHE_FILE" 2>/dev/null
 }
 
+# Return stale cache only when it has no error and its sessionResetAt is absent
+# or still in the future. Otherwise return 1 so callers fall through to an error
+# response rather than lying about post-reset usage numbers.
+stale_cache_if_valid() {
+    local fallback_error="$1"
+    local stale now_ts session_reset_at session_reset_epoch has_error
+    stale=$(read_stale_cache) || return 1
+    [[ -n "$stale" ]] || return 1
+    has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
+    [[ -n "$has_error" ]] && return 1
+    session_reset_at=$(echo "$stale" | jq -r '.sessionResetAt // empty' 2>/dev/null)
+    session_reset_epoch=0
+    [[ -n "$session_reset_at" ]] && session_reset_epoch=$(date -d "$session_reset_at" +%s 2>/dev/null || echo 0)
+    now_ts=$(now)
+    if [[ $session_reset_epoch -eq 0 || $session_reset_epoch -gt $now_ts ]]; then
+        echo "$stale"; return 0
+    fi
+    return 1
+}
+
 create_error_response() {
     echo "{\"error\":\"$1\"}"
 }
@@ -184,29 +204,16 @@ fetch_usage_data() {
     local token
     token=$(get_usage_token)
     if [[ -z "$token" ]]; then
-        local stale
-        stale=$(read_stale_cache)
-        if [[ -n "$stale" ]]; then
-            local has_error
-            has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-            [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-        fi
-        create_error_response "no-credentials"
-        return 1
+        stale_cache_if_valid "no-credentials" || { create_error_response "no-credentials"; return 1; }
+        return 0
     fi
 
     # Lock
     local lock_info
     if lock_info=$(read_active_lock); then
-        local stale
-        stale=$(read_stale_cache)
-        if [[ -n "$stale" ]]; then
-            local has_error
-            has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-            [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-        fi
-        create_error_response "${lock_info%%:*}"
-        return 1
+        local lock_error="${lock_info%%:*}"
+        stale_cache_if_valid "$lock_error" || { create_error_response "$lock_error"; return 1; }
+        return 0
     fi
 
     write_lock $(( now_ts + LOCK_MAX_AGE )) "timeout"
@@ -221,23 +228,15 @@ fetch_usage_data() {
             local usage_data
             usage_data=$(parse_api_response "$result_value")
             if [[ -z "$usage_data" ]]; then
-                local stale; stale=$(read_stale_cache)
-                if [[ -n "$stale" ]]; then
-                    local has_error; has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-                    [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-                fi
-                create_error_response "parse-error"; return 1
+                stale_cache_if_valid "parse-error" || { create_error_response "parse-error"; return 1; }
+                return 0
             fi
             local has_session has_weekly
             has_session=$(echo "$usage_data" | jq -r '.sessionUsage // empty' 2>/dev/null)
             has_weekly=$(echo "$usage_data" | jq -r '.weeklyUsage // empty' 2>/dev/null)
             if [[ -z "$has_session" && -z "$has_weekly" ]]; then
-                local stale; stale=$(read_stale_cache)
-                if [[ -n "$stale" ]]; then
-                    local has_error; has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-                    [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-                fi
-                create_error_response "parse-error"; return 1
+                stale_cache_if_valid "parse-error" || { create_error_response "parse-error"; return 1; }
+                return 0
             fi
             ensure_cache_dir
             echo "$usage_data" > "$CACHE_FILE" 2>/dev/null
@@ -246,20 +245,12 @@ fetch_usage_data() {
             ;;
         rate-limited)
             write_lock $(( now_ts + result_value )) "rate-limited"
-            local stale; stale=$(read_stale_cache)
-            if [[ -n "$stale" ]]; then
-                local has_error; has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-                [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-            fi
-            create_error_response "rate-limited"; return 1
+            stale_cache_if_valid "rate-limited" || { create_error_response "rate-limited"; return 1; }
+            return 0
             ;;
         *)
-            local stale; stale=$(read_stale_cache)
-            if [[ -n "$stale" ]]; then
-                local has_error; has_error=$(echo "$stale" | jq -r '.error // empty' 2>/dev/null)
-                [[ -z "$has_error" ]] && { echo "$stale"; return 0; }
-            fi
-            create_error_response "api-error"; return 1
+            stale_cache_if_valid "api-error" || { create_error_response "api-error"; return 1; }
+            return 0
             ;;
     esac
 }

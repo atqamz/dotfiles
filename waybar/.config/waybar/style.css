@@ -113,6 +113,11 @@ window#waybar {
   color: @muted;
 }
 
+#custom-claude_usage.stale {
+  color: @muted;
+  opacity: 0.5;
+}
+
 #custom-cpu_status,
 #custom-gpu_status {
   min-width: 75px;

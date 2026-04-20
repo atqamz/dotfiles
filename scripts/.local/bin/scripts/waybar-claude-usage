@@ -67,10 +67,11 @@ def main() -> None:
     data = fetch()
     err = data.get("error") if isinstance(data, dict) else "parse"
     if err:
+        transient = err in ("rate-limited", "timeout")
         payload = {
             "text": "󰚩 --",
             "tooltip": f"Claude usage: {err}",
-            "class": "error",
+            "class": "stale" if transient else "error",
             "alt": err,
         }
         print(json.dumps(payload))
