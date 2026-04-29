@@ -5,9 +5,10 @@
 CACHE_DIR="${HOME}/.cache/claude/statusline"
 CACHE_FILE="${CACHE_DIR}/usage.json"
 LOCK_FILE="${CACHE_DIR}/usage.lock"
-CACHE_MAX_AGE=180
+CACHE_MAX_AGE=600
 LOCK_MAX_AGE=30
-DEFAULT_RATE_LIMIT_BACKOFF=300
+DEFAULT_RATE_LIMIT_BACKOFF=600
+BACKOFF_FILE="${CACHE_DIR}/usage.backoff"
 TOKEN_CACHE_FILE="${CACHE_DIR}/token.cache"
 TOKEN_CACHE_MAX_AGE=3600
 
@@ -82,7 +83,27 @@ write_lock() {
     local blocked_until="$1"
     local error="${2:-timeout}"
     ensure_cache_dir
-    echo "{\"blockedUntil\":$blocked_until,\"error\":\"$error\"}" > "$LOCK_FILE" 2>/dev/null
+    local jitter=$(( RANDOM % 30 ))
+    echo "{\"blockedUntil\":$(( blocked_until + jitter )),\"error\":\"$error\"}" > "$LOCK_FILE" 2>/dev/null
+}
+
+read_backoff_count() {
+    [[ -f "$BACKOFF_FILE" ]] || { echo 0; return; }
+    local n
+    n=$(cat "$BACKOFF_FILE" 2>/dev/null)
+    [[ "$n" =~ ^[0-9]+$ ]] && echo "$n" || echo 0
+}
+
+write_backoff_count() {
+    ensure_cache_dir
+    echo "$1" > "$BACKOFF_FILE" 2>/dev/null
+}
+
+calc_backoff_seconds() {
+    local count="$1"
+    local seconds=$(( DEFAULT_RATE_LIMIT_BACKOFF * (1 << count) ))
+    [[ $seconds -gt 3600 ]] && seconds=3600
+    echo "$seconds"
 }
 
 parse_retry_after() {
@@ -123,8 +144,8 @@ fetch_from_api() {
         local retry_after retry_seconds
         retry_after=$(grep -i "^retry-after:" "$headers_file" | sed 's/^retry-after: *//i' | tr -d '\r\n' 2>/dev/null)
         retry_seconds=$(parse_retry_after "$retry_after")
-        retry_seconds=${retry_seconds:-$DEFAULT_RATE_LIMIT_BACKOFF}
-        result="rate-limited:$retry_seconds"
+        # 0 = no server hint; caller applies exponential backoff
+        result="rate-limited:${retry_seconds:-0}"
     else
         result="error"
     fi
@@ -180,20 +201,26 @@ fetch_usage_data() {
     local now_ts
     now_ts=$(now)
 
-    # Fresh cache? Also invalidate if the cached sessionResetAt is in the past
-    # (the 5hr window has rolled over; stale numbers and reset time).
+    # Cache check — also invalidate if sessionResetAt is in the past.
     if [[ -f "$CACHE_FILE" ]]; then
-        local cache_age=$(( now_ts - $(file_mtime "$CACHE_FILE") ))
-        if [[ $cache_age -lt $CACHE_MAX_AGE ]]; then
-            local cached_data
-            cached_data=$(cat "$CACHE_FILE" 2>/dev/null)
-            if [[ -n "$cached_data" ]]; then
-                local has_error session_reset_at session_reset_epoch
-                has_error=$(echo "$cached_data" | jq -r '.error // empty' 2>/dev/null)
-                session_reset_at=$(echo "$cached_data" | jq -r '.sessionResetAt // empty' 2>/dev/null)
-                session_reset_epoch=0
-                [[ -n "$session_reset_at" ]] && session_reset_epoch=$(date -d "$session_reset_at" +%s 2>/dev/null || echo 0)
-                if [[ -z "$has_error" && ( $session_reset_epoch -eq 0 || $session_reset_epoch -gt $now_ts ) ]]; then
+        local cache_age cached_data has_error session_reset_at session_reset_epoch session_pct
+        cache_age=$(( now_ts - $(file_mtime "$CACHE_FILE") ))
+        cached_data=$(cat "$CACHE_FILE" 2>/dev/null)
+        if [[ -n "$cached_data" ]]; then
+            has_error=$(echo "$cached_data" | jq -r '.error // empty' 2>/dev/null)
+            session_reset_at=$(echo "$cached_data" | jq -r '.sessionResetAt // empty' 2>/dev/null)
+            session_reset_epoch=0
+            [[ -n "$session_reset_at" ]] && session_reset_epoch=$(date -d "$session_reset_at" +%s 2>/dev/null || echo 0)
+            if [[ -z "$has_error" && ( $session_reset_epoch -eq 0 || $session_reset_epoch -gt $now_ts ) ]]; then
+                # Normal TTL
+                if [[ $cache_age -lt $CACHE_MAX_AGE ]]; then
+                    echo "$cached_data"; return 0
+                fi
+                # Extended TTL (3×) when usage <50% and session reset >30 min away
+                session_pct=$(echo "$cached_data" | jq -r '(.sessionUsage // 100) | floor' 2>/dev/null)
+                if [[ $cache_age -lt $(( CACHE_MAX_AGE * 3 )) \
+                      && "${session_pct:-100}" -lt 50 \
+                      && $session_reset_epoch -gt $(( now_ts + 1800 )) ]]; then
                     echo "$cached_data"; return 0
                 fi
             fi
@@ -239,12 +266,25 @@ fetch_usage_data() {
                 return 0
             fi
             ensure_cache_dir
+            write_backoff_count 0
             echo "$usage_data" > "$CACHE_FILE" 2>/dev/null
             echo "$usage_data"
             return 0
             ;;
         rate-limited)
-            write_lock $(( now_ts + result_value )) "rate-limited"
+            local backoff_secs
+            if [[ "$result_value" -gt 0 ]] 2>/dev/null; then
+                # Server gave Retry-After; respect it and reset backoff counter
+                backoff_secs="$result_value"
+                write_backoff_count 0
+            else
+                # No server hint; exponential backoff
+                local count
+                count=$(read_backoff_count)
+                backoff_secs=$(calc_backoff_seconds "$count")
+                write_backoff_count $(( count + 1 ))
+            fi
+            write_lock $(( now_ts + backoff_secs )) "rate-limited"
             stale_cache_if_valid "rate-limited" || { create_error_response "rate-limited"; return 1; }
             return 0
             ;;

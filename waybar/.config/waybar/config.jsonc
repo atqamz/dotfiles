@@ -61,7 +61,7 @@
   "custom/claude_usage": {
     "exec": "~/.local/bin/scripts/waybar-claude-usage",
     "return-type": "json",
-    "interval": 300,
+    "interval": 600,
     "tooltip": true
   },
   "custom/gpu_status": {
