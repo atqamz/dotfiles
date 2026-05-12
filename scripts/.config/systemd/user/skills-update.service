@@ -1,0 +1,7 @@
+[Unit]
+Description=Update Claude Code agent skills
+
+[Service]
+Type=oneshot
+ExecCondition=/bin/bash -c 'curl -sf --max-time 10 https://skills.sh > /dev/null'
+ExecStart=/bin/bash -c 'source %h/.nvm/nvm.sh && npx skills update -y'
