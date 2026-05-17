@@ -17,6 +17,14 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
 - **Power menu** (`modules/Power.qml`) — overlay session menu with Lock,
   Logout, Suspend, Reboot, Shutdown actions. IPC target `session`
   (`qs ipc call session toggle|open|close`).
+- **Clipboard history** (`modules/Clipboard.qml`) — overlay listing
+  `cliphist list` entries. Filter, Enter to `cliphist decode | wl-copy`
+  back to the clipboard. IPC target `clipboard`. Replaces the legacy
+  rofi-based `cliphistory` script.
+- **Window picker** (`modules/WindowPicker.qml`) — overlay listing Hyprland
+  toplevels via `hyprctl clients -j`. Filter by class or title, Enter to
+  `hyprctl dispatch focuswindow`. IPC target `windows`. Replaces the
+  legacy rofi-based `hypr-window-picker` script.
 
 ## Inspiration
 

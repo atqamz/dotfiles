@@ -11,4 +11,6 @@ ShellRoot {
     Notifications {}
     Launcher {}
     Power {}
+    Clipboard {}
+    WindowPicker {}
 }
