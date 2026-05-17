@@ -5,3 +5,7 @@
 .DS_Store
 gnupg/.gnupg/*
 !gnupg/.gnupg/gpg-agent.conf
+
+# Per-host hyprland symlink created by `make host-link`.
+# Lands here due to stow tree-folding `~/.config/hypr` to this dir.
+hypr/.config/hypr/host.conf
