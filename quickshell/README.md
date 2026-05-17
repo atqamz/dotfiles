@@ -32,6 +32,14 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
   brightness for 1.5s after a key press. Hyprland XF86Audio*/XF86MonBrightness*
   bindings chain `wpctl`/`brightnessctl` with `qs ipc call osd volume|brightness`
   so the OSD reads back the post-change value and auto-hides.
+- **TagInput** (`modules/TagInput.qml`) — single-line text input dialog.
+  Enter dispatches `hyprctl dispatch tagwindow <text>`. Prefix `-` to remove
+  a tag. IPC target `tag`. Replaces the legacy rofi-based `hypr-tag-window`
+  script.
+- **PassMenu** (`modules/PassMenu.qml`) — overlay listing `*.gpg` entries
+  under `$PASSWORD_STORE_DIR` (default `~/.password-store`). Enter runs
+  `pass show -c` to copy the password to the clipboard. IPC target `pass`.
+  Replaces the legacy rofi-based `passmenu` script.
 
 ## Inspiration
 

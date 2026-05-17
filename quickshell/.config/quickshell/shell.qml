@@ -14,4 +14,6 @@ ShellRoot {
     Clipboard {}
     WindowPicker {}
     Osd {}
+    TagInput {}
+    PassMenu {}
 }
