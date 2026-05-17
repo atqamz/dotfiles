@@ -10,6 +10,13 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
 - **Notifications** (`modules/Notifications.qml`) — D-Bus
   `org.freedesktop.Notifications` server, top-right toast stack, auto-dismiss
   on expire timeout or click.
+- **Launcher** (`modules/Launcher.qml`) — full-screen overlay app launcher.
+  Fuzzy substring search over `DesktopEntries.applications`, keyboard
+  navigation (Up/Down + Enter), Escape or backdrop click to close. IPC
+  target `launcher` (`qs ipc call launcher toggle|open|close`).
+- **Power menu** (`modules/Power.qml`) — overlay session menu with Lock,
+  Logout, Suspend, Reboot, Shutdown actions. IPC target `session`
+  (`qs ipc call session toggle|open|close`).
 
 ## Inspiration
 
@@ -27,8 +34,8 @@ Fedora. The roadmap below ports caelestia patterns into pure QML over time.
 |---|---|---|
 | Bar | minimal | Add: tray, audio slider, network indicator, battery, brightness |
 | Notifications | minimal | Add: dismiss-all, history panel, do-not-disturb toggle |
-| Launcher | TODO | App launcher + run mode. Bound to `SUPER+D` once shipped. |
-| Power menu | TODO | Lock / logout / suspend / reboot / shutdown. Bound to `SUPER+L`. |
+| Launcher | minimal | App launcher only. Add: run mode, calculator, emoji, clipboard |
+| Power menu | minimal | Lock/Logout/Suspend/Reboot/Shutdown buttons |
 | Control center | TODO | Audio sinks, network, brightness, idle inhibit |
 | Lock | use `hyprlock` | hyprlock owns the lock screen; quickshell stays out |
 | OSD | TODO | Volume / brightness overlay on hotkey |

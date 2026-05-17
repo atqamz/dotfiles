@@ -9,4 +9,6 @@ import qs.modules
 ShellRoot {
     Bar {}
     Notifications {}
+    Launcher {}
+    Power {}
 }
