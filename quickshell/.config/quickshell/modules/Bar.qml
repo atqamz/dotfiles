@@ -171,7 +171,7 @@ Scope {
                 // Clock
                 Text {
                     Layout.alignment: Qt.AlignRight
-                    text: clock.now.toLocaleTimeString(Qt.locale(), "HH:mm  ddd dd MMM")
+                    text: clock.now ? clock.now.toLocaleTimeString(Qt.locale(), "HH:mm  ddd dd MMM") : ""
                     color: "#ffffff"
                     font.pixelSize: 12
                     font.family: "JetBrains Mono"
