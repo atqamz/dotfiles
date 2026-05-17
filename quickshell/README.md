@@ -40,6 +40,10 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
   under `$PASSWORD_STORE_DIR` (default `~/.password-store`). Enter runs
   `pass show -c` to copy the password to the clipboard. IPC target `pass`.
   Replaces the legacy rofi-based `passmenu` script.
+- **EmojiPicker** (`modules/EmojiPicker.qml`) — overlay with a curated set
+  of ~200 common emojis (hardcoded in the module since rofimoji is gone).
+  Enter runs `wl-copy` to put the glyph on the clipboard. IPC target
+  `emoji`. Replaces the legacy rofi/rofimoji-based `emojipicker` script.
 
 ## Inspiration
 

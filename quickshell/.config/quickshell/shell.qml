@@ -16,4 +16,5 @@ ShellRoot {
     Osd {}
     TagInput {}
     PassMenu {}
+    EmojiPicker {}
 }
