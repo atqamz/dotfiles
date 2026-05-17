@@ -2,14 +2,15 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "opusplan",
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "bash \"/home/atqa/.claude/statusline-command.sh\""
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
-    "caveman@caveman": true
+    "caveman@caveman": true,
+    "superpowers@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
@@ -21,6 +22,6 @@
   },
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
-  "skipAutoPermissionPrompt": true,
-  "autoCompactEnabled": true
+  "autoCompactEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
