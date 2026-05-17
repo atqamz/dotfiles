@@ -13,4 +13,5 @@ ShellRoot {
     Power {}
     Clipboard {}
     WindowPicker {}
+    Osd {}
 }

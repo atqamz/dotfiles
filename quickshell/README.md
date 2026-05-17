@@ -28,6 +28,10 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
   toplevels via `hyprctl clients -j`. Filter by class or title, Enter to
   `hyprctl dispatch focuswindow`. IPC target `windows`. Replaces the
   legacy rofi-based `hypr-window-picker` script.
+- **OSD** (`modules/Osd.qml`) — bottom-centre overlay that shows volume or
+  brightness for 1.5s after a key press. Hyprland XF86Audio*/XF86MonBrightness*
+  bindings chain `wpctl`/`brightnessctl` with `qs ipc call osd volume|brightness`
+  so the OSD reads back the post-change value and auto-hides.
 
 ## Inspiration
 
@@ -49,7 +53,7 @@ Fedora. The roadmap below ports caelestia patterns into pure QML over time.
 | Power menu | minimal | Lock/Logout/Suspend/Reboot/Shutdown buttons |
 | Control center | TODO | Audio sinks, network, brightness, idle inhibit |
 | Lock | use `hyprlock` | hyprlock owns the lock screen; quickshell stays out |
-| OSD | TODO | Volume / brightness overlay on hotkey |
+| OSD | minimal | Has: volume + brightness. Add: mic mute, capslock |
 | Wallpaper engine | dropped | Single solid black background |
 
 ## Theme
