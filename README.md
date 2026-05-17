@@ -11,7 +11,6 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `git` | Git global configuration |
 | `gnupg` | GnuPG agent configuration (symlinked manually, not stowed) |
 | `hypr` | Hyprland window manager, lock, and idle |
-| `kitty` | Terminal emulator config |
 | `opencode` | OpenCode AI assistant config |
 | `readline` | Readline input configuration |
 | `rofi` | Application launcher theme |

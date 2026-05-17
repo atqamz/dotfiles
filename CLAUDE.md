@@ -3,7 +3,7 @@
 ## Structure
 
 Each top-level directory is a GNU Stow package. Files inside mirror `$HOME`,
-so `kitty/.config/kitty/kitty.conf` becomes `~/.config/kitty/kitty.conf`.
+so `hypr/.config/hypr/hyprland.conf` becomes `~/.config/hypr/hyprland.conf`.
 
 `STOW_DIRS` in the Makefile lists every active module. `make` restows them all;
 `make delete` removes symlinks.

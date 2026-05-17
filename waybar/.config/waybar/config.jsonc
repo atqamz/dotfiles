@@ -75,7 +75,7 @@
     "format-disconnected": " offline",
     "tooltip": true,
     "tooltip-format": " {essid} {signalStrength}%\n{ipaddr}",
-    "on-click": "kitty nmtui"
+    "on-click": "alacritty --class nmtui -e nmtui"
   },
   "backlight": {
     "format": "󰃟 {percent}%",
