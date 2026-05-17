@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Connect to pavg15 RDP host via xfreerdp.
+# Password read from ~/.config/pavg15.cred (mode 600, NOT committed to dotfiles).
+
+set -eu
+
+CRED="$HOME/.config/pavg15.cred"
+
+if [[ ! -r "$CRED" ]]; then
+    notify-send -u critical "rdp-pavg15" \
+        "Missing $CRED. Create with: echo -n 'PASSWORD' > $CRED && chmod 600 $CRED"
+    exit 1
+fi
+
+# Permission sanity: refuse if world/group readable.
+perms=$(stat -c '%a' "$CRED")
+if [[ "$perms" != "600" && "$perms" != "400" ]]; then
+    notify-send -u critical "rdp-pavg15" "$CRED has perms $perms; expect 600"
+    exit 1
+fi
+
+PASS=$(< "$CRED")
+
+exec xfreerdp \
+    /v:pavg15 \
+    /u:atqa \
+    "/p:$PASS" \
+    /grab-keyboard \
+    /dynamic-resolution
