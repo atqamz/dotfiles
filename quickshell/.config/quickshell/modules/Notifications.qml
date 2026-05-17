@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick
+import qs.components
 
 Scope {
     NotificationServer {
@@ -34,59 +35,70 @@ Scope {
             }
 
             margins {
-                top: 36
-                right: 12
+                top: Theme.padding.larger
+                right: Theme.padding.larger
             }
 
-            implicitWidth: 360
+            implicitWidth: 380
             implicitHeight: stack.implicitHeight
             color: "transparent"
 
             Column {
                 id: stack
                 width: parent.width
-                spacing: 8
+                spacing: Theme.spacing.normal
 
                 Repeater {
                     model: server.trackedNotifications.values
 
-                    Rectangle {
+                    StyledRect {
                         required property var modelData
                         width: stack.width
-                        implicitHeight: content.implicitHeight + 16
-                        color: "#1a1a1a"
-                        border.color: "#3a3a3a"
+                        implicitHeight: content.implicitHeight + Theme.padding.large * 2
+                        color: Theme.surface
+                        border.color: Theme.outline
                         border.width: 1
-                        radius: 4
+                        radius: Theme.radius.large
 
-                        Column {
+                        Row {
                             id: content
                             anchors.fill: parent
-                            anchors.margins: 8
-                            spacing: 4
+                            anchors.margins: Theme.padding.large
+                            spacing: Theme.spacing.large
 
-                            Text {
-                                width: parent.width
-                                text: modelData.summary
-                                color: "#ffffff"
-                                font.pixelSize: 12
-                                font.bold: true
-                                font.family: "JetBrains Mono"
-                                wrapMode: Text.WordWrap
-                                elide: Text.ElideRight
-                                maximumLineCount: 2
+                            MaterialIcon {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: "notifications"
+                                color: Theme.tertiary
+                                font.pixelSize: 22
+                                width: 28
                             }
-                            Text {
-                                width: parent.width
-                                visible: modelData.body.length > 0
-                                text: modelData.body
-                                color: "#cccccc"
-                                font.pixelSize: 11
-                                font.family: "JetBrains Mono"
-                                wrapMode: Text.WordWrap
-                                elide: Text.ElideRight
-                                maximumLineCount: 4
-                                textFormat: Text.MarkdownText
+
+                            Column {
+                                width: parent.width - 28 - parent.spacing
+                                spacing: Theme.spacing.smaller
+
+                                StyledText {
+                                    width: parent.width
+                                    text: modelData.summary
+                                    color: Theme.text
+                                    font.pixelSize: Theme.font.size.normal
+                                    font.bold: true
+                                    wrapMode: Text.WordWrap
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 2
+                                }
+                                StyledText {
+                                    width: parent.width
+                                    visible: modelData.body.length > 0
+                                    text: modelData.body
+                                    color: Theme.textVariant
+                                    font.pixelSize: Theme.font.size.small
+                                    wrapMode: Text.WordWrap
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 4
+                                    textFormat: Text.MarkdownText
+                                }
                             }
                         }
 
