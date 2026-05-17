@@ -6,7 +6,10 @@ Replaces waybar + swaync + wlogout + rofi launcher with a single QML shell.
 ## Scope (current)
 
 - **Bar** (`modules/Bar.qml`) — top panel, black bg, JetBrains Mono. Shows
-  Hyprland workspace indicators + clock.
+  Hyprland workspace indicators (left), then network/audio/battery/clock
+  widgets (right). Audio polls `wpctl get-volume @DEFAULT_AUDIO_SINK@`
+  every 2s; battery polls `/sys/class/power_supply/BAT{0,1}/{capacity,status}`
+  every 30s; network polls `nmcli -t -f STATE general` every 2s.
 - **Notifications** (`modules/Notifications.qml`) — D-Bus
   `org.freedesktop.Notifications` server, top-right toast stack, auto-dismiss
   on expire timeout or click.
@@ -40,7 +43,7 @@ Fedora. The roadmap below ports caelestia patterns into pure QML over time.
 
 | Module | Status | Notes |
 |---|---|---|
-| Bar | minimal | Add: tray, audio slider, network indicator, battery, brightness |
+| Bar | enriched | Has: workspaces, network, audio, battery, clock. Add: tray, brightness, mpris title |
 | Notifications | minimal | Add: dismiss-all, history panel, do-not-disturb toggle |
 | Launcher | minimal | App launcher only. Add: run mode, calculator, emoji, clipboard |
 | Power menu | minimal | Lock/Logout/Suspend/Reboot/Shutdown buttons |
