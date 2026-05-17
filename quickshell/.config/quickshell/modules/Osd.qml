@@ -1,27 +1,21 @@
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import qs.components
+import qs.services
 
 Scope {
     id: root
 
-    property string label: ""
+    // "volume" | "brightness"
+    property string kind: ""
     property int value: 0
+    property bool muted: false
     property bool active: false
 
-    Process {
-        id: volRead
-        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const m = this.text.match(/Volume:\s+([0-9.]+)(\s+\[MUTED\])?/);
-                if (!m) return;
-                const pct = Math.round(parseFloat(m[1]) * 100);
-                root.label = m[2] !== undefined ? "muted" : "volume";
-                root.value = pct;
-                root.show();
-            }
-        }
+    function show(): void {
+        root.active = true;
+        hideTimer.restart();
     }
 
     Process {
@@ -29,12 +23,11 @@ Scope {
         command: ["brightnessctl", "-m"]
         stdout: StdioCollector {
             onStreamFinished: {
-                // "intel_backlight,brightness,9600,40%,24000"
                 const cols = this.text.trim().split(",");
                 if (cols.length < 4) return;
-                const pct = parseInt(cols[3].replace("%", ""), 10);
-                root.label = "brightness";
-                root.value = pct;
+                root.kind = "brightness";
+                root.value = parseInt(cols[3].replace("%", ""), 10);
+                root.muted = false;
                 root.show();
             }
         }
@@ -46,15 +39,34 @@ Scope {
         onTriggered: root.active = false
     }
 
-    function show(): void {
-        root.active = true;
-        hideTimer.restart();
+    Connections {
+        target: Audio
+        function onVolumeChanged() {
+            if (root.kind === "volume" || !root.active) {
+                root.kind = "volume";
+                root.value = Audio.volume;
+                root.muted = Audio.muted;
+            }
+        }
+        function onMutedChanged() {
+            root.kind = "volume";
+            root.value = Audio.volume;
+            root.muted = Audio.muted;
+        }
     }
 
     IpcHandler {
         target: "osd"
-        function volume(): void { volRead.running = true; }
-        function brightness(): void { brightRead.running = true; }
+        function volume(): void {
+            Audio.refresh();
+            root.kind = "volume";
+            root.value = Audio.volume;
+            root.muted = Audio.muted;
+            root.show();
+        }
+        function brightness(): void {
+            brightRead.running = true;
+        }
     }
 
     Variants {
@@ -72,59 +84,71 @@ Scope {
             }
 
             margins {
-                bottom: 60
+                bottom: 80
             }
 
-            implicitHeight: 60
+            implicitHeight: 80
             color: "transparent"
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                implicitWidth: 280
-                implicitHeight: 48
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                implicitWidth: 320
+                implicitHeight: 60
+                color: Theme.surface
+                border.color: Theme.outline
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 Row {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 12
+                    anchors.margins: Theme.padding.larger
+                    spacing: Theme.spacing.large
 
-                    Text {
+                    MaterialIcon {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.label
-                        color: "#888888"
-                        font.pixelSize: 12
-                        font.family: "JetBrains Mono"
-                        width: 80
+                        text: {
+                            if (root.kind === "brightness") return "brightness_6";
+                            if (root.muted) return "volume_off";
+                            if (root.value === 0) return "volume_mute";
+                            if (root.value < 50) return "volume_down";
+                            return "volume_up";
+                        }
+                        color: root.muted ? Theme.textDim : Theme.text
+                        font.pixelSize: 24
                     }
 
-                    Rectangle {
+                    Item {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 140
-                        height: 6
-                        color: "#1a1a1a"
-                        radius: 3
+                        implicitWidth: 180
+                        implicitHeight: 8
 
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width * (root.value / 100)
+                            anchors.fill: parent
+                            color: Theme.surfaceContainerHigh
+                            radius: Theme.radius.full
+                        }
+
+                        Rectangle {
+                            width: parent.width * Math.max(0, Math.min(1, root.value / 100))
                             height: parent.height
-                            color: "#ffffff"
-                            radius: 3
+                            color: root.muted ? Theme.textDim : Theme.primary
+                            radius: Theme.radius.full
+
+                            Behavior on width {
+                                NumberAnimation {
+                                    duration: Theme.anim.durations.normal
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
                         }
                     }
 
-                    Text {
+                    StyledText {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: `${root.value}%`
-                        color: "#ffffff"
-                        font.pixelSize: 12
-                        font.family: "JetBrains Mono"
-                        width: 36
+                        text: root.value + "%"
+                        color: Theme.text
+                        font.pixelSize: Theme.font.size.normal
+                        width: 40
                         horizontalAlignment: Text.AlignRight
                     }
                 }

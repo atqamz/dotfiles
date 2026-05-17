@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
+import qs.components
 
 Scope {
     id: root
@@ -81,7 +82,7 @@ Scope {
                 right: true
             }
 
-            color: "#cc000000"
+            color: Theme.scrim
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -92,53 +93,66 @@ Scope {
                 onClicked: root.open = false
             }
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                width: 540
-                height: 440
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                width: 560
+                height: 460
+                color: Theme.surface
+                border.color: Theme.outline
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 MouseArea { anchors.fill: parent }
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 10
+                    anchors.margins: Theme.padding.larger
+                    spacing: Theme.spacing.large
 
-                    TextField {
-                        id: searchField
+                    Row {
                         width: parent.width
-                        placeholderText: "Search pass entries..."
-                        color: "#ffffff"
-                        placeholderTextColor: "#888888"
-                        font.pixelSize: 14
-                        font.family: "JetBrains Mono"
-                        text: root.query
-                        onTextChanged: if (text !== root.query) root.query = text
-                        background: Rectangle {
-                            color: "#1a1a1a"
-                            border.color: "#3a3a3a"
-                            border.width: 1
-                            radius: 4
-                        }
-                        padding: 8
+                        spacing: Theme.spacing.large
 
-                        Keys.onPressed: event => {
-                            if (event.key === Qt.Key_Escape) {
-                                root.open = false;
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Down) {
-                                root.moveSelection(1);
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
-                                root.moveSelection(-1);
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                root.copySelected();
-                                event.accepted = true;
+                        MaterialIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "key"
+                            color: Theme.textVariant
+                            font.pixelSize: 22
+                            width: 28
+                        }
+
+                        TextField {
+                            id: searchField
+                            width: parent.width - 28 - parent.spacing
+                            placeholderText: "Search pass entries…"
+                            color: Theme.text
+                            placeholderTextColor: Theme.textMuted
+                            font.pixelSize: Theme.font.size.large
+                            font.family: Theme.font.family.sans
+                            text: root.query
+                            onTextChanged: if (text !== root.query) root.query = text
+                            background: Rectangle {
+                                color: Theme.surfaceContainer
+                                border.color: Theme.outlineVariant
+                                border.width: 1
+                                radius: Theme.radius.normal
+                            }
+                            padding: Theme.padding.normal
+
+                            Keys.onPressed: event => {
+                                if (event.key === Qt.Key_Escape) {
+                                    root.open = false;
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Down) {
+                                    root.moveSelection(1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Up) {
+                                    root.moveSelection(-1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    root.copySelected();
+                                    event.accepted = true;
+                                }
                             }
                         }
                     }
@@ -150,25 +164,25 @@ Scope {
                         keyNavigationEnabled: false
                         currentIndex: root.currentIndex
                         model: root.filteredEntries
+                        spacing: 2
 
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                        delegate: Rectangle {
+                        delegate: StyledRect {
                             required property var modelData
                             required property int index
                             width: ListView.view.width
-                            height: 30
-                            color: index === root.currentIndex ? "#1f1f1f" : "transparent"
-                            radius: 3
+                            height: 32
+                            color: index === root.currentIndex ? Theme.surfaceContainerHigh : "transparent"
+                            radius: Theme.radius.normal
 
-                            Text {
+                            StyledText {
                                 anchors.verticalCenter: parent.verticalCenter
                                 anchors.left: parent.left
-                                anchors.leftMargin: 8
+                                anchors.leftMargin: Theme.padding.large
                                 text: modelData
-                                color: "#ffffff"
-                                font.pixelSize: 12
-                                font.family: "JetBrains Mono"
+                                color: Theme.text
+                                font.pixelSize: Theme.font.size.normal
                             }
 
                             MouseArea {

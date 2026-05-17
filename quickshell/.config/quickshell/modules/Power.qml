@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
+import qs.components
 
 Scope {
     id: root
@@ -10,11 +11,11 @@ Scope {
     property bool open: false
 
     readonly property var actions: [
-        { label: "Lock",     cmd: ["hyprlock"] },
-        { label: "Logout",   cmd: ["hyprctl", "dispatch", "exit"] },
-        { label: "Suspend",  cmd: ["systemctl", "suspend"] },
-        { label: "Reboot",   cmd: ["systemctl", "reboot"] },
-        { label: "Shutdown", cmd: ["systemctl", "poweroff"] }
+        { label: "Lock",     icon: "lock",              cmd: ["hyprlock"] },
+        { label: "Logout",   icon: "logout",            cmd: ["hyprctl", "dispatch", "exit"] },
+        { label: "Suspend",  icon: "bedtime",           cmd: ["systemctl", "suspend"] },
+        { label: "Reboot",   icon: "restart_alt",       cmd: ["systemctl", "reboot"] },
+        { label: "Shutdown", icon: "power_settings_new", cmd: ["systemctl", "poweroff"] }
     ]
 
     function toggle(): void { root.open = !root.open; }
@@ -46,7 +47,7 @@ Scope {
                 right: true
             }
 
-            color: "#cc000000"
+            color: Theme.scrim
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -57,42 +58,52 @@ Scope {
                 onClicked: root.open = false
             }
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                implicitWidth: buttonRow.implicitWidth + 32
-                implicitHeight: buttonRow.implicitHeight + 32
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                implicitWidth: buttonRow.implicitWidth + Theme.padding.larger * 2
+                implicitHeight: buttonRow.implicitHeight + Theme.padding.larger * 2
+                color: Theme.surface
+                border.color: Theme.outline
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 MouseArea { anchors.fill: parent }
 
                 RowLayout {
                     id: buttonRow
                     anchors.centerIn: parent
-                    spacing: 12
+                    spacing: Theme.spacing.large
 
                     Repeater {
                         model: root.actions
 
-                        Rectangle {
+                        StyledRect {
                             required property var modelData
-                            implicitWidth: 120
-                            implicitHeight: 120
-                            color: hover.hovered ? "#1f1f1f" : "#141414"
-                            border.color: hover.hovered ? "#ffffff" : "#3a3a3a"
+                            implicitWidth: 128
+                            implicitHeight: 128
+                            color: layer.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                            border.color: layer.hovered ? Theme.primary : Theme.outline
                             border.width: 1
-                            radius: 4
+                            radius: Theme.radius.large
 
-                            HoverHandler { id: hover }
+                            StateLayer { id: layer; radius: parent.radius }
 
-                            Text {
+                            ColumnLayout {
                                 anchors.centerIn: parent
-                                text: modelData.label
-                                color: "#ffffff"
-                                font.pixelSize: 14
-                                font.family: "JetBrains Mono"
+                                spacing: Theme.spacing.normal
+
+                                MaterialIcon {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: modelData.icon
+                                    color: layer.hovered ? Theme.primary : Theme.text
+                                    font.pixelSize: 36
+                                }
+                                StyledText {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: modelData.label
+                                    color: Theme.text
+                                    font.pixelSize: Theme.font.size.large
+                                }
                             }
 
                             TapHandler {

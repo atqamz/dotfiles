@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
+import qs.components
 
 Scope {
     id: root
@@ -45,7 +46,7 @@ Scope {
                 right: true
             }
 
-            color: "#cc000000"
+            color: Theme.scrim
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -61,46 +62,56 @@ Scope {
                 onClicked: root.open = false
             }
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                width: 420
-                implicitHeight: column.implicitHeight + 24
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                width: 440
+                implicitHeight: column.implicitHeight + Theme.padding.larger * 2
+                color: Theme.surface
+                border.color: Theme.outline
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 MouseArea { anchors.fill: parent }
 
                 Column {
                     id: column
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
+                    anchors.margins: Theme.padding.larger
+                    spacing: Theme.spacing.normal
 
-                    Text {
+                    Row {
                         width: parent.width
-                        text: "tag window  (prefix - to remove)"
-                        color: "#888888"
-                        font.pixelSize: 11
-                        font.family: "JetBrains Mono"
+                        spacing: Theme.spacing.normal
+
+                        MaterialIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "label"
+                            color: Theme.textVariant
+                            font.pixelSize: 18
+                        }
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "tag window  (prefix - to remove)"
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.font.size.small
+                        }
                     }
 
                     TextField {
                         id: field
                         width: parent.width
                         placeholderText: "tag name"
-                        color: "#ffffff"
-                        placeholderTextColor: "#666666"
-                        font.pixelSize: 14
-                        font.family: "JetBrains Mono"
+                        color: Theme.text
+                        placeholderTextColor: Theme.textDim
+                        font.pixelSize: Theme.font.size.large
+                        font.family: Theme.font.family.sans
                         background: Rectangle {
-                            color: "#1a1a1a"
-                            border.color: "#3a3a3a"
+                            color: Theme.surfaceContainer
+                            border.color: Theme.outlineVariant
                             border.width: 1
-                            radius: 4
+                            radius: Theme.radius.normal
                         }
-                        padding: 8
+                        padding: Theme.padding.normal
 
                         Keys.onPressed: event => {
                             if (event.key === Qt.Key_Escape) {
