@@ -1,7 +1,7 @@
-STOW_DIRS = bash claude git hypr opencode readline rofi scripts swaync tmux waybar wlogout
+STOW_DIRS = bash claude git hypr opencode quickshell readline rofi scripts swaync tmux waybar wlogout
 
 # files or directories that might conflict with stow and should be backed up
-BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .config/hypr .config/hypr/host.conf .config/opencode .config/rofi .config/swaync .config/waybar .config/wlogout .gitconfig .inputrc .tmux.conf
+BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .config/hypr .config/hypr/host.conf .config/opencode .config/quickshell .config/rofi .config/swaync .config/waybar .config/wlogout .gitconfig .inputrc .tmux.conf
 
 # gnupg requires a real directory with strict permissions, so stow's directory
 # folding cannot be used. Symlink individual config files instead.
