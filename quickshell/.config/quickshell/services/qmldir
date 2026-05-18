@@ -11,3 +11,4 @@ singleton HyprlandKeybinds 1.0 HyprlandKeybinds.qml
 singleton Emojis 1.0 Emojis.qml
 singleton NotificationHistory 1.0 NotificationHistory.qml
 singleton Updates 1.0 Updates.qml
+singleton Resources 1.0 Resources.qml
