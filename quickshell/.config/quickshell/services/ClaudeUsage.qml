@@ -25,17 +25,21 @@ Singleton {
         try {
             const d = JSON.parse(text);
             if (d.error) {
+                root.sessionPct = 0;
+                root.weeklyPct = 0;
                 root.status = "error";
                 root.errorKind = d.error;
                 return;
             }
-            root.sessionPct = parseFloat(d.sessionUsage ?? 0);
-            root.weeklyPct = parseFloat(d.weeklyUsage ?? 0);
+            root.sessionPct = parseFloat(d.sessionUsage ?? 0) || 0;
+            root.weeklyPct = parseFloat(d.weeklyUsage ?? 0) || 0;
             root.sessionResetIso = d.sessionResetAt ?? "";
             root.weeklyResetIso = d.weeklyResetAt ?? "";
             root.status = severity(Math.max(root.sessionPct, root.weeklyPct));
             root.errorKind = "";
         } catch (e) {
+            root.sessionPct = 0;
+            root.weeklyPct = 0;
             root.status = "error";
             root.errorKind = "parse";
         }
@@ -54,6 +58,6 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: proc.running = true
+        onTriggered: if (!proc.running) proc.running = true
     }
 }
