@@ -28,13 +28,13 @@ Singleton {
     readonly property real length: activePlayer?.length ?? 0
 
     function togglePlaying(): void {
-        if (canTogglePlaying) activePlayer.togglePlaying();
+        if (activePlayer && canTogglePlaying) activePlayer.togglePlaying();
     }
     function next(): void {
-        if (canGoNext) activePlayer.next();
+        if (activePlayer && canGoNext) activePlayer.next();
     }
     function previous(): void {
-        if (canGoPrevious) activePlayer.previous();
+        if (activePlayer && canGoPrevious) activePlayer.previous();
     }
     function pauseAll(): void {
         for (let i = 0; i < allPlayers.length; ++i) {
