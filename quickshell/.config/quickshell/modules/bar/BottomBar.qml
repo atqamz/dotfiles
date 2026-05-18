@@ -12,7 +12,7 @@ PanelWindow {
     readonly property int pillHeight: 28
     readonly property int edgeMargin: 6
     readonly property int hotZoneHeight: 12
-    readonly property int panelHeight: pillHeight + edgeMargin + 2   // 36
+    readonly property int panelHeight: pillHeight + edgeMargin + 2
     readonly property int visibleY: panelHeight - pillHeight - edgeMargin
 
     anchors {
@@ -48,7 +48,7 @@ PanelWindow {
         anchors.leftMargin: panel.edgeMargin
         anchors.rightMargin: panel.edgeMargin
         height: panel.pillHeight
-        y: panel.panelHeight                 // start collapsed (offscreen, below panel)
+        y: panel.panelHeight
 
         LauncherPill {
             id: launcher
@@ -60,6 +60,12 @@ PanelWindow {
             id: workspaces
             anchors.verticalCenter: parent.verticalCenter
             x: launcher.x + launcher.width + 8
+        }
+
+        MediaPill {
+            id: media
+            anchors.verticalCenter: parent.verticalCenter
+            x: workspaces.x + workspaces.width + 8
         }
 
         ClockPill {
@@ -87,7 +93,7 @@ PanelWindow {
         slideFromY: panel.panelHeight
         slideToY: panel.visibleY
         hotZoneItem: hotZone
-        watchedItems: [launcher, workspaces, clock, claude, status]
+        watchedItems: [launcher, workspaces, media, clock, claude, status]
         dwellMs: 600
     }
 
@@ -97,6 +103,10 @@ PanelWindow {
     }
     Connections {
         target: workspaces
+        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
+    }
+    Connections {
+        target: media
         function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
     }
     Connections {
