@@ -101,10 +101,7 @@ Scope {
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InCubic } }
 
-                        Component.onCompleted: {
-                            x = width + 20;
-                            slideInAnim.start();
-                        }
+                        Component.onCompleted: slideInAnim.start()
 
                         NumberAnimation {
                             id: slideInAnim
@@ -222,11 +219,8 @@ Scope {
 
                         MouseArea {
                             anchors.fill: parent
-                            acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                            propagateComposedEvents: true
-                            onClicked: function(mouse) {
-                                if (mouse.button === Qt.MiddleButton) card.dismissed = true;
-                            }
+                            acceptedButtons: Qt.MiddleButton
+                            onClicked: card.dismissed = true
                         }
 
                         onDismissedChanged: if (dismissed) dismissTimer.restart()
