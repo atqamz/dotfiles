@@ -19,6 +19,18 @@ Pill {
         return "volume_up";
     }
 
+    readonly property string bluetoothIcon: {
+        if (!Bluetooth.powered) return "bluetooth_disabled";
+        if (Bluetooth.connectedDeviceCount > 0) return "bluetooth_connected";
+        return "bluetooth";
+    }
+
+    readonly property color bluetoothColor: {
+        if (!Bluetooth.powered) return Theme.textDim;
+        if (Bluetooth.connectedDeviceCount > 0) return Theme.text;
+        return Theme.textVariant;
+    }
+
     readonly property string batteryIcon: {
         if (Battery.charging) return "battery_charging_full";
         if (Battery.percent < 10) return "battery_alert";
@@ -55,6 +67,16 @@ Pill {
                 color: Audio.muted ? Theme.textDim : Theme.textVariant
                 font.pixelSize: 11
             }
+        }
+
+        // bluetooth
+        MaterialIcon {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Bluetooth.available
+            text: root.bluetoothIcon
+            color: root.bluetoothColor
+            font.pixelSize: 16
+            TapHandler { onTapped: Bluetooth.togglePowered() }
         }
 
         // network
