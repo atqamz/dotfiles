@@ -1,8 +1,10 @@
+// quickshell/.config/quickshell/modules/Clipboard.qml
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
+import qs.components
 
 Scope {
     id: root
@@ -14,12 +16,17 @@ Scope {
 
     readonly property var filteredEntries: {
         const q = root.query.toLowerCase();
-        if (q.length === 0)
-            return root.entries;
+        if (q.length === 0) return root.entries;
         return root.entries.filter(e => e.preview.toLowerCase().includes(q));
     }
 
     onFilteredEntriesChanged: root.currentIndex = 0
+
+    function detectKind(preview: string): string {
+        if (/^\[\[\s*binary data.*image/i.test(preview)) return "image";
+        if (/^https?:\/\//.test(preview.trim())) return "link";
+        return "text";
+    }
 
     function toggle(): void {
         if (root.open) {
@@ -39,12 +46,16 @@ Scope {
 
     function pasteSelected(): void {
         const list = root.filteredEntries;
-        if (root.currentIndex < 0 || root.currentIndex >= list.length)
-            return;
+        if (root.currentIndex < 0 || root.currentIndex >= list.length) return;
         const entry = list[root.currentIndex];
         root.open = false;
         copyProc.command = ["sh", "-c", `cliphist decode ${entry.id} | wl-copy`];
         copyProc.running = true;
+    }
+
+    function deleteEntry(id: string): void {
+        deleteProc.command = ["sh", "-c", `echo '${id}' | cliphist delete`];
+        deleteProc.running = true;
     }
 
     function clearAll(): void {
@@ -60,11 +71,10 @@ Scope {
                 const lines = this.text.split("\n").filter(l => l.length > 0);
                 root.entries = lines.map(line => {
                     const tabIdx = line.indexOf("\t");
-                    if (tabIdx < 0) return { id: line, preview: line };
-                    return {
-                        id: line.substring(0, tabIdx),
-                        preview: line.substring(tabIdx + 1)
-                    };
+                    if (tabIdx < 0) return { id: line, preview: line, kind: "text" };
+                    const id = line.substring(0, tabIdx);
+                    const preview = line.substring(tabIdx + 1);
+                    return { id: id, preview: preview, kind: root.detectKind(preview) };
                 });
                 root.open = true;
             }
@@ -72,6 +82,10 @@ Scope {
     }
 
     Process { id: copyProc }
+    Process {
+        id: deleteProc
+        onExited: listProc.running = true
+    }
     Process {
         id: wipeProc
         command: ["cliphist", "wipe"]
@@ -98,7 +112,7 @@ Scope {
                 right: true
             }
 
-            color: "#cc000000"
+            color: Theme.scrim
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
@@ -109,53 +123,72 @@ Scope {
                 onClicked: root.open = false
             }
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                width: 640
-                height: 480
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                width: 680
+                height: 520
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 MouseArea { anchors.fill: parent }
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 10
+                    anchors.margins: Theme.padding.larger
+                    spacing: Theme.spacing.large
 
-                    TextField {
-                        id: searchField
+                    Row {
                         width: parent.width
-                        placeholderText: "Search clipboard..."
-                        color: "#ffffff"
-                        placeholderTextColor: "#888888"
-                        font.pixelSize: 14
-                        font.family: "JetBrains Mono"
-                        text: root.query
-                        onTextChanged: if (text !== root.query) root.query = text
-                        background: Rectangle {
-                            color: "#1a1a1a"
-                            border.color: "#3a3a3a"
-                            border.width: 1
-                            radius: 4
-                        }
-                        padding: 8
+                        spacing: Theme.spacing.large
 
-                        Keys.onPressed: event => {
-                            if (event.key === Qt.Key_Escape) {
-                                root.open = false;
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Down) {
-                                root.moveSelection(1);
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
-                                root.moveSelection(-1);
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                root.pasteSelected();
-                                event.accepted = true;
+                        MaterialIcon {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "content_paste"
+                            color: Theme.textVariant
+                            font.pixelSize: 22
+                            width: 28
+                        }
+
+                        TextField {
+                            id: searchField
+                            width: parent.width - 28 - parent.spacing
+                            placeholderText: "Search clipboard…"
+                            color: Theme.text
+                            placeholderTextColor: Theme.textMuted
+                            font.pixelSize: Theme.font.size.large
+                            font.family: Theme.font.family.sans
+                            text: root.query
+                            onTextChanged: if (text !== root.query) root.query = text
+                            background: Rectangle {
+                                color: Theme.surfaceContainer
+                                border.color: Theme.outlineVariant
+                                border.width: 1
+                                radius: Theme.radius.normal
+                            }
+                            padding: Theme.padding.normal
+
+                            Keys.onPressed: event => {
+                                if (event.key === Qt.Key_Escape) {
+                                    root.open = false;
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Down) {
+                                    root.moveSelection(1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Up) {
+                                    root.moveSelection(-1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    root.pasteSelected();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Delete) {
+                                    const list = root.filteredEntries;
+                                    if (root.currentIndex >= 0 && root.currentIndex < list.length) {
+                                        root.deleteEntry(list[root.currentIndex].id);
+                                    }
+                                    event.accepted = true;
+                                }
                             }
                         }
                     }
@@ -167,39 +200,52 @@ Scope {
                         keyNavigationEnabled: false
                         currentIndex: root.currentIndex
                         model: root.filteredEntries
+                        spacing: 2
 
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                        delegate: Rectangle {
+                        delegate: StyledRect {
                             required property var modelData
                             required property int index
                             width: ListView.view.width
-                            height: 30
-                            color: index === root.currentIndex ? "#1f1f1f" : "transparent"
-                            radius: 3
+                            height: 48
+                            color: index === root.currentIndex ? Theme.surfaceContainerHigh : "transparent"
+                            radius: Theme.radius.normal
 
                             Row {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
-                                spacing: 8
+                                anchors.leftMargin: Theme.padding.large
+                                anchors.rightMargin: Theme.padding.large
+                                spacing: Theme.spacing.large
 
-                                Text {
+                                StyledText {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: modelData.id
-                                    color: "#666666"
-                                    font.pixelSize: 11
-                                    font.family: "JetBrains Mono"
-                                    width: 40
+                                    color: Theme.textDim
+                                    font.pixelSize: Theme.font.size.small
+                                    font.family: Theme.font.family.mono
+                                    width: 44
                                     elide: Text.ElideRight
                                 }
-                                Text {
+
+                                MaterialIcon {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.preview
-                                    color: "#ffffff"
-                                    font.pixelSize: 12
-                                    font.family: "JetBrains Mono"
-                                    width: parent.width - 56
+                                    text: {
+                                        if (modelData.kind === "image") return "image";
+                                        if (modelData.kind === "link") return "link";
+                                        return "subject";
+                                    }
+                                    color: Theme.textDim
+                                    font.pixelSize: 18
+                                    width: 22
+                                }
+
+                                StyledText {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData.kind === "image" ? "[image]" : modelData.preview
+                                    color: Theme.text
+                                    font.pixelSize: Theme.font.size.normal
+                                    width: parent.width - 44 - 22 - parent.spacing * 3
                                     elide: Text.ElideRight
                                 }
                             }
@@ -207,10 +253,15 @@ Scope {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onEntered: root.currentIndex = index
-                                onClicked: {
+                                onClicked: function(mouse) {
                                     root.currentIndex = index;
-                                    root.pasteSelected();
+                                    if (mouse.button === Qt.RightButton) {
+                                        root.deleteEntry(modelData.id);
+                                    } else {
+                                        root.pasteSelected();
+                                    }
                                 }
                             }
                         }

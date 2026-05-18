@@ -17,4 +17,7 @@ ShellRoot {
     TagInput {}
     PassMenu {}
     EmojiPicker {}
+    MediaControls {}
+    Cheatsheet {}
+    NotificationHistory {}
 }

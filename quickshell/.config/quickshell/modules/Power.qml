@@ -1,33 +1,56 @@
+// quickshell/.config/quickshell/modules/Power.qml
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
+import qs.components
 
 Scope {
     id: root
 
     property bool open: false
+    property int currentIndex: 0
+    property int confirmingIndex: -1     // index of card awaiting confirmation, or -1
 
     readonly property var actions: [
-        { label: "Lock",     cmd: ["hyprlock"] },
-        { label: "Logout",   cmd: ["hyprctl", "dispatch", "exit"] },
-        { label: "Suspend",  cmd: ["systemctl", "suspend"] },
-        { label: "Reboot",   cmd: ["systemctl", "reboot"] },
-        { label: "Shutdown", cmd: ["systemctl", "poweroff"] }
+        { label: "Lock",     icon: "lock",              cmd: ["hyprlock"],                 confirm: false },
+        { label: "Logout",   icon: "logout",            cmd: ["hyprctl", "dispatch", "exit"], confirm: false },
+        { label: "Suspend",  icon: "bedtime",           cmd: ["systemctl", "suspend"],     confirm: false },
+        { label: "Reboot",   icon: "refresh",           cmd: ["systemctl", "reboot"],      confirm: true },
+        { label: "Shutdown", icon: "power_settings_new", cmd: ["systemctl", "poweroff"],   confirm: true }
     ]
 
-    function toggle(): void { root.open = !root.open; }
+    function toggle(): void {
+        root.open = !root.open;
+        if (root.open) {
+            root.currentIndex = 0;
+            root.confirmingIndex = -1;
+        }
+    }
 
-    function run(cmd: list<string>): void {
+    function activate(index: int): void {
+        if (index < 0 || index >= root.actions.length) return;
+        const a = root.actions[index];
+        if (a.confirm && root.confirmingIndex !== index) {
+            root.confirmingIndex = index;
+            return;
+        }
         root.open = false;
-        Quickshell.execDetached(cmd);
+        root.confirmingIndex = -1;
+        Quickshell.execDetached(a.cmd);
+    }
+
+    function moveSelection(delta: int): void {
+        const len = root.actions.length;
+        root.currentIndex = (root.currentIndex + delta + len) % len;
+        root.confirmingIndex = -1;
     }
 
     IpcHandler {
         target: "session"
         function toggle(): void { root.toggle(); }
-        function open(): void { root.open = true; }
+        function open(): void { root.open = true; root.currentIndex = 0; root.confirmingIndex = -1; }
         function close(): void { root.open = false; }
     }
 
@@ -46,57 +69,91 @@ Scope {
                 right: true
             }
 
-            color: "#cc000000"
+            color: Theme.scrim
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            Keys.onEscapePressed: root.open = false
-
             MouseArea {
                 anchors.fill: parent
+                focus: true
                 onClicked: root.open = false
+                Keys.onEscapePressed: root.open = false
+                Keys.onLeftPressed: root.moveSelection(-1)
+                Keys.onRightPressed: root.moveSelection(1)
+                Keys.onReturnPressed: root.activate(root.currentIndex)
+                Keys.onEnterPressed: root.activate(root.currentIndex)
             }
 
-            Rectangle {
+            StyledRect {
                 anchors.centerIn: parent
-                implicitWidth: buttonRow.implicitWidth + 32
-                implicitHeight: buttonRow.implicitHeight + 32
-                color: "#0a0a0a"
-                border.color: "#3a3a3a"
+                implicitWidth: buttonRow.implicitWidth + Theme.padding.larger * 2
+                implicitHeight: buttonRow.implicitHeight + Theme.padding.larger * 2
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
-                radius: 6
+                radius: Theme.radius.large
 
                 MouseArea { anchors.fill: parent }
 
                 RowLayout {
                     id: buttonRow
                     anchors.centerIn: parent
-                    spacing: 12
+                    spacing: Theme.spacing.extraLarge
 
                     Repeater {
                         model: root.actions
 
-                        Rectangle {
+                        StyledRect {
+                            id: card
                             required property var modelData
-                            implicitWidth: 120
-                            implicitHeight: 120
-                            color: hover.hovered ? "#1f1f1f" : "#141414"
-                            border.color: hover.hovered ? "#ffffff" : "#3a3a3a"
+                            required property int index
+                            property bool hovered: cardHover.hovered
+                            property bool selected: index === root.currentIndex
+                            property bool confirming: index === root.confirmingIndex
+
+                            implicitWidth: 160
+                            implicitHeight: 160
+                            color: card.confirming ? Theme.warning :
+                                   (card.hovered || card.selected ? Theme.surfaceContainerHigh : Theme.surfaceContainer)
+                            border.color: card.confirming ? Theme.warning :
+                                          (card.hovered || card.selected ? Theme.primary : Theme.outlineVariant)
                             border.width: 1
-                            radius: 4
+                            radius: Theme.radius.large
+                            scale: card.hovered || card.selected ? 1.04 : 1.0
 
-                            HoverHandler { id: hover }
+                            Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                            Behavior on border.color { ColorAnimation { duration: 120 } }
 
-                            Text {
+                            HoverHandler { id: cardHover }
+
+                            StateLayer { id: layer; radius: parent.radius }
+
+                            ColumnLayout {
                                 anchors.centerIn: parent
-                                text: modelData.label
-                                color: "#ffffff"
-                                font.pixelSize: 14
-                                font.family: "JetBrains Mono"
+                                spacing: Theme.spacing.normal
+
+                                MaterialIcon {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: card.confirming ? "warning" : card.modelData.icon
+                                    color: card.confirming ? Theme.textOnPrimary :
+                                           (card.hovered || card.selected ? Theme.primary : Theme.text)
+                                    font.pixelSize: 48
+                                }
+                                StyledText {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: card.confirming ? "Confirm?" : card.modelData.label
+                                    color: card.confirming ? Theme.textOnPrimary : Theme.text
+                                    font.pixelSize: Theme.font.size.large
+                                    font.bold: card.confirming
+                                }
                             }
 
-                            TapHandler {
-                                onTapped: root.run(modelData.cmd)
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onEntered: root.currentIndex = card.index
+                                onClicked: root.activate(card.index)
                             }
                         }
                     }
