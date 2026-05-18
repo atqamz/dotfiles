@@ -106,8 +106,10 @@ Scope {
                                 }
                             }
 
-                            TapHandler {
-                                onTapped: root.run(modelData.cmd)
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: root.run(modelData.cmd)
                             }
                         }
                     }
