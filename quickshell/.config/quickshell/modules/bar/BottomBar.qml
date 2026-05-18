@@ -11,7 +11,7 @@ PanelWindow {
 
     readonly property int pillHeight: 28
     readonly property int edgeMargin: 6
-    readonly property int hotZoneHeight: 4
+    readonly property int hotZoneHeight: 12
     readonly property int panelHeight: pillHeight + edgeMargin + 2   // 36
     readonly property int visibleY: panelHeight - pillHeight - edgeMargin
 
@@ -88,7 +88,7 @@ PanelWindow {
         slideToY: panel.visibleY
         hotZoneItem: hotZone
         watchedItems: [launcher, workspaces, clock, claude, status]
-        dwellMs: 150
+        dwellMs: 600
     }
 
     Connections {
