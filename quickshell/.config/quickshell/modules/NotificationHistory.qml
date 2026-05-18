@@ -35,14 +35,17 @@ Scope {
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-            Rectangle {
+            FocusScope {
                 anchors.fill: parent
-                color: Theme.scrim
-                MouseArea { anchors.fill: parent; onClicked: root.open = false }
-            }
+                focus: root.open
+                Keys.onEscapePressed: root.open = false
 
-            Keys.onEscapePressed: root.open = false
-            focus: root.open
+                Rectangle {
+                    anchors.fill: parent
+                    color: Theme.scrim
+                    MouseArea { anchors.fill: parent; onClicked: root.open = false }
+                }
+            }
 
             StyledRect {
                 anchors.centerIn: parent
