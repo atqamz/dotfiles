@@ -26,12 +26,14 @@ Singleton {
                 const lines = this.text.split("\n");
                 let count = 0;
                 for (const line of lines) {
-                    if (/^[A-Za-z0-9][^ ]*\.[^ ]+\s+\S+\s+\S+/.test(line)) count++;
+                    if (/^[A-Za-z0-9][^ ]*\.[^ ]+\s+\S+\s+\S+$/.test(line)) count++;
                 }
                 root.available = count;
                 root.lastChecked = new Date();
-                root.checking = false;
             }
+        }
+        onRunningChanged: {
+            if (!proc.running) root.checking = false;
         }
     }
 
