@@ -3,9 +3,9 @@ import QtQuick
 import Quickshell
 import qs.modules.bar as BarModules
 
-// Single bottom bar holding all pills (launcher | workspaces | clock |
-// claude | status). Floats above windows (ExclusionMode.Ignore), peeks
-// on bottom-edge hover.
+// Single bottom bar holding all pills (launcher | workspaces | media |
+// clock | resources | tray | status). Floats above windows
+// (ExclusionMode.Ignore), peeks on bottom-edge hover.
 Scope {
     id: bar
 
