@@ -1,0 +1,82 @@
+// quickshell/.config/quickshell/modules/bar/BottomBar.qml
+import QtQuick
+import Quickshell
+import Quickshell.Wayland
+import qs.components
+
+PanelWindow {
+    id: panel
+    required property var modelData
+    screen: modelData
+
+    readonly property int pillHeight: 28
+    readonly property int edgeMargin: 6
+    readonly property int hotZoneHeight: 4
+    readonly property int panelHeight: pillHeight + edgeMargin + 2   // 36
+    // Pill row visible y: pill ends edgeMargin from panel bottom (= screen
+    // bottom). pillRow.y = panelHeight - pillHeight - edgeMargin = 2.
+    readonly property int visibleY: panelHeight - pillHeight - edgeMargin
+
+    anchors {
+        bottom: true
+        right: true
+    }
+
+    implicitHeight: panelHeight
+    implicitWidth: status.implicitWidth + 2 * edgeMargin
+    color: "transparent"
+
+    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+
+    Item {
+        id: hotZone
+        property bool hovered: hotHover.hovered
+
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: panel.hotZoneHeight
+
+        HoverHandler { id: hotHover }
+    }
+
+    Item {
+        id: pillRow
+
+        anchors.right: parent.right
+        anchors.rightMargin: panel.edgeMargin
+        width: status.implicitWidth
+        height: panel.pillHeight
+        y: panel.panelHeight                 // start collapsed (offscreen, below panel)
+
+        StatusPill {
+            id: status
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+
+    PeekState {
+        id: peek
+        slideTarget: pillRow
+        slideFromY: panel.panelHeight
+        slideToY: panel.visibleY
+        hotZoneItem: hotZone
+        watchedItems: [status]
+        dwellMs: 150
+    }
+
+    Connections {
+        target: status
+        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
+    }
+
+    mask: Region {
+        x: 0
+        y: peek.fullyHidden ? panel.panelHeight - panel.hotZoneHeight : 0
+        width: panel.width
+        height: peek.fullyHidden ? panel.hotZoneHeight : panel.panelHeight
+    }
+}
