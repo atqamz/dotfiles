@@ -62,8 +62,8 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: buttonRow.implicitWidth + Theme.padding.larger * 2
                 implicitHeight: buttonRow.implicitHeight + Theme.padding.larger * 2
-                color: Theme.surface
-                border.color: Theme.outline
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
 
@@ -82,7 +82,7 @@ Scope {
                             implicitWidth: 128
                             implicitHeight: 128
                             color: layer.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
-                            border.color: layer.hovered ? Theme.primary : Theme.outline
+                            border.color: layer.hovered ? Theme.primary : Theme.outlineVariant
                             border.width: 1
                             radius: Theme.radius.large
 
