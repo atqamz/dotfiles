@@ -18,4 +18,5 @@ ShellRoot {
     PassMenu {}
     EmojiPicker {}
     MediaControls {}
+    Cheatsheet {}
 }
