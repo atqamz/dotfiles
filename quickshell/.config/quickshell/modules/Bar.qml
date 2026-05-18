@@ -3,23 +3,19 @@ import QtQuick
 import Quickshell
 import qs.modules.bar as BarModules
 
-// Primary-monitor-only floating-pills bar. Spawns TopBar (4 pills, peeks
-// from top) and BottomBar (status pill, peeks from bottom) on the primary
-// screen only — multi-monitor: secondary screens get nothing.
+// Floating-pills bar. TopBar (4 pills, peeks from top) and BottomBar
+// (status pill, peeks from bottom). Primary-screen-only filtering is
+// deferred — TODO once primaryScreen API behaviour is verified.
 Scope {
     id: bar
 
-    readonly property var primaryScreens: Quickshell.screens.filter(
-        s => Quickshell.primaryScreen && s.name === Quickshell.primaryScreen.name
-    )
-
     Variants {
-        model: bar.primaryScreens
-        BarModules.TopBar {}    // modelData property already declared `required` in TopBar.qml
+        model: Quickshell.screens
+        BarModules.TopBar {}
     }
 
     Variants {
-        model: bar.primaryScreens
+        model: Quickshell.screens
         BarModules.BottomBar {}
     }
 }

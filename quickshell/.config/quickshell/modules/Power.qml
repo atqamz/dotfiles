@@ -14,7 +14,7 @@ Scope {
         { label: "Lock",     icon: "lock",              cmd: ["hyprlock"] },
         { label: "Logout",   icon: "logout",            cmd: ["hyprctl", "dispatch", "exit"] },
         { label: "Suspend",  icon: "bedtime",           cmd: ["systemctl", "suspend"] },
-        { label: "Reboot",   icon: "restart_alt",       cmd: ["systemctl", "reboot"] },
+        { label: "Reboot",   icon: "refresh",           cmd: ["systemctl", "reboot"] },
         { label: "Shutdown", icon: "power_settings_new", cmd: ["systemctl", "poweroff"] }
     ]
 
@@ -51,11 +51,11 @@ Scope {
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            Keys.onEscapePressed: root.open = false
-
             MouseArea {
                 anchors.fill: parent
+                focus: true
                 onClicked: root.open = false
+                Keys.onEscapePressed: root.open = false
             }
 
             StyledRect {
