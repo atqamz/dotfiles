@@ -66,8 +66,8 @@ Scope {
                 anchors.centerIn: parent
                 width: 440
                 implicitHeight: column.implicitHeight + Theme.padding.larger * 2
-                color: Theme.surface
-                border.color: Theme.outline
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
 
