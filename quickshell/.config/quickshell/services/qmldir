@@ -7,3 +7,4 @@ singleton ClaudeUsage 1.0 ClaudeUsage.qml
 singleton MprisService 1.0 MprisService.qml
 singleton TrayService 1.0 TrayService.qml
 singleton Bluetooth 1.0 Bluetooth.qml
+singleton HyprlandKeybinds 1.0 HyprlandKeybinds.qml
