@@ -1,3 +1,4 @@
+// quickshell/.config/quickshell/modules/Clipboard.qml
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -15,12 +16,17 @@ Scope {
 
     readonly property var filteredEntries: {
         const q = root.query.toLowerCase();
-        if (q.length === 0)
-            return root.entries;
+        if (q.length === 0) return root.entries;
         return root.entries.filter(e => e.preview.toLowerCase().includes(q));
     }
 
     onFilteredEntriesChanged: root.currentIndex = 0
+
+    function detectKind(preview: string): string {
+        if (/^\[\[\s*binary data.*image/i.test(preview)) return "image";
+        if (/^https?:\/\//.test(preview.trim())) return "link";
+        return "text";
+    }
 
     function toggle(): void {
         if (root.open) {
@@ -40,12 +46,16 @@ Scope {
 
     function pasteSelected(): void {
         const list = root.filteredEntries;
-        if (root.currentIndex < 0 || root.currentIndex >= list.length)
-            return;
+        if (root.currentIndex < 0 || root.currentIndex >= list.length) return;
         const entry = list[root.currentIndex];
         root.open = false;
         copyProc.command = ["sh", "-c", `cliphist decode ${entry.id} | wl-copy`];
         copyProc.running = true;
+    }
+
+    function deleteEntry(id: string): void {
+        deleteProc.command = ["sh", "-c", `echo '${id}' | cliphist delete`];
+        deleteProc.running = true;
     }
 
     function clearAll(): void {
@@ -61,11 +71,10 @@ Scope {
                 const lines = this.text.split("\n").filter(l => l.length > 0);
                 root.entries = lines.map(line => {
                     const tabIdx = line.indexOf("\t");
-                    if (tabIdx < 0) return { id: line, preview: line };
-                    return {
-                        id: line.substring(0, tabIdx),
-                        preview: line.substring(tabIdx + 1)
-                    };
+                    if (tabIdx < 0) return { id: line, preview: line, kind: "text" };
+                    const id = line.substring(0, tabIdx);
+                    const preview = line.substring(tabIdx + 1);
+                    return { id: id, preview: preview, kind: root.detectKind(preview) };
                 });
                 root.open = true;
             }
@@ -73,6 +82,10 @@ Scope {
     }
 
     Process { id: copyProc }
+    Process {
+        id: deleteProc
+        onExited: listProc.running = true
+    }
     Process {
         id: wipeProc
         command: ["cliphist", "wipe"]
@@ -169,6 +182,12 @@ Scope {
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                                     root.pasteSelected();
                                     event.accepted = true;
+                                } else if (event.key === Qt.Key_Delete) {
+                                    const list = root.filteredEntries;
+                                    if (root.currentIndex >= 0 && root.currentIndex < list.length) {
+                                        root.deleteEntry(list[root.currentIndex].id);
+                                    }
+                                    event.accepted = true;
                                 }
                             }
                         }
@@ -189,7 +208,7 @@ Scope {
                             required property var modelData
                             required property int index
                             width: ListView.view.width
-                            height: 32
+                            height: 48
                             color: index === root.currentIndex ? Theme.surfaceContainerHigh : "transparent"
                             radius: Theme.radius.normal
 
@@ -204,15 +223,29 @@ Scope {
                                     text: modelData.id
                                     color: Theme.textDim
                                     font.pixelSize: Theme.font.size.small
+                                    font.family: Theme.font.family.mono
                                     width: 44
                                     elide: Text.ElideRight
                                 }
+
+                                MaterialIcon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: {
+                                        if (modelData.kind === "image") return "image";
+                                        if (modelData.kind === "link") return "link";
+                                        return "subject";
+                                    }
+                                    color: Theme.textDim
+                                    font.pixelSize: 18
+                                    width: 22
+                                }
+
                                 StyledText {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.preview
+                                    text: modelData.kind === "image" ? "[image]" : modelData.preview
                                     color: Theme.text
                                     font.pixelSize: Theme.font.size.normal
-                                    width: parent.width - 44 - parent.spacing
+                                    width: parent.width - 44 - 22 - parent.spacing * 3
                                     elide: Text.ElideRight
                                 }
                             }
@@ -220,10 +253,15 @@ Scope {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onEntered: root.currentIndex = index
-                                onClicked: {
+                                onClicked: function(mouse) {
                                     root.currentIndex = index;
-                                    root.pasteSelected();
+                                    if (mouse.button === Qt.RightButton) {
+                                        root.deleteEntry(modelData.id);
+                                    } else {
+                                        root.pasteSelected();
+                                    }
                                 }
                             }
                         }
