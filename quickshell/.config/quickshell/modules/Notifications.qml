@@ -1,38 +1,22 @@
 // quickshell/.config/quickshell/modules/Notifications.qml
 import Quickshell
-import Quickshell.Services.Notifications
 import QtQuick
 import QtQuick.Layouts
 import qs.components
+import qs.services
 
 Scope {
     id: root
 
     readonly property int maxVisible: 5
 
-    NotificationServer {
-        id: server
-        bodyMarkupSupported: true
-        bodyHyperlinksSupported: false
-        bodyImagesSupported: false
-        actionsSupported: true
-        actionIconsSupported: false
-        imageSupported: false
-        persistenceSupported: true
-        keepOnReload: false
-
-        onNotification: notif => {
-            notif.tracked = true;
-        }
-    }
-
     readonly property var visibleNotifications: {
-        const all = server.trackedNotifications.values;
+        const all = NotificationHistory.server.trackedNotifications.values;
         if (all.length <= root.maxVisible) return all;
         return all.slice(0, root.maxVisible);
     }
 
-    readonly property int overflowCount: Math.max(0, server.trackedNotifications.values.length - root.maxVisible)
+    readonly property int overflowCount: Math.max(0, NotificationHistory.server.trackedNotifications.values.length - root.maxVisible)
 
     Variants {
         model: Quickshell.screens
@@ -41,7 +25,7 @@ Scope {
             required property var modelData
 
             screen: modelData
-            visible: server.trackedNotifications.values.length > 0
+            visible: NotificationHistory.server.trackedNotifications.values.length > 0
 
             anchors {
                 top: true

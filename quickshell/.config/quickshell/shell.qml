@@ -19,4 +19,5 @@ ShellRoot {
     EmojiPicker {}
     MediaControls {}
     Cheatsheet {}
+    NotificationHistory {}
 }
