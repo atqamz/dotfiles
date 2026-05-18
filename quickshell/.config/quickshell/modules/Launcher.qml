@@ -91,8 +91,8 @@ Scope {
                 anchors.centerIn: parent
                 width: 600
                 height: 520
-                color: Theme.surface
-                border.color: Theme.outline
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
 

@@ -94,10 +94,10 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: 320
                 implicitHeight: 60
-                color: Theme.surface
-                border.color: Theme.outline
+                color: Theme.background
+                border.color: Theme.outlineVariant
                 border.width: 1
-                radius: Theme.radius.large
+                radius: Theme.radius.full
 
                 Row {
                     anchors.fill: parent
