@@ -74,10 +74,16 @@ PanelWindow {
             x: parent.width / 2 - width / 2
         }
 
+        TrayPill {
+            id: tray
+            anchors.verticalCenter: parent.verticalCenter
+            x: status.x - width - 8
+        }
+
         ClaudePill {
             id: claude
             anchors.verticalCenter: parent.verticalCenter
-            x: status.x - width - 8
+            x: tray.visible ? (tray.x - width - 8) : (status.x - width - 8)
         }
 
         StatusPill {
@@ -93,7 +99,7 @@ PanelWindow {
         slideFromY: panel.panelHeight
         slideToY: panel.visibleY
         hotZoneItem: hotZone
-        watchedItems: [launcher, workspaces, media, clock, claude, status]
+        watchedItems: [launcher, workspaces, media, clock, claude, tray, status]
         dwellMs: 600
     }
 
@@ -115,6 +121,10 @@ PanelWindow {
     }
     Connections {
         target: claude
+        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
+    }
+    Connections {
+        target: tray
         function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
     }
     Connections {
