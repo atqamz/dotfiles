@@ -1,5 +1,6 @@
 // quickshell/.config/quickshell/modules/bar/StatusPill.qml
 import QtQuick
+import Quickshell
 import qs.components
 import qs.services
 
@@ -48,6 +49,29 @@ Pill {
 
     contentItem: Row {
         spacing: 10
+
+        // updates
+        Row {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: Updates.available > 0
+            spacing: 4
+
+            MaterialIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "system_update"
+                color: Theme.warning
+                font.pixelSize: 16
+                TapHandler {
+                    onTapped: Quickshell.execDetached(["kitty", "-e", "bash", "-c", "sudo dnf upgrade; read -n 1 -s -r -p 'Press any key to close...'"])
+                }
+            }
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Updates.available.toString()
+                color: Theme.warning
+                font.pixelSize: 11
+            }
+        }
 
         // volume
         Row {
