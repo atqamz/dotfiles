@@ -5,3 +5,4 @@ singleton Battery 1.0 Battery.qml
 singleton Network 1.0 Network.qml
 singleton ClaudeUsage 1.0 ClaudeUsage.qml
 singleton MprisService 1.0 MprisService.qml
+singleton TrayService 1.0 TrayService.qml
