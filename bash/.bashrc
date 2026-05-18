@@ -44,3 +44,6 @@ export NVM_DIR="$HOME/.nvm"
 
 # deno
 [ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"
+
+# graphify private env (GEMINI_API_KEY etc.); file is untracked, line is public
+[ -f "$HOME/.config/graphify/env" ] && set -a && . "$HOME/.config/graphify/env" && set +a
