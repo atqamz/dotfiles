@@ -35,6 +35,60 @@ rsync -a --delete \
   --exclude='*' \
   "$SRC_MEMORY" "$MEMORY_DST" || { err "memory rsync failed"; exit 1; }
 
+log "memory: dangling-wikilink check"
+SRC_MEMORY_DIR="$SRC_MEMORY" RAW_DIR="$RAW" python3 <<'PY' || warn "wikilink check errored"
+import os, re, sys
+from pathlib import Path
+
+root = Path(os.environ["SRC_MEMORY_DIR"])
+raw = Path(os.environ["RAW_DIR"])
+link_re = re.compile(r"\[\[([^\]\|\#]+?)(?:\#[^\]]*)?(?:\|[^\]]*)?\]\]")
+name_re = re.compile(r"^name:\s*(\S+)\s*$", re.M)
+
+# Treat raw corpus files (~/raw/**) as valid cross-scope wikilink targets.
+global_slugs = set()
+if raw.is_dir():
+    for f in raw.rglob("*.md"):
+        if "graphify-out" in f.parts:
+            continue
+        global_slugs.add(f.stem)
+
+dangling = []
+for project in sorted(p for p in root.iterdir() if p.is_dir()):
+    memdir = project / "memory"
+    if not memdir.is_dir():
+        continue
+    md_files = [f for f in memdir.rglob("*.md") if not f.name.endswith(".original.md")]
+    slugs = set(global_slugs)
+    for f in md_files:
+        slugs.add(f.stem)
+        try:
+            head = f.read_text(errors="ignore")[:800]
+        except OSError:
+            continue
+        m = name_re.search(head)
+        if m:
+            slugs.add(m.group(1).strip())
+    for f in md_files:
+        try:
+            text = f.read_text(errors="ignore")
+        except OSError:
+            continue
+        for ref in link_re.findall(text):
+            ref = ref.strip()
+            if ref and ref not in slugs:
+                dangling.append((project.name, f.name, ref))
+
+if dangling:
+    print(f"[graphify-sync] WARN: {len(dangling)} dangling wikilink(s) found:", file=sys.stderr)
+    for proj, src, ref in dangling[:30]:
+        print(f"[graphify-sync] WARN:   {proj}/{src} -> [[{ref}]]", file=sys.stderr)
+    if len(dangling) > 30:
+        print(f"[graphify-sync] WARN:   ... and {len(dangling) - 30} more", file=sys.stderr)
+else:
+    print("[graphify-sync] wikilinks: all resolved")
+PY
+
 log "memory: graphify extract"
 if ! ( cd "$MEMORY_WS" && graphify extract . --backend gemini ); then
   warn "memory extract failed; continuing"
