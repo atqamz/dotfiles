@@ -27,6 +27,9 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
     ssh-add ~/.ssh/id_ed25519 2>/dev/null
 fi
 
+# gpg pinentry tty fallback
+export GPG_TTY=$(tty)
+
 # go
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOPATH/bin"
