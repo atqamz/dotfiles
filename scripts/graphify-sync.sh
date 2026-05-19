@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # graphify-sync: rebuild graphify-memory + graphify-personal graphs, push ~/raw.
 # Triggered by graphify-sync.timer (daily) or run manually.
-# Requires GEMINI_API_KEY (loaded via systemd EnvironmentFile=%h/.config/graphify/env
-# or sourced from %h/.config/graphify/env when run interactively).
+# GEMINI_API_KEY fetched from `pass show dotfiles/api-key/gemini`.
+# Falls back to `claude -p` for per-file commit message generation when gemini fails.
 
 set -uo pipefail
 
@@ -15,14 +15,21 @@ log() { echo "[graphify-sync] $*"; }
 warn() { echo "[graphify-sync] WARN: $*" >&2; }
 err() { echo "[graphify-sync] ERROR: $*" >&2; }
 
-if [[ -z "${GEMINI_API_KEY:-}" && -f "$HOME/.config/graphify/env" ]]; then
-  set -a; . "$HOME/.config/graphify/env"; set +a
+if [[ -z "${GEMINI_API_KEY:-}" ]] && command -v pass >/dev/null 2>&1; then
+  GEMINI_API_KEY="$(pass show dotfiles/api-key/gemini 2>/dev/null || true)"
+  [[ -n "$GEMINI_API_KEY" ]] && export GEMINI_API_KEY
 fi
 
-if [[ -z "${GEMINI_API_KEY:-}" ]]; then
-  err "GEMINI_API_KEY not set; aborting"
+HAS_GEMINI=0; HAS_CLAUDE=0
+[[ -n "${GEMINI_API_KEY:-}" ]] && HAS_GEMINI=1
+command -v claude >/dev/null 2>&1 && HAS_CLAUDE=1
+
+if [[ $HAS_GEMINI -eq 0 && $HAS_CLAUDE -eq 0 ]]; then
+  err "no LLM available (need GEMINI_API_KEY via pass, or claude CLI on PATH); aborting"
   exit 1
 fi
+[[ $HAS_GEMINI -eq 0 ]] && warn "GEMINI_API_KEY unavailable; commit-message gen uses claude -p only, graphify extract will be skipped"
+[[ $HAS_CLAUDE -eq 0 ]] && warn "claude CLI not on PATH; gemini only (no fallback for commit messages)"
 
 #----- 1. memory: rsync + rebuild graph
 log "memory: rsync auto-memory into workspace"
@@ -90,15 +97,20 @@ else:
 PY
 
 log "memory: graphify extract"
-if ! ( cd "$MEMORY_WS" && graphify extract . --backend gemini ); then
-  warn "memory extract failed; continuing"
+if [[ $HAS_GEMINI -eq 1 ]]; then
+  ( cd "$MEMORY_WS" && graphify extract . --backend gemini ) || warn "memory extract failed; continuing"
+else
+  warn "no GEMINI_API_KEY; skipping memory extract (no headless extract fallback wired)"
 fi
 
 #----- 2. raw: rebuild personal corpus graph
 log "raw: graphify extract"
-if ! ( cd "$RAW" && graphify extract . --backend gemini ); then
-  warn "raw extract failed; skipping raw push"
-  exit 0
+if [[ $HAS_GEMINI -eq 1 ]]; then
+  if ! ( cd "$RAW" && graphify extract . --backend gemini ); then
+    warn "raw extract failed; will still commit/push file changes"
+  fi
+else
+  warn "no GEMINI_API_KEY; skipping raw extract (still continuing with commit/push)"
 fi
 
 #----- 3. raw: per-file semantic commit + push
@@ -131,16 +143,20 @@ fi
 
 log "raw: ${#CHANGED[@]} change(s) to process"
 
+COMMIT_SYS_PROMPT="You generate concise git commit subject lines. Output the subject line only — no quotes, no markdown, no trailing period. Max 60 chars."
+
 generate_message() {
   local action="$1" path="$2" context="$3"
-  local prompt
+  local prompt msg
   case "$action" in
     add)    prompt="Write a Conventional Commits subject line for adding the new file '$path'. Constraints: imperative mood, lowercase, no period, max 60 characters. Use type 'add' (e.g. 'add notes: short summary'). Content preview:\n$context" ;;
     remove) prompt="Write a Conventional Commits subject line for removing the file '$path'. Constraints: imperative, lowercase, no period, max 60 characters. Use type 'remove'." ;;
     *)      prompt="Write a Conventional Commits subject line describing this diff for '$path'. Constraints: imperative, lowercase, no period, max 60 characters. Use 'update' if no clearer type fits. Diff:\n$context" ;;
   esac
 
-  GEMINI_PROMPT="$prompt" python3 <<'PY' 2>/dev/null
+  # Tier 1: Gemini (cheap, fast).
+  if [[ $HAS_GEMINI -eq 1 ]]; then
+    msg=$(GEMINI_PROMPT="$prompt" GEMINI_SYS="$COMMIT_SYS_PROMPT" python3 <<'PY' 2>/dev/null
 import os, sys
 from openai import OpenAI
 client = OpenAI(
@@ -151,19 +167,41 @@ try:
     r = client.chat.completions.create(
         model="gemini-2.0-flash",
         messages=[
-            {"role": "system", "content": "You generate concise git commit subject lines. Output the subject line only — no quotes, no markdown, no trailing period. Max 60 chars."},
+            {"role": "system", "content": os.environ["GEMINI_SYS"]},
             {"role": "user", "content": os.environ["GEMINI_PROMPT"]},
         ],
         max_tokens=40,
         temperature=0.2,
     )
-    msg = (r.choices[0].message.content or "").strip().strip('"').strip("'").splitlines()[0]
-    if not msg:
+    out = (r.choices[0].message.content or "").strip().strip('"').strip("'").splitlines()
+    out = out[0] if out else ""
+    if not out:
         sys.exit(2)
-    print(msg[:60])
+    print(out[:60])
 except Exception:
     sys.exit(2)
 PY
+    )
+    if [[ -n "$msg" ]]; then
+      echo "$msg"
+      return 0
+    fi
+  fi
+
+  # Tier 2: claude -p (text-only, single turn, no tool use).
+  if [[ $HAS_CLAUDE -eq 1 ]]; then
+    msg=$(printf '%b' "$prompt" \
+      | claude -p --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
+      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+            -e 's/^["'"'"']//' -e 's/["'"'"']$//' \
+      | head -n 1)
+    if [[ -n "$msg" ]]; then
+      echo "${msg:0:60}"
+      return 0
+    fi
+  fi
+
+  return 2
 }
 
 for entry in "${CHANGED[@]}"; do

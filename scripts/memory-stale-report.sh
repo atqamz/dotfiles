@@ -12,23 +12,37 @@ log() { echo "[memory-stale-report] $*"; }
 warn() { echo "[memory-stale-report] WARN: $*" >&2; }
 err() { echo "[memory-stale-report] ERROR: $*" >&2; }
 
-if [[ -z "${GEMINI_API_KEY:-}" && -f "$HOME/.config/graphify/env" ]]; then
-  set -a; . "$HOME/.config/graphify/env"; set +a
+if [[ -z "${GEMINI_API_KEY:-}" ]] && command -v pass >/dev/null 2>&1; then
+  GEMINI_API_KEY="$(pass show dotfiles/api-key/gemini 2>/dev/null || true)"
+  [[ -n "$GEMINI_API_KEY" ]] && export GEMINI_API_KEY
 fi
 
-if [[ -z "${GEMINI_API_KEY:-}" ]]; then
-  err "GEMINI_API_KEY not set; aborting"
+HAS_GEMINI=0; HAS_CLAUDE=0
+[[ -n "${GEMINI_API_KEY:-}" ]] && HAS_GEMINI=1
+command -v claude >/dev/null 2>&1 && HAS_CLAUDE=1
+
+if [[ $HAS_GEMINI -eq 0 && $HAS_CLAUDE -eq 0 ]]; then
+  err "no LLM available (need GEMINI_API_KEY via pass, or claude CLI on PATH); aborting"
   exit 1
 fi
+[[ $HAS_GEMINI -eq 0 ]] && warn "GEMINI_API_KEY unavailable; using claude -p only"
+[[ $HAS_CLAUDE -eq 0 ]] && warn "claude CLI not on PATH; gemini only (no fallback)"
+
+export HAS_GEMINI HAS_CLAUDE
 
 mkdir -p "$(dirname "$OUT")"
 
 log "scanning memory dirs under $SRC"
 
 SRC_MEMORY_DIR="$SRC" OUTPUT_PATH="$OUT" python3 <<'PY' || { err "report generation failed"; exit 1; }
-import os, sys, json, time, re
+import os, sys, json, time, re, subprocess
 from pathlib import Path
-from openai import OpenAI
+
+HAS_GEMINI = os.environ.get("HAS_GEMINI") == "1"
+HAS_CLAUDE = os.environ.get("HAS_CLAUDE") == "1"
+
+if HAS_GEMINI:
+    from openai import OpenAI
 
 root = Path(os.environ["SRC_MEMORY_DIR"])
 out_path = Path(os.environ["OUTPUT_PATH"])
@@ -72,16 +86,11 @@ if not candidates:
     print(f"[memory-stale-report] scanned {all_count}, 0 candidates; wrote {out_path}")
     sys.exit(0)
 
-# Batch all candidates into a single Gemini call.
-client = OpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
-
 # Trim previews to keep prompt small.
 for c in candidates:
     c["preview"] = c["preview"][:600]
 
+SYS_PROMPT = "Output ONLY valid JSON. No prose, no markdown fences."
 prompt = (
     "You are reviewing Claude Code auto-memory files for staleness. For each candidate below, "
     "decide if the memory looks stale (outdated, completed-project, deadline-passed, contradicted-by-newer-info) "
@@ -92,28 +101,66 @@ prompt = (
     "Candidates:\n" + json.dumps(candidates, ensure_ascii=False, indent=2)
 )
 
-try:
+def parse_json_list(raw_text):
+    raw_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip(), flags=re.M).strip()
+    parsed = json.loads(raw_text)
+    if not isinstance(parsed, list):
+        raise ValueError("LLM did not return a list")
+    return parsed
+
+def call_gemini():
+    client = OpenAI(
+        api_key=os.environ["GEMINI_API_KEY"],
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
     r = client.chat.completions.create(
         model="gemini-2.0-flash",
         messages=[
-            {"role": "system", "content": "Output ONLY valid JSON. No prose, no markdown fences."},
+            {"role": "system", "content": SYS_PROMPT},
             {"role": "user", "content": prompt},
         ],
         max_tokens=2048,
         temperature=0.1,
     )
-    raw = (r.choices[0].message.content or "").strip()
-    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw, flags=re.M).strip()
-    verdicts = json.loads(raw)
-    if not isinstance(verdicts, list):
-        raise ValueError("LLM did not return a list")
-except Exception as e:
+    return parse_json_list(r.choices[0].message.content or "")
+
+def call_claude():
+    result = subprocess.run(
+        ["claude", "-p", "--max-turns", "1",
+         "--append-system-prompt", SYS_PROMPT],
+        input=prompt, capture_output=True, text=True, timeout=300,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"claude -p exited {result.returncode}: {result.stderr[:200]}")
+    return parse_json_list(result.stdout)
+
+verdicts = None
+provider = None
+errors = []
+
+if HAS_GEMINI:
+    try:
+        verdicts = call_gemini()
+        provider = "gemini-2.0-flash"
+    except Exception as e:
+        errors.append(f"gemini: {e}")
+        print(f"[memory-stale-report] gemini failed: {e}; trying claude -p", file=sys.stderr)
+
+if verdicts is None and HAS_CLAUDE:
+    try:
+        verdicts = call_claude()
+        provider = "claude -p"
+    except Exception as e:
+        errors.append(f"claude: {e}")
+
+if verdicts is None:
+    err_summary = "; ".join(errors) if errors else "no LLM provider available"
     out_path.write_text(
         f"# Memory stale report\n\nGenerated: {time.strftime('%Y-%m-%d %H:%M:%S %z')}\n\n"
-        f"LLM call failed: {e}\n\nHeuristic candidates ({len(candidates)} flagged by age/keyword):\n\n"
+        f"LLM call(s) failed: {err_summary}\n\nHeuristic candidates ({len(candidates)} flagged by age/keyword):\n\n"
         + "\n".join(f"- `{c['path']}` (age {c['age_days']}d, kw={c['keyword_hit']})" for c in candidates)
     )
-    print(f"[memory-stale-report] LLM failed: {e}; wrote heuristic-only report")
+    print(f"[memory-stale-report] all LLMs failed ({err_summary}); wrote heuristic-only report")
     sys.exit(0)
 
 by_path = {v.get("path"): v for v in verdicts if isinstance(v, dict)}
@@ -145,6 +192,7 @@ report = [
     "# Memory stale report",
     "",
     f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S %z')}",
+    f"Provider: {provider}.",
     f"Scanned: {all_count} file(s). Flagged candidates: {len(candidates)}.",
     "",
     "## Stale (review and prune/update)",

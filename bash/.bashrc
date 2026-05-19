@@ -45,5 +45,8 @@ export NVM_DIR="$HOME/.nvm"
 # deno
 [ -f "$HOME/.deno/env" ] && . "$HOME/.deno/env"
 
-# graphify private env (GEMINI_API_KEY etc.); file is untracked, line is public
-[ -f "$HOME/.config/graphify/env" ] && set -a && . "$HOME/.config/graphify/env" && set +a
+# gemini api key from pass (graphify-sync, memory-stale-report, ad-hoc graphify extract)
+if command -v pass >/dev/null 2>&1; then
+    GEMINI_API_KEY="$(pass show dotfiles/api-key/gemini 2>/dev/null)"
+    [ -n "$GEMINI_API_KEY" ] && export GEMINI_API_KEY || unset GEMINI_API_KEY
+fi

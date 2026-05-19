@@ -3,8 +3,6 @@ Description=Generate Claude Code memory stale-candidates report (weekly)
 
 [Service]
 Type=oneshot
-EnvironmentFile=%h/.config/graphify/env
-ExecCondition=/bin/bash -c 'test -n "$GEMINI_API_KEY"'
 ExecStart=%h/dotfiles/scripts/memory-stale-report.sh
 Nice=15
 TimeoutStartSec=10min

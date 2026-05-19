@@ -3,8 +3,6 @@ Description=Rebuild graphify-memory + graphify-personal graphs and push ~/raw
 
 [Service]
 Type=oneshot
-EnvironmentFile=%h/.config/graphify/env
-ExecCondition=/bin/bash -c 'test -n "$GEMINI_API_KEY"'
 ExecStart=%h/dotfiles/scripts/graphify-sync.sh
 Nice=10
 TimeoutStartSec=15min
