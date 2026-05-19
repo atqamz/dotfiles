@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONTAINER_PASSPHRASE="$(pass show dotfiles/ssh/passphrase)"
+export CONTAINER_PASSPHRASE
+
+exec /usr/bin/podman-tui "$@"
