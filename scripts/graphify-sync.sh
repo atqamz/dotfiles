@@ -103,6 +103,16 @@ else
   warn "no GEMINI_API_KEY; skipping memory extract (no headless extract fallback wired)"
 fi
 
+#----- 1.5. promote: lift generalizable memory entries into ~/raw/from-memory/
+# DRY_RUN=1 by default during 7-day burn-in window; flip PROMOTE_DRY_RUN=0 in service env to enable writes.
+log "promote: scan memory for promotable entries"
+if [[ $HAS_CLAUDE -eq 1 ]]; then
+  DRY_RUN="${PROMOTE_DRY_RUN:-1}" PROMOTE_MODEL="${PROMOTE_MODEL:-claude-sonnet-4-6}" \
+    "$HOME/dotfiles/scripts/promote-memory.sh" || warn "promote-memory failed; continuing"
+else
+  warn "claude CLI not on PATH; skipping promote-memory"
+fi
+
 #----- 2. raw: rebuild personal corpus graph
 log "raw: graphify extract"
 if [[ $HAS_GEMINI -eq 1 ]]; then
@@ -189,9 +199,10 @@ PY
   fi
 
   # Tier 2: claude -p (text-only, single turn, no tool use).
+  # Pinned to haiku — short subject-line gen, personal-memory policy disallows opus.
   if [[ $HAS_CLAUDE -eq 1 ]]; then
     msg=$(printf '%b' "$prompt" \
-      | claude -p --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
+      | claude -p --model claude-haiku-4-5-20251001 --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
       | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
             -e 's/^["'"'"']//' -e 's/["'"'"']$//' \
       | head -n 1)
