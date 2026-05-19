@@ -1,10 +1,10 @@
-# Coding Defaults
+# Coding
 
-- **Read before writing:** Understand patterns before modifying. Follow project conventions over personal preference.
-- **Error handling:** Handle explicitly. Propagate with context.
-- **Naming:** Clear, descriptive. Match project conventions.
-- **Tests:** Add/update when suite exists. Run before done.
-- **Linting/formatting:** Respect project tools. Run if available.
-- **Dependencies:** No new without discussion. Prefer stdlib.
-- **Comments:** Explain "why", not "what". No redundant comments.
-- **File organization:** Follow existing structure. Reorganize only if that's the task.
+- Read before writing. Project conventions over personal.
+- Errors handled explicit. Propagate with context.
+- Names clear, descriptive, match project.
+- Tests added/updated when suite exists. Run before done.
+- Respect project lint/format tools. Run if available.
+- No new deps without discussion. Prefer stdlib.
+- Comments explain "why", not "what". No redundant comments.
+- Follow existing file structure. Reorganize only if task.
