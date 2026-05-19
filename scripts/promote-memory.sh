@@ -44,7 +44,7 @@ log "scan projects under $PROJECTS (model=$PROMOTE_MODEL dry_run=$DRY_RUN)"
 export PROJECTS DST MANIFEST DRYLOG DRY_RUN PROMOTE_MODEL
 
 python3 <<'PY' || { warn "python promote step failed"; exit 1; }
-import os, re, json, hashlib, subprocess, datetime, sys
+import os, re, json, hashlib, socket, subprocess, datetime, sys
 from pathlib import Path
 
 projects = Path(os.environ["PROJECTS"])
@@ -53,6 +53,7 @@ manifest_path = Path(os.environ["MANIFEST"])
 drylog = Path(os.environ["DRYLOG"])
 dry_run = os.environ["DRY_RUN"] == "1"
 model = os.environ["PROMOTE_MODEL"]
+device = socket.gethostname()
 
 manifest = json.loads(manifest_path.read_text() or "{}")
 
@@ -237,6 +238,7 @@ for c in candidates:
                     f"source: {src_pretty}",
                     f"promoted: {today}",
                     f"promoted_by: auto ({c['classification']})",
+                    f"promoted_from: {device}",
                     f"name: {c['fm'].get('name', c['key'])}"]
         if c["fm"].get("description"):
             fm_lines.append(f"description: {c['fm']['description']}")
@@ -249,6 +251,7 @@ for c in candidates:
         "hash": c["hash"], "decision": c["decision"],
         "classification": c["classification"],
         "checked_at": today, "src": c["src"],
+        "device": device,
     }
 
 manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))
