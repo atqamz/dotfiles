@@ -24,7 +24,7 @@ deactivate() {
 check_window() {
   local class
   class=$(hyprctl activewindow -j | jq -r '.class // empty' 2>/dev/null) || return
-  if [[ "$class" == "$PASSTHROUGH_CLASS" ]]; then
+  if [[ "${class,,}" == "${PASSTHROUGH_CLASS,,}" ]]; then
     activate
   else
     deactivate
