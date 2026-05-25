@@ -77,7 +77,7 @@ pre_capture() {
 }
 
 freeze_screen() {
-  hyprpicker -r -z &
+  hyprpicker -r -z >/dev/null 2>&1 &
   hyprpicker_pid=$!
   sleep 0.2
 }
