@@ -12,7 +12,7 @@ require_cmd magick
 require_cmd wl-copy
 
 readonly VALID_MODES="smart region window fullscreen"
-readonly VALID_PROCESSING="all copy save"
+readonly VALID_PROCESSING="all copy save edit"
 
 mode="smart"
 processing="all"
@@ -30,7 +30,7 @@ for arg in "$@"; do
         processing="$arg"
       else
         printf 'unknown argument: %s\n' "$arg" >&2
-        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save] [--delay=N] [--editor=<name>]\n' >&2
+        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save|edit] [--delay=N] [--editor=<name>]\n' >&2
         exit 1
       fi
       ;;
@@ -206,6 +206,21 @@ process_save() {
   cat > "$filepath"
 }
 
+process_edit() {
+  if [[ "$editor" == "satty" ]]; then
+    satty --filename - --copy-command "wl-copy --type image/png" --early-exit
+  elif [[ "$editor" == "swappy" ]]; then
+    local tmpfile_edit
+    tmpfile_edit=$(mktemp --suffix=.png)
+    cat > "$tmpfile_edit"
+    swappy -f "$tmpfile_edit"
+    [[ -f "$tmpfile_edit" ]] && wl-copy --type image/png < "$tmpfile_edit"
+    rm -f "$tmpfile_edit"
+  else
+    wl-copy --type image/png
+  fi
+}
+
 case "$mode" in
   smart)      capture_smart      ;;
   region)     capture_region     ;;
@@ -215,4 +230,5 @@ esac | case "$processing" in
   all)  process_all  ;;
   copy) process_copy ;;
   save) process_save ;;
+  edit) process_edit ;;
 esac
