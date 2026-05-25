@@ -7,29 +7,183 @@ source "${BASH_COMMON:-$script_dir/bash-common}"
 
 require_cmd grim
 require_cmd slurp
+require_cmd hyprpicker
 require_cmd wl-copy
 
-annotator=""
-if has_cmd satty; then
-  annotator="satty"
-elif has_cmd swappy; then
-  annotator="swappy"
+pkill slurp && exit 0
+
+readonly VALID_MODES="smart region window fullscreen"
+readonly VALID_PROCESSING="all copy save edit"
+
+mode="smart"
+processing="all"
+editor_override=""
+delay=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --editor=*) editor_override="${arg#--editor=}" ;;
+    --delay=*) delay="${arg#--delay=}" ;;
+    *)
+      if [[ " $VALID_MODES " == *" $arg "* ]]; then
+        mode="$arg"
+      elif [[ " $VALID_PROCESSING " == *" $arg "* ]]; then
+        processing="$arg"
+      else
+        printf 'unknown argument: %s\n' "$arg" >&2
+        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save|edit] [--delay=N] [--editor=<name>]\n' >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+resolve_editor() {
+  if [[ -n "$editor_override" ]]; then
+    printf '%s' "$editor_override"
+  elif [[ -n "${SCREENSHOT_EDITOR:-}" ]]; then
+    printf '%s' "$SCREENSHOT_EDITOR"
+  elif has_cmd satty; then
+    printf 'satty'
+  elif has_cmd swappy; then
+    printf 'swappy'
+  else
+    printf ''
+  fi
+}
+
+editor="$(resolve_editor)"
+screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
+
+# Freeze cleanup — keep hyprpicker alive until after grim captures
+PID=""
+cleanup_freeze() {
+  [[ -n "$PID" ]] && kill "$PID" 2>/dev/null || true
+}
+trap cleanup_freeze EXIT
+
+JQ_MONITOR_GEO='
+  def format_geo:
+    .x as $x | .y as $y |
+    (.width / .scale | floor) as $w |
+    (.height / .scale | floor) as $h |
+    .transform as $t |
+    if $t == 1 or $t == 3 then
+      "\($x),\($y) \($h)x\($w)"
+    else
+      "\($x),\($y) \($w)x\($h)"
+    end;
+'
+
+get_rectangles() {
+  local active_workspace
+  active_workspace=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+  hyprctl monitors -j | jq -r --arg ws "$active_workspace" "${JQ_MONITOR_GEO} .[] | select(.activeWorkspace.id == (\$ws | tonumber)) | format_geo"
+  hyprctl clients -j | jq -r --arg ws "$active_workspace" '.[] | select(.workspace.id == ($ws | tonumber)) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'
+}
+
+# Select region based on mode
+if ((delay > 0)); then
+  sleep "$delay"
 fi
 
-geometry="$(slurp)" || exit 1
-[[ -z "$geometry" ]] && exit 0
+case "$mode" in
+  region)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(slurp 2>/dev/null) || exit 0
+    ;;
+  window)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(get_rectangles | slurp -r 2>/dev/null) || exit 0
+    ;;
+  fullscreen)
+    SELECTION=$(hyprctl monitors -j | jq -r "${JQ_MONITOR_GEO} .[] | select(.focused == true) | format_geo")
+    ;;
+  smart|*)
+    RECTS=$(get_rectangles)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(echo "$RECTS" | slurp 2>/dev/null) || exit 0
 
-if [[ "$annotator" == "satty" ]]; then
-  # Satty supports stdin; copy to clipboard after editing.
-  grim -g "$geometry" - | satty --filename - --copy-command "wl-copy --type image/png" --early-exit
-elif [[ "$annotator" == "swappy" ]]; then
-  # Swappy edits a temp file; copy result back to clipboard.
-  tmpfile=$(mktemp --suffix=.png)
-  trap 'rm -f "$tmpfile"' EXIT
-  grim -g "$geometry" "$tmpfile"
-  swappy -f "$tmpfile"
-  [[ -f "$tmpfile" ]] && wl-copy --type image/png < "$tmpfile"
-else
-  # Fallback: just copy the region to clipboard.
-  grim -g "$geometry" - | wl-copy --type image/png
-fi
+    if [[ $SELECTION =~ ^([0-9]+),([0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]]; then
+      if ((${BASH_REMATCH[3]} * ${BASH_REMATCH[4]} < 20)); then
+        click_x="${BASH_REMATCH[1]}"
+        click_y="${BASH_REMATCH[2]}"
+
+        while IFS= read -r rect; do
+          if [[ $rect =~ ^([0-9]+),([0-9]+)[[:space:]]([0-9]+)x([0-9]+) ]]; then
+            rect_x="${BASH_REMATCH[1]}"
+            rect_y="${BASH_REMATCH[2]}"
+            rect_w="${BASH_REMATCH[3]}"
+            rect_h="${BASH_REMATCH[4]}"
+
+            if ((click_x >= rect_x && click_x < rect_x + rect_w && click_y >= rect_y && click_y < rect_y + rect_h)); then
+              SELECTION="${rect_x},${rect_y} ${rect_w}x${rect_h}"
+              break
+            fi
+          fi
+        done <<< "$RECTS"
+      fi
+    fi
+    ;;
+esac
+
+[[ -z "${SELECTION:-}" ]] && exit 0
+
+generate_filepath() {
+  local filename="Screenshot_$(date '+%Y-%m-%d_%H-%M-%S').png"
+  mkdir -p "$screenshot_dir"
+  printf '%s/%s' "$screenshot_dir" "$filename"
+}
+
+open_editor() {
+  local filepath="$1"
+  if [[ "$editor" == "satty" ]]; then
+    satty --filename "$filepath" \
+      --output-filename "$filepath" \
+      --actions-on-enter save-to-clipboard \
+      --save-after-copy \
+      --copy-command wl-copy
+  elif [[ "$editor" == "swappy" ]]; then
+    swappy -f "$filepath"
+    [[ -f "$filepath" ]] && wl-copy --type image/png < "$filepath"
+  else
+    "$editor" "$filepath"
+  fi
+}
+
+case "$processing" in
+  all)
+    filepath="$(generate_filepath)"
+    grim -g "$SELECTION" "$filepath" || exit 1
+    wl-copy < "$filepath"
+    if has_cmd notify-send; then
+      (
+        action="$(notify-send "Screenshot saved" "$(basename "$filepath")" \
+          -t 10000 -i "$filepath" \
+          -A "edit=Edit" 2>/dev/null || true)"
+        if [[ "$action" == "edit" && -n "$editor" ]]; then
+          open_editor "$filepath"
+        fi
+      ) >/dev/null 2>&1 &
+    fi
+    ;;
+  copy)
+    grim -g "$SELECTION" - | wl-copy
+    ;;
+  save)
+    filepath="$(generate_filepath)"
+    grim -g "$SELECTION" "$filepath" || exit 1
+    ;;
+  edit)
+    tmpfile=$(mktemp --suffix=.png)
+    grim -g "$SELECTION" "$tmpfile" || { rm -f "$tmpfile"; exit 1; }
+    open_editor "$tmpfile"
+    rm -f "$tmpfile"
+    ;;
+esac

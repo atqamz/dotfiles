@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PASSTHROUGH_CLASS="vncviewer"
+SUBMAP_NAME="passthrough"
+SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+
+in_passthrough=false
+
+activate() {
+  if ! $in_passthrough; then
+    hyprctl dispatch submap "$SUBMAP_NAME"
+    in_passthrough=true
+  fi
+}
+
+deactivate() {
+  if $in_passthrough; then
+    hyprctl dispatch submap reset
+    in_passthrough=false
+  fi
+}
+
+check_window() {
+  local class
+  class=$(hyprctl activewindow -j | jq -r '.class // empty' 2>/dev/null) || return
+  if [[ "${class,,}" == "${PASSTHROUGH_CLASS,,}" ]]; then
+    activate
+  else
+    deactivate
+  fi
+}
+
+# initial check
+check_window
+
+# monitor focus changes via IPC
+socat -u "UNIX-CONNECT:$SOCKET" - | while IFS= read -r event; do
+  case "$event" in
+    activewindowv2\>*) check_window ;;
+  esac
+done
