@@ -8,7 +8,6 @@ source "${BASH_COMMON:-$script_dir/bash-common}"
 require_cmd grim
 require_cmd slurp
 require_cmd hyprpicker
-require_cmd magick
 require_cmd wl-copy
 
 readonly VALID_MODES="smart region window fullscreen"
@@ -54,48 +53,12 @@ resolve_editor() {
 editor="$(resolve_editor)"
 screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
 
-hyprpicker_pid=""
-tmpfile=""
-
-cleanup() {
-  if [[ -n "$hyprpicker_pid" ]]; then
-    kill "$hyprpicker_pid" 2>/dev/null || true
-    wait "$hyprpicker_pid" 2>/dev/null || true
-    hyprpicker_pid=""
-  fi
-  [[ -n "$tmpfile" ]] && rm -f "$tmpfile"
+# Freeze cleanup — keep hyprpicker alive until after grim captures
+PID=""
+cleanup_freeze() {
+  [[ -n "$PID" ]] && kill "$PID" 2>/dev/null || true
 }
-
-trap cleanup EXIT
-
-pre_capture() {
-  if ((delay > 0)); then
-    sleep "$delay"
-  fi
-  tmpfile=$(mktemp --suffix=.png)
-  grim -c "$tmpfile"
-}
-
-freeze_screen() {
-  hyprpicker -r -z >/dev/null 2>&1 &
-  hyprpicker_pid=$!
-  sleep 0.2
-}
-
-unfreeze_screen() {
-  if [[ -n "$hyprpicker_pid" ]]; then
-    kill "$hyprpicker_pid" 2>/dev/null || true
-    wait "$hyprpicker_pid" 2>/dev/null || true
-    hyprpicker_pid=""
-  fi
-}
-
-crop_and_output() {
-  local geom="$1"
-  local x y w h
-  IFS=', x' read -r x y w h <<< "$geom"
-  magick "$tmpfile" -crop "${w}x${h}+${x}+${y}" +repage png:-
-}
+trap cleanup_freeze EXIT
 
 get_window_rects() {
   hyprctl clients -j | jq -r '
@@ -104,72 +67,58 @@ get_window_rects() {
   '
 }
 
-get_active_monitor() {
-  hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'
-}
+# Select region based on mode
+if ((delay > 0)); then
+  sleep "$delay"
+fi
 
-snap_to_window() {
-  local geom="$1"
-  local x y w h area
-  IFS=', x' read -r x y w h <<< "$geom"
-  area=$((w * h))
-  if ((area < 20)); then
-    local cx=$((x + w / 2))
-    local cy=$((y + h / 2))
-    local best=""
-    while IFS= read -r rect; do
-      local rx ry rw rh
-      IFS=', x' read -r rx ry rw rh <<< "$rect"
-      if ((cx >= rx && cx < rx + rw && cy >= ry && cy < ry + rh)); then
-        best="$rect"
+case "$mode" in
+  region)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(slurp 2>/dev/null) || exit 0
+    ;;
+  window)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(get_window_rects | slurp -r 2>/dev/null) || exit 0
+    ;;
+  fullscreen)
+    SELECTION=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | "\(.x),\(.y) \(.width)x\(.height)"')
+    ;;
+  smart|*)
+    RECTS=$(get_window_rects)
+    hyprpicker -r -z >/dev/null 2>&1 &
+    PID=$!
+    sleep 0.1
+    SELECTION=$(echo "$RECTS" | slurp 2>/dev/null) || exit 0
+
+    if [[ $SELECTION =~ ^([0-9]+),([0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]]; then
+      if ((${BASH_REMATCH[3]} * ${BASH_REMATCH[4]} < 20)); then
+        click_x="${BASH_REMATCH[1]}"
+        click_y="${BASH_REMATCH[2]}"
+
+        while IFS= read -r rect; do
+          if [[ $rect =~ ^([0-9]+),([0-9]+)[[:space:]]([0-9]+)x([0-9]+) ]]; then
+            rect_x="${BASH_REMATCH[1]}"
+            rect_y="${BASH_REMATCH[2]}"
+            rect_w="${BASH_REMATCH[3]}"
+            rect_h="${BASH_REMATCH[4]}"
+
+            if ((click_x >= rect_x && click_x < rect_x + rect_w && click_y >= rect_y && click_y < rect_y + rect_h)); then
+              SELECTION="${rect_x},${rect_y} ${rect_w}x${rect_h}"
+              break
+            fi
+          fi
+        done <<< "$RECTS"
       fi
-    done <<< "$(get_window_rects)"
-    if [[ -n "$best" ]]; then
-      printf '%s' "$best"
-      return
     fi
-  fi
-  printf '%s' "$geom"
-}
+    ;;
+esac
 
-capture_smart() {
-  pre_capture
-  freeze_screen
-  local rects geometry
-  rects="$(get_window_rects)"
-  geometry="$(echo "$rects" | slurp)" || { unfreeze_screen; exit 1; }
-  unfreeze_screen
-  geometry="$(snap_to_window "$geometry")"
-  crop_and_output "$geometry"
-}
-
-capture_region() {
-  pre_capture
-  freeze_screen
-  local geometry
-  geometry="$(slurp)" || { unfreeze_screen; exit 1; }
-  unfreeze_screen
-  crop_and_output "$geometry"
-}
-
-capture_window() {
-  pre_capture
-  freeze_screen
-  local rects geometry
-  rects="$(get_window_rects)"
-  geometry="$(echo "$rects" | slurp -r)" || { unfreeze_screen; exit 1; }
-  unfreeze_screen
-  crop_and_output "$geometry"
-}
-
-capture_fullscreen() {
-  local monitor
-  monitor="$(get_active_monitor)"
-  if ((delay > 0)); then
-    sleep "$delay"
-  fi
-  grim -c -o "$monitor" -
-}
+[[ -z "${SELECTION:-}" ]] && exit 0
 
 generate_filepath() {
   local filename="Screenshot_$(date '+%Y-%m-%d_%H-%M-%S').png"
@@ -177,65 +126,48 @@ generate_filepath() {
   printf '%s/%s' "$screenshot_dir" "$filename"
 }
 
-process_all() {
-  local filepath
-  filepath="$(generate_filepath)"
-  tee "$filepath" | wl-copy --type image/png
-  local filename
-  filename="$(basename "$filepath")"
-  if has_cmd notify-send; then
-    (
-      action="$(notify-send "Screenshot saved" "$filename" \
-        --icon "$filepath" \
-        --action "edit=Edit" 2>/dev/null || true)"
-      if [[ "$action" == "edit" && -n "$editor" ]]; then
-        "$editor" "$filepath"
-      fi
-    ) &
-    disown
-  fi
-}
-
-process_copy() {
-  wl-copy --type image/png
-}
-
-process_save() {
-  local filepath
-  filepath="$(generate_filepath)"
-  cat > "$filepath"
-}
-
-process_edit() {
-  local file="$1"
+open_editor() {
+  local filepath="$1"
   if [[ "$editor" == "satty" ]]; then
-    satty --filename "$file" --copy-command "wl-copy --type image/png" --early-exit
+    satty --filename "$filepath" \
+      --output-filename "$filepath" \
+      --copy-command "wl-copy --type image/png" \
+      --early-exit
   elif [[ "$editor" == "swappy" ]]; then
-    swappy -f "$file"
-    [[ -f "$file" ]] && wl-copy --type image/png < "$file"
+    swappy -f "$filepath"
+    [[ -f "$filepath" ]] && wl-copy --type image/png < "$filepath"
   else
-    wl-copy --type image/png < "$file"
+    "$editor" "$filepath"
   fi
 }
 
-capture() {
-  case "$mode" in
-    smart)      capture_smart      ;;
-    region)     capture_region     ;;
-    window)     capture_window     ;;
-    fullscreen) capture_fullscreen ;;
-  esac
-}
-
-if [[ "$processing" == "edit" ]]; then
-  local_tmp=$(mktemp --suffix=.png)
-  capture > "$local_tmp"
-  process_edit "$local_tmp"
-  rm -f "$local_tmp"
-else
-  capture | case "$processing" in
-    all)  process_all  ;;
-    copy) process_copy ;;
-    save) process_save ;;
-  esac
-fi
+case "$processing" in
+  all)
+    filepath="$(generate_filepath)"
+    grim -g "$SELECTION" "$filepath" || exit 1
+    wl-copy --type image/png < "$filepath"
+    if has_cmd notify-send; then
+      (
+        action="$(notify-send "Screenshot saved" "$(basename "$filepath")" \
+          --icon "$filepath" \
+          --action "edit=Edit" 2>/dev/null || true)"
+        if [[ "$action" == "edit" && -n "$editor" ]]; then
+          open_editor "$filepath"
+        fi
+      ) >/dev/null 2>&1 &
+    fi
+    ;;
+  copy)
+    grim -g "$SELECTION" - | wl-copy
+    ;;
+  save)
+    filepath="$(generate_filepath)"
+    grim -g "$SELECTION" "$filepath" || exit 1
+    ;;
+  edit)
+    tmpfile=$(mktemp --suffix=.png)
+    grim -g "$SELECTION" "$tmpfile" || { rm -f "$tmpfile"; exit 1; }
+    open_editor "$tmpfile"
+    rm -f "$tmpfile"
+    ;;
+esac
