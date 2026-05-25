@@ -207,28 +207,35 @@ process_save() {
 }
 
 process_edit() {
+  local file="$1"
   if [[ "$editor" == "satty" ]]; then
-    satty --filename - --copy-command "wl-copy --type image/png" --early-exit
+    satty --filename "$file" --copy-command "wl-copy --type image/png" --early-exit
   elif [[ "$editor" == "swappy" ]]; then
-    local tmpfile_edit
-    tmpfile_edit=$(mktemp --suffix=.png)
-    cat > "$tmpfile_edit"
-    swappy -f "$tmpfile_edit"
-    [[ -f "$tmpfile_edit" ]] && wl-copy --type image/png < "$tmpfile_edit"
-    rm -f "$tmpfile_edit"
+    swappy -f "$file"
+    [[ -f "$file" ]] && wl-copy --type image/png < "$file"
   else
-    wl-copy --type image/png
+    wl-copy --type image/png < "$file"
   fi
 }
 
-case "$mode" in
-  smart)      capture_smart      ;;
-  region)     capture_region     ;;
-  window)     capture_window     ;;
-  fullscreen) capture_fullscreen ;;
-esac | case "$processing" in
-  all)  process_all  ;;
-  copy) process_copy ;;
-  save) process_save ;;
-  edit) process_edit ;;
-esac
+capture() {
+  case "$mode" in
+    smart)      capture_smart      ;;
+    region)     capture_region     ;;
+    window)     capture_window     ;;
+    fullscreen) capture_fullscreen ;;
+  esac
+}
+
+if [[ "$processing" == "edit" ]]; then
+  local_tmp=$(mktemp --suffix=.png)
+  capture > "$local_tmp"
+  process_edit "$local_tmp"
+  rm -f "$local_tmp"
+else
+  capture | case "$processing" in
+    all)  process_all  ;;
+    copy) process_copy ;;
+    save) process_save ;;
+  esac
+fi
