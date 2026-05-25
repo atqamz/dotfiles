@@ -10,6 +10,8 @@ require_cmd slurp
 require_cmd hyprpicker
 require_cmd wl-copy
 
+pkill slurp && exit 0
+
 readonly VALID_MODES="smart region window fullscreen"
 readonly VALID_PROCESSING="all copy save edit"
 
@@ -60,11 +62,24 @@ cleanup_freeze() {
 }
 trap cleanup_freeze EXIT
 
-get_window_rects() {
-  hyprctl clients -j | jq -r '
-    .[] | select(.mapped == true and .hidden == false) |
-    "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"
-  '
+JQ_MONITOR_GEO='
+  def format_geo:
+    .x as $x | .y as $y |
+    (.width / .scale | floor) as $w |
+    (.height / .scale | floor) as $h |
+    .transform as $t |
+    if $t == 1 or $t == 3 then
+      "\($x),\($y) \($h)x\($w)"
+    else
+      "\($x),\($y) \($w)x\($h)"
+    end;
+'
+
+get_rectangles() {
+  local active_workspace
+  active_workspace=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+  hyprctl monitors -j | jq -r --arg ws "$active_workspace" "${JQ_MONITOR_GEO} .[] | select(.activeWorkspace.id == (\$ws | tonumber)) | format_geo"
+  hyprctl clients -j | jq -r --arg ws "$active_workspace" '.[] | select(.workspace.id == ($ws | tonumber)) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'
 }
 
 # Select region based on mode
@@ -83,13 +98,13 @@ case "$mode" in
     hyprpicker -r -z >/dev/null 2>&1 &
     PID=$!
     sleep 0.1
-    SELECTION=$(get_window_rects | slurp -r 2>/dev/null) || exit 0
+    SELECTION=$(get_rectangles | slurp -r 2>/dev/null) || exit 0
     ;;
   fullscreen)
-    SELECTION=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | "\(.x),\(.y) \(.width)x\(.height)"')
+    SELECTION=$(hyprctl monitors -j | jq -r "${JQ_MONITOR_GEO} .[] | select(.focused == true) | format_geo")
     ;;
   smart|*)
-    RECTS=$(get_window_rects)
+    RECTS=$(get_rectangles)
     hyprpicker -r -z >/dev/null 2>&1 &
     PID=$!
     sleep 0.1
@@ -131,8 +146,9 @@ open_editor() {
   if [[ "$editor" == "satty" ]]; then
     satty --filename "$filepath" \
       --output-filename "$filepath" \
-      --copy-command "wl-copy --type image/png" \
-      --early-exit
+      --actions-on-enter save-to-clipboard \
+      --save-after-copy \
+      --copy-command wl-copy
   elif [[ "$editor" == "swappy" ]]; then
     swappy -f "$filepath"
     [[ -f "$filepath" ]] && wl-copy --type image/png < "$filepath"
@@ -145,12 +161,12 @@ case "$processing" in
   all)
     filepath="$(generate_filepath)"
     grim -g "$SELECTION" "$filepath" || exit 1
-    wl-copy --type image/png < "$filepath"
+    wl-copy < "$filepath"
     if has_cmd notify-send; then
       (
         action="$(notify-send "Screenshot saved" "$(basename "$filepath")" \
-          --icon "$filepath" \
-          --action "edit=Edit" 2>/dev/null || true)"
+          -t 10000 -i "$filepath" \
+          -A "edit=Edit" 2>/dev/null || true)"
         if [[ "$action" == "edit" && -n "$editor" ]]; then
           open_editor "$filepath"
         fi
