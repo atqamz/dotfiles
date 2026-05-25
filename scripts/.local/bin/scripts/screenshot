@@ -103,3 +103,36 @@ snap_to_window() {
   fi
   printf '%s' "$geom"
 }
+
+capture_smart() {
+  freeze_screen
+  local rects geometry
+  rects="$(get_window_rects)"
+  geometry="$(echo "$rects" | slurp)" || { unfreeze_screen; exit 1; }
+  unfreeze_screen
+  geometry="$(snap_to_window "$geometry")"
+  grim -g "$geometry" -
+}
+
+capture_region() {
+  freeze_screen
+  local geometry
+  geometry="$(slurp)" || { unfreeze_screen; exit 1; }
+  unfreeze_screen
+  grim -g "$geometry" -
+}
+
+capture_window() {
+  freeze_screen
+  local rects geometry
+  rects="$(get_window_rects)"
+  geometry="$(echo "$rects" | slurp -r)" || { unfreeze_screen; exit 1; }
+  unfreeze_screen
+  grim -g "$geometry" -
+}
+
+capture_fullscreen() {
+  local monitor
+  monitor="$(get_active_monitor)"
+  grim -o "$monitor" -
+}
