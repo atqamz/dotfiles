@@ -50,3 +50,21 @@ resolve_editor() {
 
 editor="$(resolve_editor)"
 screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
+
+hyprpicker_pid=""
+
+freeze_screen() {
+  hyprpicker -r -z &
+  hyprpicker_pid=$!
+  sleep 0.2
+}
+
+unfreeze_screen() {
+  if [[ -n "$hyprpicker_pid" ]]; then
+    kill "$hyprpicker_pid" 2>/dev/null || true
+    wait "$hyprpicker_pid" 2>/dev/null || true
+    hyprpicker_pid=""
+  fi
+}
+
+trap unfreeze_screen EXIT
