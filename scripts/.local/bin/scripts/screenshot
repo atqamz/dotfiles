@@ -16,10 +16,12 @@ readonly VALID_PROCESSING="all copy save"
 mode="smart"
 processing="all"
 editor_override=""
+delay=0
 
 for arg in "$@"; do
   case "$arg" in
     --editor=*) editor_override="${arg#--editor=}" ;;
+    --delay=*) delay="${arg#--delay=}" ;;
     *)
       if [[ " $VALID_MODES " == *" $arg "* ]]; then
         mode="$arg"
@@ -27,7 +29,7 @@ for arg in "$@"; do
         processing="$arg"
       else
         printf 'unknown argument: %s\n' "$arg" >&2
-        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save] [--editor=<name>]\n' >&2
+        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save] [--delay=N] [--editor=<name>]\n' >&2
         exit 1
       fi
       ;;
@@ -54,6 +56,9 @@ screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshot
 hyprpicker_pid=""
 
 freeze_screen() {
+  if ((delay > 0)); then
+    sleep "$delay"
+  fi
   hyprpicker -r -z &
   hyprpicker_pid=$!
   sleep 0.2
@@ -111,7 +116,7 @@ capture_smart() {
   geometry="$(echo "$rects" | slurp)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
   geometry="$(snap_to_window "$geometry")"
-  grim -g "$geometry" -
+  grim -c -g "$geometry" -
 }
 
 capture_region() {
@@ -119,7 +124,7 @@ capture_region() {
   local geometry
   geometry="$(slurp)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
-  grim -g "$geometry" -
+  grim -c -g "$geometry" -
 }
 
 capture_window() {
@@ -128,13 +133,16 @@ capture_window() {
   rects="$(get_window_rects)"
   geometry="$(echo "$rects" | slurp -r)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
-  grim -g "$geometry" -
+  grim -c -g "$geometry" -
 }
 
 capture_fullscreen() {
   local monitor
   monitor="$(get_active_monitor)"
-  grim -o "$monitor" -
+  if ((delay > 0)); then
+    sleep "$delay"
+  fi
+  grim -c -o "$monitor" -
 }
 
 generate_filepath() {
