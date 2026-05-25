@@ -136,3 +136,49 @@ capture_fullscreen() {
   monitor="$(get_active_monitor)"
   grim -o "$monitor" -
 }
+
+generate_filepath() {
+  local filename="Screenshot_$(date '+%Y-%m-%d_%H-%M-%S').png"
+  mkdir -p "$screenshot_dir"
+  printf '%s/%s' "$screenshot_dir" "$filename"
+}
+
+process_all() {
+  local filepath
+  filepath="$(generate_filepath)"
+  tee "$filepath" | wl-copy --type image/png
+  local filename
+  filename="$(basename "$filepath")"
+  if has_cmd notify-send; then
+    (
+      action="$(notify-send "Screenshot saved" "$filename" \
+        --icon "$filepath" \
+        --action "edit=Edit" 2>/dev/null || true)"
+      if [[ "$action" == "edit" && -n "$editor" ]]; then
+        "$editor" "$filepath"
+      fi
+    ) &
+    disown
+  fi
+}
+
+process_copy() {
+  wl-copy --type image/png
+}
+
+process_save() {
+  local filepath
+  filepath="$(generate_filepath)"
+  cat > "$filepath"
+}
+
+case "$mode" in
+  smart)      capture_smart      ;;
+  region)     capture_region     ;;
+  window)     capture_window     ;;
+  fullscreen) capture_fullscreen ;;
+esac | case "$processing" in
+  all)  process_all  ;;
+  copy) process_copy ;;
+  save) process_save ;;
+esac
