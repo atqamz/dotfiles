@@ -68,3 +68,38 @@ unfreeze_screen() {
 }
 
 trap unfreeze_screen EXIT
+
+get_window_rects() {
+  hyprctl clients -j | jq -r '
+    .[] | select(.mapped == true and .hidden == false) |
+    "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"
+  '
+}
+
+get_active_monitor() {
+  hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name'
+}
+
+snap_to_window() {
+  local geom="$1"
+  local x y w h area
+  IFS=', x' read -r x y w h <<< "$geom"
+  area=$((w * h))
+  if ((area < 20)); then
+    local cx=$((x + w / 2))
+    local cy=$((y + h / 2))
+    local best=""
+    while IFS= read -r rect; do
+      local rx ry rw rh
+      IFS=', x' read -r rx ry rw rh <<< "$rect"
+      if ((cx >= rx && cx < rx + rw && cy >= ry && cy < ry + rh)); then
+        best="$rect"
+      fi
+    done <<< "$(get_window_rects)"
+    if [[ -n "$best" ]]; then
+      printf '%s' "$best"
+      return
+    fi
+  fi
+  printf '%s' "$geom"
+}
