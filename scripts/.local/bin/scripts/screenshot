@@ -8,6 +8,7 @@ source "${BASH_COMMON:-$script_dir/bash-common}"
 require_cmd grim
 require_cmd slurp
 require_cmd hyprpicker
+require_cmd magick
 require_cmd wl-copy
 
 readonly VALID_MODES="smart region window fullscreen"
@@ -54,11 +55,28 @@ editor="$(resolve_editor)"
 screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
 
 hyprpicker_pid=""
+tmpfile=""
 
-freeze_screen() {
+cleanup() {
+  if [[ -n "$hyprpicker_pid" ]]; then
+    kill "$hyprpicker_pid" 2>/dev/null || true
+    wait "$hyprpicker_pid" 2>/dev/null || true
+    hyprpicker_pid=""
+  fi
+  [[ -n "$tmpfile" ]] && rm -f "$tmpfile"
+}
+
+trap cleanup EXIT
+
+pre_capture() {
   if ((delay > 0)); then
     sleep "$delay"
   fi
+  tmpfile=$(mktemp --suffix=.png)
+  grim -c "$tmpfile"
+}
+
+freeze_screen() {
   hyprpicker -r -z &
   hyprpicker_pid=$!
   sleep 0.2
@@ -72,7 +90,12 @@ unfreeze_screen() {
   fi
 }
 
-trap unfreeze_screen EXIT
+crop_and_output() {
+  local geom="$1"
+  local x y w h
+  IFS=', x' read -r x y w h <<< "$geom"
+  magick "$tmpfile" -crop "${w}x${h}+${x}+${y}" +repage png:-
+}
 
 get_window_rects() {
   hyprctl clients -j | jq -r '
@@ -110,30 +133,33 @@ snap_to_window() {
 }
 
 capture_smart() {
+  pre_capture
   freeze_screen
   local rects geometry
   rects="$(get_window_rects)"
   geometry="$(echo "$rects" | slurp)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
   geometry="$(snap_to_window "$geometry")"
-  grim -c -g "$geometry" -
+  crop_and_output "$geometry"
 }
 
 capture_region() {
+  pre_capture
   freeze_screen
   local geometry
   geometry="$(slurp)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
-  grim -c -g "$geometry" -
+  crop_and_output "$geometry"
 }
 
 capture_window() {
+  pre_capture
   freeze_screen
   local rects geometry
   rects="$(get_window_rects)"
   geometry="$(echo "$rects" | slurp -r)" || { unfreeze_screen; exit 1; }
   unfreeze_screen
-  grim -c -g "$geometry" -
+  crop_and_output "$geometry"
 }
 
 capture_fullscreen() {
