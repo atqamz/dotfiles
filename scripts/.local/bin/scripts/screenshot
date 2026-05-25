@@ -7,29 +7,46 @@ source "${BASH_COMMON:-$script_dir/bash-common}"
 
 require_cmd grim
 require_cmd slurp
+require_cmd hyprpicker
 require_cmd wl-copy
 
-annotator=""
-if has_cmd satty; then
-  annotator="satty"
-elif has_cmd swappy; then
-  annotator="swappy"
-fi
+readonly VALID_MODES="smart region window fullscreen"
+readonly VALID_PROCESSING="all copy save"
 
-geometry="$(slurp)" || exit 1
-[[ -z "$geometry" ]] && exit 0
+mode="smart"
+processing="all"
+editor_override=""
 
-if [[ "$annotator" == "satty" ]]; then
-  # Satty supports stdin; copy to clipboard after editing.
-  grim -g "$geometry" - | satty --filename - --copy-command "wl-copy --type image/png" --early-exit
-elif [[ "$annotator" == "swappy" ]]; then
-  # Swappy edits a temp file; copy result back to clipboard.
-  tmpfile=$(mktemp --suffix=.png)
-  trap 'rm -f "$tmpfile"' EXIT
-  grim -g "$geometry" "$tmpfile"
-  swappy -f "$tmpfile"
-  [[ -f "$tmpfile" ]] && wl-copy --type image/png < "$tmpfile"
-else
-  # Fallback: just copy the region to clipboard.
-  grim -g "$geometry" - | wl-copy --type image/png
-fi
+for arg in "$@"; do
+  case "$arg" in
+    --editor=*) editor_override="${arg#--editor=}" ;;
+    *)
+      if [[ " $VALID_MODES " == *" $arg "* ]]; then
+        mode="$arg"
+      elif [[ " $VALID_PROCESSING " == *" $arg "* ]]; then
+        processing="$arg"
+      else
+        printf 'unknown argument: %s\n' "$arg" >&2
+        printf 'usage: screenshot [smart|region|window|fullscreen] [all|copy|save] [--editor=<name>]\n' >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+resolve_editor() {
+  if [[ -n "$editor_override" ]]; then
+    printf '%s' "$editor_override"
+  elif [[ -n "${SCREENSHOT_EDITOR:-}" ]]; then
+    printf '%s' "$SCREENSHOT_EDITOR"
+  elif has_cmd satty; then
+    printf 'satty'
+  elif has_cmd swappy; then
+    printf 'swappy'
+  else
+    printf ''
+  fi
+}
+
+editor="$(resolve_editor)"
+screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots}"
