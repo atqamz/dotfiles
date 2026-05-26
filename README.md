@@ -15,6 +15,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `readline` | Readline input configuration |
 | `rofi` | Application launcher theme |
 | `scripts` | Helper scripts (`~/.local/bin/scripts`) |
+| `swappy` | Screenshot editor configuration |
 | `swaync` | Notification center |
 | `tmux` | Terminal multiplexer |
 | `waybar` | Status bar |
