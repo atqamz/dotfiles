@@ -15,6 +15,7 @@ workspace helpers, and Waybar status scripts.
 - grim
 - slurp
 - hyprpicker
+- jq
 - satty (optional, screenshot editor)
 - rofi-wayland
 - rofimoji
