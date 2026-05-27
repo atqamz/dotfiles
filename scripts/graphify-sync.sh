@@ -10,6 +10,8 @@ SRC_MEMORY="$HOME/.claude/projects/"
 MEMORY_WS="$HOME/.graphify/memory-workspace"
 MEMORY_DST="$MEMORY_WS/projects/"
 RAW="$HOME/raw"
+GRAPHIFY_BIN="$HOME/.graphify/venv/bin/graphify"
+[[ -x "$GRAPHIFY_BIN" ]] || GRAPHIFY_BIN="graphify"  # fallback to PATH
 
 log() { echo "[graphify-sync] $*"; }
 warn() { echo "[graphify-sync] WARN: $*" >&2; }
@@ -98,7 +100,7 @@ PY
 
 log "memory: graphify extract"
 if [[ $HAS_GEMINI -eq 1 ]]; then
-  ( cd "$MEMORY_WS" && graphify extract . --backend gemini ) || warn "memory extract failed; continuing"
+  ( cd "$MEMORY_WS" && "$GRAPHIFY_BIN" extract . --backend gemini ) || warn "memory extract failed; continuing"
 else
   warn "no GEMINI_API_KEY; skipping memory extract (no headless extract fallback wired)"
 fi
@@ -116,7 +118,7 @@ fi
 #----- 2. raw: rebuild personal corpus graph
 log "raw: graphify extract"
 if [[ $HAS_GEMINI -eq 1 ]]; then
-  if ! ( cd "$RAW" && graphify extract . --backend gemini ); then
+  if ! ( cd "$RAW" && "$GRAPHIFY_BIN" extract . --backend gemini ); then
     warn "raw extract failed; will still commit/push file changes"
   fi
 else
