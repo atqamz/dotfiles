@@ -50,3 +50,29 @@ if command -v pass >/dev/null 2>&1; then
     GEMINI_API_KEY="$(pass show dotfiles/api-key/gemini 2>/dev/null)"
     [ -n "$GEMINI_API_KEY" ] && export GEMINI_API_KEY || unset GEMINI_API_KEY
 fi
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+[ -d "$BUN_INSTALL/bin" ] && export PATH="$BUN_INSTALL/bin:$PATH"
+
+# homebrew env vars (HOMEBREW_PREFIX, MANPATH, ...); PATH precedence fixed below
+if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# PATH precedence: system (dnf) > homebrew > everything else (node, bun, cargo, go).
+# brew shellenv prepends itself; this re-sorts. Idempotent: dedupes on every shell.
+__order_path() {
+    local brew_bin=/home/linuxbrew/.linuxbrew/bin brew_sbin=/home/linuxbrew/.linuxbrew/sbin
+    local sys="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    local rest
+    rest="$(printf '%s' "$PATH" | tr ':' '\n' \
+        | grep -vxE "/usr/local/sbin|/usr/local/bin|/usr/sbin|/usr/bin|/sbin|/bin|${brew_bin}|${brew_sbin}" \
+        | awk 'NF && !seen[$0]++' | paste -sd ':')"
+    if [ -x "$brew_bin/brew" ]; then
+        export PATH="${sys}:${brew_bin}:${brew_sbin}:${rest}"
+    else
+        export PATH="${sys}:${rest}"
+    fi
+}
+__order_path
