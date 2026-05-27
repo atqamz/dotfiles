@@ -58,7 +58,11 @@ screenshot_dir="${SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshot
 # Freeze cleanup — keep hyprpicker alive until after grim captures
 PID=""
 cleanup_freeze() {
-  [[ -n "$PID" ]] && kill "$PID" 2>/dev/null || true
+  if [[ -n "$PID" ]]; then
+    kill "$PID" 2>/dev/null || true
+    wait "$PID" 2>/dev/null || true
+    PID=""
+  fi
 }
 trap cleanup_freeze EXIT
 
@@ -145,13 +149,12 @@ open_editor() {
   local filepath="$1"
   if [[ "$editor" == "satty" ]]; then
     satty --filename "$filepath" \
-      --output-filename "$filepath" \
-      --actions-on-enter save-to-clipboard \
-      --save-after-copy \
-      --copy-command wl-copy
+      --copy-command wl-copy \
+      --early-exit
   elif [[ "$editor" == "swappy" ]]; then
-    swappy -f "$filepath"
-    [[ -f "$filepath" ]] && wl-copy --type image/png < "$filepath"
+    local save_path
+    save_path="$(generate_filepath)"
+    swappy -f "$filepath" -o "$save_path"
   else
     "$editor" "$filepath"
   fi
@@ -161,6 +164,7 @@ case "$processing" in
   all)
     filepath="$(generate_filepath)"
     grim -g "$SELECTION" "$filepath" || exit 1
+    cleanup_freeze
     wl-copy < "$filepath"
     if has_cmd notify-send; then
       (
@@ -175,14 +179,17 @@ case "$processing" in
     ;;
   copy)
     grim -g "$SELECTION" - | wl-copy
+    cleanup_freeze
     ;;
   save)
     filepath="$(generate_filepath)"
     grim -g "$SELECTION" "$filepath" || exit 1
+    cleanup_freeze
     ;;
   edit)
     tmpfile=$(mktemp --suffix=.png)
     grim -g "$SELECTION" "$tmpfile" || { rm -f "$tmpfile"; exit 1; }
+    cleanup_freeze
     open_editor "$tmpfile"
     rm -f "$tmpfile"
     ;;
