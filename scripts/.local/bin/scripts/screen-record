@@ -146,7 +146,7 @@ start_screenrecording() {
       capture_args=(-w "${target#monitor:}" -s "${RESOLUTION:-$(default_resolution)}")
       ;;
     region:*)
-      capture_args=(-w "${target#region:}")
+      capture_args=(-w region -region "${target#region:}")
       [[ -n $RESOLUTION ]] && capture_args+=(-s "$RESOLUTION")
       ;;
     esac
