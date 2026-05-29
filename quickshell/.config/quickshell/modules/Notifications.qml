@@ -25,7 +25,7 @@ Scope {
             required property var modelData
 
             screen: modelData
-            visible: NotificationHistory.server.trackedNotifications.values.length > 0
+            visible: !NotificationHistory.doNotDisturb && NotificationHistory.server.trackedNotifications.values.length > 0
 
             anchors {
                 top: true

@@ -11,6 +11,7 @@ Singleton {
 
     readonly property int historyLimit: 50
     property var history: []
+    property bool doNotDisturb: false
     readonly property alias server: notifServer
 
     function _push(notif) {
