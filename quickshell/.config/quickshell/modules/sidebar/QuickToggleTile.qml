@@ -5,6 +5,8 @@ import qs.components
 Rectangle {
     id: tile
 
+    signal pressAndHold()
+
     required property QuickToggleModel model
 
     Layout.fillWidth: true
@@ -54,5 +56,6 @@ Rectangle {
         anchors.fill: parent
         enabled: tile.model.available
         onClicked: tile.model.mainAction()
+        onPressAndHold: tile.pressAndHold()
     }
 }
