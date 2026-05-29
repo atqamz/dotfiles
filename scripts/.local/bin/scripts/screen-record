@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -uo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1090
@@ -181,6 +180,29 @@ start_screenrecording() {
   fi
 }
 
+finalize_recording() {
+  local latest
+  latest=$(cat "$RECORDING_FILE" 2>/dev/null)
+  [[ -f $latest ]] || return
+
+  local video_codec=(-c:v copy)
+  if ffprobe -v error -select_streams v:0 -read_intervals %+0.2 -show_entries packet=flags -of csv=p=0 "$latest" 2>/dev/null | grep -q D; then
+    video_codec=(-c:v libx264 -preset veryfast -crf 20)
+  fi
+
+  local args=(-y -ss 0.1 -i "$latest" "${video_codec[@]}")
+  if ffprobe -v error -select_streams a -show_entries stream=codec_type -of csv=p=0 "$latest" 2>/dev/null | grep -q audio; then
+    args+=(-af "volume=enable='lt(t,0.4)':volume=0,afade=t=in:st=0.4:d=0.05,loudnorm=I=-14:TP=-1.5:LRA=11")
+  fi
+
+  local processed="${latest%.mp4}-processed.mp4"
+  if ffmpeg "${args[@]}" "$processed" -loglevel quiet 2>/dev/null; then
+    mv "$processed" "$latest"
+  else
+    rm -f "$processed"
+  fi
+}
+
 stop_screenrecording() {
   pkill -SIGINT -f "^gpu-screen-recorder"
 
@@ -197,6 +219,7 @@ stop_screenrecording() {
     pkill -9 -f "^gpu-screen-recorder"
     notify-send "Screen recording error" "Recording process had to be force-killed. Video may be corrupted." -u critical -t 5000
   else
+    finalize_recording
     local filename=$(cat "$RECORDING_FILE" 2>/dev/null)
     echo "$filename"
     local preview="${filename%.mp4}-preview.png"
