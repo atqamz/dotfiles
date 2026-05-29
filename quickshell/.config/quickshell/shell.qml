@@ -21,4 +21,5 @@ ShellRoot {
     MediaControls {}
     Cheatsheet {}
     NotificationHistory {}
+    SidebarRight {}
 }
