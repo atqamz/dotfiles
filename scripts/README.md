@@ -15,6 +15,7 @@ workspace helpers, and Waybar status scripts.
 - grim
 - slurp
 - hyprpicker
+- jq
 - satty (optional, screenshot editor)
 - rofi-wayland
 - rofimoji
@@ -22,3 +23,7 @@ workspace helpers, and Waybar status scripts.
 - notify-send (libnotify)
 - python3
 - nvidia-smi (optional, for GPU status)
+- gpu-screen-recorder
+- ffmpeg (provides ffprobe)
+- v4l2-utils (v4l2-ctl, webcam overlay)
+- mpv (open recording from notification)

@@ -14,6 +14,7 @@ ShellRoot {
     Clipboard {}
     WindowPicker {}
     Osd {}
+    RecordingIndicator {}
     TagInput {}
     PassMenu {}
     EmojiPicker {}
