@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+
+STEP="0.3"
+MIN="1.0"
+MAX="3.0"
+
+current=$(hyprctl getoption cursor:zoom_factor -j | jq -r '.float')
+current="${current:-1.0}"
+
+case "${1:---in}" in
+  --in)
+    new=$(awk "BEGIN { v = $current + $STEP; if (v > $MAX) v = $MAX; printf \"%.1f\", v }")
+    ;;
+  --out)
+    new=$(awk "BEGIN { v = $current - $STEP; if (v < $MIN) v = $MIN; printf \"%.1f\", v }")
+    ;;
+  --reset)
+    new="$MIN"
+    ;;
+  *)
+    printf 'usage: zoom [--in|--out|--reset]\n' >&2
+    exit 1
+    ;;
+esac
+
+hyprctl keyword cursor:zoom_factor "$new" >/dev/null
