@@ -33,3 +33,4 @@ workspace helpers, and Waybar status scripts.
 - pactl (pulseaudio-utils, audio sink enumeration)
 - wpctl (wireplumber, audio device control)
 - brightnessctl (keyboard backlight control)
+- powerprofilesctl (power-profiles-daemon)
