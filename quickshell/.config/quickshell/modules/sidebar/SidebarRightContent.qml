@@ -22,13 +22,13 @@ Flickable {
 
             StyledText {
                 text: Qt.formatDateTime(Time.now, "HH:mm")
-                font.pixelSize: Theme.font.size.title
+                font.pixelSize: Theme.font.size.extraLarge
                 font.bold: true
             }
 
             StyledText {
                 text: Qt.formatDateTime(Time.now, "ddd dd MMM")
-                color: Theme.textSecondary
+                color: Theme.textVariant
             }
 
             Item { Layout.fillWidth: true }
@@ -37,5 +37,14 @@ Flickable {
         QuickSliders {}
 
         QuickToggles {}
+
+        // Separator
+        Rectangle {
+            Layout.fillWidth: true
+            height: 1
+            color: Theme.outlineVariant
+        }
+
+        CalendarWidget {}
     }
 }
