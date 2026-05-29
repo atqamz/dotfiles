@@ -30,3 +30,6 @@ workspace helpers, and Waybar status scripts.
 - tesseract + tesseract-langpack-eng (OCR text extraction)
 - hyprsunset (blue light filter)
 - hypridle (idle lock daemon)
+- pactl (pulseaudio-utils, audio sink enumeration)
+- wpctl (wireplumber, audio device control)
+- brightnessctl (keyboard backlight control)

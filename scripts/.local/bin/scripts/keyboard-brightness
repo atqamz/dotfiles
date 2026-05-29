@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd brightnessctl
+
+device=""
+for candidate in /sys/class/leds/*kbd_backlight*; do
+  [ -e "$candidate" ] && { device="$(basename "$candidate")"; break; }
+done
+
+if [ -z "$device" ]; then
+  printf 'no keyboard backlight device found\n' >&2
+  exit 1
+fi
+
+direction="${1:-up}"
+
+max=$(brightnessctl -d "$device" max)
+current=$(brightnessctl -d "$device" get)
+step=$(( max / 10 ))
+(( step < 1 )) && step=1
+
+case "$direction" in
+  up)
+    new=$(( current + step ))
+    (( new > max )) && new=$max
+    ;;
+  down)
+    new=$(( current - step ))
+    (( new < 0 )) && new=0
+    ;;
+  cycle)
+    new=$(( current + step ))
+    (( new > max )) && new=0
+    ;;
+  *)
+    printf 'usage: keyboard-brightness <up|down|cycle>\n' >&2
+    exit 1
+    ;;
+esac
+
+brightnessctl -d "$device" set "$new" >/dev/null
