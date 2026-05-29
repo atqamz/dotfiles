@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd notify-send
+
+refresh_hyprland() {
+  has_cmd hyprctl && hyprctl reload >/dev/null
+}
+
+refresh_hypridle() {
+  pkill -x hypridle 2>/dev/null
+  sleep 0.3
+  has_cmd hypridle && setsid hypridle >/dev/null 2>&1 &
+}
+
+refresh_quickshell() {
+  pkill -x quickshell 2>/dev/null
+  sleep 0.5
+  has_cmd qs && setsid qs >/dev/null 2>&1 &
+}
+
+refresh_cliphist() {
+  pkill -f "wl-paste.*cliphist" 2>/dev/null
+  sleep 0.3
+  has_cmd cliphist-watch && setsid cliphist-watch >/dev/null 2>&1 &
+}
+
+case "${1:-all}" in
+  hyprland)    refresh_hyprland ;;
+  hypridle)    refresh_hypridle ;;
+  quickshell)  refresh_quickshell ;;
+  cliphist)    refresh_cliphist ;;
+  all)
+    refresh_hyprland
+    refresh_hypridle
+    refresh_quickshell
+    refresh_cliphist
+    ;;
+  *)
+    printf 'usage: refresh [hyprland|hypridle|quickshell|cliphist|all]\n' >&2
+    exit 1
+    ;;
+esac
+
+notify-send -u low "Refreshed: ${1:-all}"

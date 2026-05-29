@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd powerprofilesctl
+require_cmd notify-send
+
+profiles() {
+  powerprofilesctl list | awk '/^\s*[* ]\s*[a-zA-Z0-9-]+:$/ { gsub(/^[*[:space:]]+|:$/,""); print }'
+}
+
+current() {
+  powerprofilesctl get
+}
+
+set_profile() {
+  powerprofilesctl set "$1"
+  notify-send -u low "Power profile: $1"
+}
+
+cycle() {
+  mapfile -t available < <(profiles)
+  cur=$(current)
+  for i in "${!available[@]}"; do
+    if [[ "${available[$i]}" == "$cur" ]]; then
+      next_idx=$(( (i + 1) % ${#available[@]} ))
+      set_profile "${available[$next_idx]}"
+      return
+    fi
+  done
+  set_profile "${available[0]}"
+}
+
+case "${1:-}" in
+  "")           current ;;
+  cycle)        cycle ;;
+  performance|balanced|power-saver) set_profile "$1" ;;
+  *)
+    printf 'usage: power-profile [cycle|performance|balanced|power-saver]\n' >&2
+    exit 1
+    ;;
+esac
