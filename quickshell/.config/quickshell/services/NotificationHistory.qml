@@ -59,6 +59,7 @@ Singleton {
         function open(): void   { root._openCb   && root._openCb();   }
         function close(): void  { root._closeCb  && root._closeCb();  }
         function clear(): void  { root.clear(); }
+        function toggleDnd(): void { root.doNotDisturb = !root.doNotDisturb; }
     }
 
     property var _toggleCb: null

@@ -28,3 +28,5 @@ workspace helpers, and Waybar status scripts.
 - v4l2-utils (v4l2-ctl, webcam overlay)
 - mpv (open recording from notification)
 - tesseract + tesseract-langpack-eng (OCR text extraction)
+- hyprsunset (blue light filter)
+- hypridle (idle lock daemon)

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd notify-send
+
+qs ipc call notificationHistory toggleDnd 2>/dev/null
+
+if toggle notifications; then
+  notify-send -u low "Notifications silenced"
+else
+  notify-send -u low "Notifications enabled"
+fi

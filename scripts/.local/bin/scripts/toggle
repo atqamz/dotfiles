@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+STATE_DIR="$HOME/.local/state/toggles"
+
+usage() {
+  printf 'usage: toggle <name> [on|off|status]\n' >&2
+  exit 1
+}
+
+[ -z "$1" ] && usage
+
+name="$1"
+action="${2:-toggle}"
+
+case "$name" in
+  */* | ..*) printf 'invalid toggle name: %s\n' "$name" >&2; exit 2 ;;
+esac
+
+flag="$STATE_DIR/$name"
+
+mkdir -p "$STATE_DIR"
+
+case "$action" in
+  on)
+    touch "$flag"
+    exit 0
+    ;;
+  off)
+    rm -f "$flag"
+    exit 1
+    ;;
+  status)
+    [ -f "$flag" ] && exit 0 || exit 1
+    ;;
+  toggle)
+    if [ -f "$flag" ]; then
+      rm -f "$flag"
+      exit 1
+    else
+      touch "$flag"
+      exit 0
+    fi
+    ;;
+  *)
+    usage
+    ;;
+esac
