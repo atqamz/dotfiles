@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+source bash-common
+
+require_cmd notify-send
+
+qs ipc call notificationHistory toggleDnd 2>/dev/null
+
+if toggle notifications; then
+  notify-send -u low "Notifications silenced"
+else
+  notify-send -u low "Notifications enabled"
+fi

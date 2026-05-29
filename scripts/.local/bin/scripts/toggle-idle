@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+source bash-common
+
+require_cmd notify-send
+
+action="${1:-toggle}"
+
+start_idle() {
+  if ! pgrep -x hypridle >/dev/null; then
+    setsid hypridle >/dev/null 2>&1 &
+  fi
+  toggle idle on
+  notify-send -u low "Idle lock enabled"
+}
+
+stop_idle() {
+  pkill -x hypridle 2>/dev/null
+  toggle idle off
+  notify-send -u low "Idle lock disabled"
+}
+
+case "$action" in
+  on) start_idle ;;
+  off) stop_idle ;;
+  toggle)
+    if pgrep -x hypridle >/dev/null; then
+      stop_idle
+    else
+      start_idle
+    fi
+    ;;
+esac

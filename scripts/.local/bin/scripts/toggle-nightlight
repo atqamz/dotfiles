@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+source bash-common
+
+require_cmd hyprsunset
+require_cmd hyprctl
+require_cmd notify-send
+
+ON_TEMP=4000
+OFF_TEMP=6500
+
+action="${1:-toggle}"
+
+start_nightlight() {
+  if ! pgrep -x hyprsunset >/dev/null; then
+    setsid hyprsunset >/dev/null 2>&1 &
+    sleep 0.5
+  fi
+  hyprctl hyprsunset temperature "$ON_TEMP" >/dev/null 2>&1
+  toggle nightlight on
+  notify-send -u low "Night light on"
+}
+
+stop_nightlight() {
+  if pgrep -x hyprsunset >/dev/null; then
+    hyprctl hyprsunset temperature "$OFF_TEMP" >/dev/null 2>&1
+  fi
+  toggle nightlight off
+  notify-send -u low "Night light off"
+}
+
+case "$action" in
+  on) start_nightlight ;;
+  off) stop_nightlight ;;
+  toggle)
+    if toggle nightlight status; then
+      stop_nightlight
+    else
+      start_nightlight
+    fi
+    ;;
+esac
