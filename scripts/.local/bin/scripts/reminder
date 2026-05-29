@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd notify-send
+
+REMINDER_DIR="${XDG_RUNTIME_DIR:-/tmp}/reminders"
+mkdir -p "$REMINDER_DIR"
+
+set_reminder() {
+  local duration="$1"
+  local message="${2:-Reminder}"
+  local id
+  id="$(date +%s)"
+  local unit="${duration//[0-9]/}"
+  local value="${duration//[^0-9]/}"
+
+  case "$unit" in
+    m|"") unit="m"; seconds=$((value * 60)) ;;
+    h) seconds=$((value * 3600)) ;;
+    s) seconds=$((value)) ;;
+    *) printf 'invalid duration: %s (use Nm, Nh, or Ns)\n' "$duration" >&2; exit 1 ;;
+  esac
+
+  echo "$message" > "$REMINDER_DIR/$id"
+
+  local escaped_msg="${message//\'/\'\\\'\'}"
+  systemd-run --user --on-active="${seconds}s" \
+    --unit="reminder-${id}" \
+    --description="Reminder: $message" \
+    bash -c "notify-send -u critical 'Reminder' '${escaped_msg}'; rm -f '${REMINDER_DIR}/${id}'" \
+    >/dev/null 2>&1
+
+  notify-send -u low "Reminder set: $message (${value}${unit})"
+}
+
+show_reminders() {
+  local found=0
+  local now
+  now=$(date +%s)
+
+  for f in "$REMINDER_DIR"/*; do
+    [ -f "$f" ] || continue
+    found=1
+    local id
+    id=$(basename "$f")
+    local message
+    message=$(cat "$f")
+
+    local timer_info
+    timer_info=$(systemctl --user show "reminder-${id}.timer" --property=NextElapseUSecRealtime 2>/dev/null)
+    local next_fire
+    next_fire=$(echo "$timer_info" | grep -oP 'NextElapseUSecRealtime=\K.*')
+
+    printf '%s — %s\n' "$message" "${next_fire:-unknown}"
+  done
+
+  if [ "$found" -eq 0 ]; then
+    printf 'no active reminders\n'
+  fi
+}
+
+clear_reminders() {
+  for f in "$REMINDER_DIR"/*; do
+    [ -f "$f" ] || continue
+    local id
+    id=$(basename "$f")
+    systemctl --user stop "reminder-${id}.timer" 2>/dev/null
+    rm -f "$f"
+  done
+  notify-send -u low "All reminders cleared"
+}
+
+case "${1:-}" in
+  set)
+    [ -z "${2:-}" ] && { printf 'usage: reminder set <duration> [message]\n' >&2; exit 1; }
+    set_reminder "$2" "${3:-Reminder}"
+    ;;
+  show) show_reminders ;;
+  clear) clear_reminders ;;
+  *)
+    printf 'usage: reminder <set|show|clear>\n' >&2
+    exit 1
+    ;;
+esac

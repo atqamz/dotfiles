@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+url="${1:-}"
+[ -z "$url" ] && { printf 'usage: webapp-launch <url>\n' >&2; exit 1; }
+
+browser=$(xdg-settings get default-web-browser 2>/dev/null | sed 's/\.desktop$//')
+
+case "$browser" in
+  *chromium*|*chrome*|*brave*|*vivaldi*|*edge*)
+    exec "$browser" --app="$url"
+    ;;
+  *firefox*)
+    exec firefox --ssb="$url"
+    ;;
+  *)
+    exec xdg-open "$url"
+    ;;
+esac
