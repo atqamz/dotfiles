@@ -34,3 +34,5 @@ workspace helpers, and Waybar status scripts.
 - wpctl (wireplumber, audio device control)
 - brightnessctl (keyboard backlight control)
 - powerprofilesctl (power-profiles-daemon)
+- upower (battery info)
+- curl (weather data)

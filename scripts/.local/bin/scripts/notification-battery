@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+battery_info=$(upower -i "$(upower -e | grep battery)" 2>/dev/null)
+if [ -z "$battery_info" ]; then
+  notify-send -u low "No battery detected"
+  exit 0
+fi
+
+percentage=$(echo "$battery_info" | grep -oP 'percentage:\s+\K\S+')
+state=$(echo "$battery_info" | grep -oP 'state:\s+\K\S+')
+time_to=$(echo "$battery_info" | grep -oP 'time to (full|empty):\s+\K.*')
+
+msg="Battery: ${percentage} (${state})"
+[ -n "$time_to" ] && msg="$msg — $time_to"
+
+notify-send -u low "$msg"
