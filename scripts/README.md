@@ -4,8 +4,8 @@ Custom scripts installed to `~/.local/bin/scripts/`. The parent directory
 `~/.local/bin/` is left for installer-managed binaries (claude, uv, etc.) so
 they don't land inside the dotfiles repo via stow's tree folding.
 
-Includes clipboard history, screenshot, emoji picker, password menu, Hyprland
-workspace helpers, and Waybar status scripts.
+Includes capture tools, system toggles, audio/display management, quick-info
+notifications, workspace helpers, web app manager, and utility scripts.
 
 ## Dependencies
 
@@ -36,3 +36,6 @@ workspace helpers, and Waybar status scripts.
 - powerprofilesctl (power-profiles-daemon)
 - upower (battery info)
 - curl (weather data)
+- localsend (optional, file sharing)
+- cmatrix or cbonsai (optional, screensaver)
+- imagemagick (optional, image transcoding)
