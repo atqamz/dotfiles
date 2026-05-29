@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd notify-send
+
+if [ -n "${1:-}" ]; then
+  file="$1"
+else
+  if has_cmd zenity; then
+    file=$(zenity --file-selection 2>/dev/null)
+  else
+    printf 'usage: share <file>\n' >&2
+    exit 1
+  fi
+fi
+
+[ -z "$file" ] && exit 1
+[ ! -e "$file" ] && { printf 'not found: %s\n' "$file" >&2; exit 1; }
+
+if has_cmd localsend; then
+  localsend send "$file"
+elif has_cmd flatpak && flatpak list --app | grep -q localsend; then
+  flatpak run org.localsend.localsend_app send "$file"
+else
+  printf 'localsend not installed\n' >&2
+  exit 1
+fi

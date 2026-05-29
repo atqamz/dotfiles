@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd ffmpeg
+require_cmd notify-send
+
+usage() {
+  printf 'usage: transcode <input> [--to format]\n' >&2
+  printf 'formats: mp4, gif, mp3, jpg, png\n' >&2
+  exit 1
+}
+
+[ -z "${1:-}" ] && usage
+
+input="$1"
+shift
+
+target=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --to) target="$2"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+
+[ ! -f "$input" ] && { printf 'file not found: %s\n' "$input" >&2; exit 1; }
+
+ext="${input##*.}"
+base="${input%.*}"
+
+if [ -z "$target" ]; then
+  case "$ext" in
+    webm|mkv|mov|avi) target="mp4" ;;
+    wav|flac|ogg) target="mp3" ;;
+    heic|webp|tiff) target="jpg" ;;
+    mp4) target="gif" ;;
+    *) printf 'cannot auto-detect target for .%s — use --to\n' "$ext" >&2; exit 1 ;;
+  esac
+fi
+
+output="${base}.${target}"
+
+case "$target" in
+  mp4)
+    ffmpeg -i "$input" -c:v libx264 -crf 23 -preset medium -c:a aac -b:a 128k "$output" -y 2>/dev/null
+    ;;
+  gif)
+    ffmpeg -i "$input" -vf "fps=15,scale=480:-1:flags=lanczos" "$output" -y 2>/dev/null
+    ;;
+  mp3)
+    ffmpeg -i "$input" -c:a libmp3lame -q:a 2 "$output" -y 2>/dev/null
+    ;;
+  jpg)
+    if has_cmd magick; then
+      magick "$input" -quality 85 -strip "$output"
+    else
+      ffmpeg -i "$input" -q:v 2 "$output" -y 2>/dev/null
+    fi
+    ;;
+  png)
+    if has_cmd magick; then
+      magick "$input" -strip "$output"
+    else
+      ffmpeg -i "$input" "$output" -y 2>/dev/null
+    fi
+    ;;
+  *)
+    printf 'unsupported target format: %s\n' "$target" >&2
+    exit 1
+    ;;
+esac
+
+notify-send -u low "Transcoded: $(basename "$output")"

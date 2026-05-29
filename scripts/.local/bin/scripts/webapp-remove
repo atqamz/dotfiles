@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd notify-send
+
+APPS_DIR="$HOME/.local/share/applications"
+ICONS_DIR="$APPS_DIR/icons"
+
+if [ -n "${1:-}" ]; then
+  slug=$(echo "$1" | tr '[:upper:] ' '[:lower:]-')
+else
+  printf 'usage: webapp-remove <name>\n' >&2
+  exit 1
+fi
+
+desktop_file="$APPS_DIR/webapp-${slug}.desktop"
+icon_file="$ICONS_DIR/webapp-${slug}.png"
+
+[ ! -f "$desktop_file" ] && { printf 'webapp not found: %s\n' "$1" >&2; exit 1; }
+
+rm -f "$desktop_file" "$icon_file"
+update-desktop-database "$APPS_DIR" 2>/dev/null
+notify-send -u low "Web app removed: $1"
