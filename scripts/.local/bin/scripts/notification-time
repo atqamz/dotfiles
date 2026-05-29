@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+notify-send -u low "$(date +"%A %H:%M  |  %d %B %Y  |  Week %V")"

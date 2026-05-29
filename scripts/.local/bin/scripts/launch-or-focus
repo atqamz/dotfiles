@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+require_cmd jq
+
+if (( $# == 0 )); then
+  printf 'usage: launch-or-focus <pattern> [command]\n' >&2
+  exit 1
+fi
+
+pattern="$1"
+command="${2:-$pattern}"
+
+addr=$(hyprctl clients -j | jq -r --arg p "$pattern" \
+  '.[] | select((.class | test("\\b" + $p + "\\b"; "i")) or (.title | test("\\b" + $p + "\\b"; "i"))) | .address' | head -n1)
+
+if [ -n "$addr" ]; then
+  hyprctl dispatch focuswindow "address:$addr" >/dev/null
+else
+  setsid bash -c "$command" >/dev/null 2>&1 &
+fi

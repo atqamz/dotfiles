@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+require_cmd jq
+require_cmd notify-send
+
+device=$(hyprctl devices -j | jq -r '.touch[] | .name' | head -n1)
+
+if [ -z "$device" ]; then
+  printf 'no touchscreen device found\n' >&2
+  exit 1
+fi
+
+action="${1:-toggle}"
+
+enable() {
+  hyprctl keyword "device[$device]:enabled" true >/dev/null
+  toggle touchscreen-off off
+  notify-send -u low "Touchscreen enabled"
+}
+
+disable() {
+  hyprctl keyword "device[$device]:enabled" false >/dev/null
+  toggle touchscreen-off on
+  notify-send -u low "Touchscreen disabled"
+}
+
+case "$action" in
+  on) enable ;;
+  off) disable ;;
+  toggle)
+    if toggle touchscreen-off status; then
+      enable
+    else
+      disable
+    fi
+    ;;
+esac
