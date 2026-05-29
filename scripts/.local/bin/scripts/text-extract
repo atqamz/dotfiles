@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd grim
+require_cmd slurp
+require_cmd tesseract
+require_cmd wl-copy
+require_cmd hyprpicker
+
+cleanup_freeze() {
+  [[ -n ${PID:-} ]] && kill $PID 2>/dev/null
+}
+trap cleanup_freeze EXIT
+
+hyprpicker -r -z >/dev/null 2>&1 &
+PID=$!
+sleep .1
+SELECTION=$(slurp 2>/dev/null)
+
+[[ -z $SELECTION ]] && exit 0
+
+TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${OCR_LANGS:-eng}" --dpi 300 -c preserve_interword_spaces=1 2>/dev/null) || exit 1
+
+[[ -z $TEXT ]] && exit 1
+
+printf "%s" "$TEXT" | wl-copy
+notify-send "Copied text from selection to clipboard"
