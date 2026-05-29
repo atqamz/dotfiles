@@ -46,5 +46,21 @@ Flickable {
         }
 
         CalendarWidget {}
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: 1
+            color: Theme.outlineVariant
+        }
+
+        TodoWidget {}
+
+        Rectangle {
+            Layout.fillWidth: true
+            height: 1
+            color: Theme.outlineVariant
+        }
+
+        PomodoroWidget {}
     }
 }
