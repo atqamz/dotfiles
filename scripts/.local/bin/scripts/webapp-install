@@ -34,7 +34,7 @@ browser=$(xdg-settings get default-web-browser 2>/dev/null | sed 's/\.desktop$//
 cat > "$desktop_file" << EOF
 [Desktop Entry]
 Name=$name
-Exec=webapp-launch $url
+Exec=webapp-launch "$url"
 Icon=${icon_path:-applications-internet}
 Type=Application
 Categories=Network;WebApps;

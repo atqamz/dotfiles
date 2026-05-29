@@ -25,10 +25,11 @@ set_reminder() {
 
   echo "$message" > "$REMINDER_DIR/$id"
 
+  local escaped_msg="${message//\'/\'\\\'\'}"
   systemd-run --user --on-active="${seconds}s" \
     --unit="reminder-${id}" \
     --description="Reminder: $message" \
-    bash -c "notify-send -u critical 'Reminder' '$message'; rm -f '$REMINDER_DIR/$id'" \
+    bash -c "notify-send -u critical 'Reminder' '${escaped_msg}'; rm -f '${REMINDER_DIR}/${id}'" \
     >/dev/null 2>&1
 
   notify-send -u low "Reminder set: $message (${value}${unit})"
