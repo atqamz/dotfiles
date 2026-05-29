@@ -25,8 +25,8 @@ fi
 current_idx=0
 best_diff=999
 for i in "${!SCALES[@]}"; do
-  diff=$(awk "BEGIN { d = $current_scale - ${SCALES[$i]}; if (d < 0) d = -d; print d }")
-  if awk "BEGIN { exit !($diff < $best_diff) }"; then
+  diff=$(awk -v cur="$current_scale" -v s="${SCALES[$i]}" 'BEGIN { d = cur - s; if (d < 0) d = -d; print d }')
+  if awk -v d="$diff" -v b="$best_diff" 'BEGIN { exit !(d < b) }'; then
     best_diff=$diff
     current_idx=$i
   fi
