@@ -1,9 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.components
 import qs.services
 
 GridLayout {
+    id: toggleGrid
+
+    signal openWifiDialog()
+    signal openBluetoothDialog()
+    signal openNightLightDialog()
+
     Layout.fillWidth: true
     columns: 2
     columnSpacing: 8
@@ -15,11 +22,9 @@ GridLayout {
             icon: Network.connected ? "wifi" : "wifi_off"
             statusText: Network.connected ? Network.activeConnection : "Off"
             toggled: Network.connected
-            mainAction: function() {
-                Quickshell.execDetached(["nmcli", "radio", "wifi",
-                    Network.state === "connected" ? "off" : "on"]);
-            }
+            mainAction: function() { Network.toggleWifi(); }
         }
+        onPressAndHold: toggleGrid.openWifiDialog()
     }
 
     QuickToggleTile {
@@ -31,6 +36,7 @@ GridLayout {
             toggled: Bluetooth.powered
             mainAction: function() { Bluetooth.togglePowered(); }
         }
+        onPressAndHold: toggleGrid.openBluetoothDialog()
     }
 
     QuickToggleTile {
@@ -41,6 +47,7 @@ GridLayout {
             toggled: Hyprsunset.active
             mainAction: function() { Hyprsunset.toggle(); }
         }
+        onPressAndHold: toggleGrid.openNightLightDialog()
     }
 
     QuickToggleTile {
