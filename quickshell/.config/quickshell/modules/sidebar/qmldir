@@ -4,3 +4,5 @@ QuickToggles 1.0 QuickToggles.qml
 QuickToggleModel 1.0 QuickToggleModel.qml
 QuickToggleTile 1.0 QuickToggleTile.qml
 CalendarWidget 1.0 CalendarWidget.qml
+TodoWidget 1.0 TodoWidget.qml
+PomodoroWidget 1.0 PomodoroWidget.qml
