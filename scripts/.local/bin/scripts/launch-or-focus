@@ -20,5 +20,5 @@ addr=$(hyprctl clients -j | jq -r --arg p "$pattern" \
 if [ -n "$addr" ]; then
   hyprctl dispatch focuswindow "address:$addr" >/dev/null
 else
-  exec setsid "$command" >/dev/null 2>&1 &
+  setsid bash -c "$command" >/dev/null 2>&1 &
 fi
