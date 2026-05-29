@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+
+STATE_FILE="$HOME/.local/state/toggles/gaps-off"
+
+if [ -f "$STATE_FILE" ]; then
+  hyprctl keyword general:gaps_in 2 >/dev/null
+  hyprctl keyword general:gaps_out 0 >/dev/null
+  hyprctl keyword decoration:rounding 0 >/dev/null
+  hyprctl keyword general:border_size 0 >/dev/null
+  rm -f "$STATE_FILE"
+else
+  hyprctl keyword general:gaps_in 0 >/dev/null
+  hyprctl keyword general:gaps_out 0 >/dev/null
+  hyprctl keyword decoration:rounding 0 >/dev/null
+  hyprctl keyword general:border_size 0 >/dev/null
+  mkdir -p "$(dirname "$STATE_FILE")"
+  touch "$STATE_FILE"
+fi
