@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+
+qs ipc call bar toggle 2>/dev/null && exit 0
+
+if pgrep -x waybar >/dev/null; then
+  pkill -x waybar
+else
+  setsid waybar >/dev/null 2>&1 &
+fi

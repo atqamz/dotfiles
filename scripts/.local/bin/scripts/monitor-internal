@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+require_cmd jq
+require_cmd notify-send
+
+internal=$(hyprctl monitors -j | jq -r '.[] | select(.name | contains("eDP")).name' | head -n 1)
+
+if [ -z "$internal" ]; then
+  notify-send -u low "No internal display detected"
+  exit 1
+fi
+
+external_count=$(hyprctl monitors -j | jq '[.[] | select(.name | contains("eDP") | not)] | length')
+
+on() {
+  hyprctl keyword monitor "$internal,preferred,auto,1" >/dev/null
+  toggle internal-monitor-off off
+  notify-send -u low "Internal display enabled"
+}
+
+off() {
+  if (( external_count == 0 )); then
+    notify-send -u low "Cannot disable only active display"
+    exit 1
+  fi
+  hyprctl keyword monitor "$internal,disable" >/dev/null
+  toggle internal-monitor-off on
+  notify-send -u low "Internal display disabled"
+}
+
+case "${1:-toggle}" in
+  on) on ;;
+  off) off ;;
+  toggle)
+    if toggle internal-monitor-off status; then
+      on
+    else
+      off
+    fi
+    ;;
+  *)
+    printf 'usage: monitor-internal <on|off|toggle>\n' >&2
+    exit 1
+    ;;
+esac

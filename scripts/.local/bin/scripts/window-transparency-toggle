@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+require_cmd jq
+
+addr=$(hyprctl activewindow -j | jq -r '.address')
+[ "$addr" = "null" ] || [ -z "$addr" ] && exit 1
+
+hyprctl setprop "address:$addr" opaque toggle >/dev/null

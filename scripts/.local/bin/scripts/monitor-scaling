@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+require_cmd hyprctl
+require_cmd jq
+require_cmd notify-send
+
+SCALES=(1 1.25 1.5 2)
+
+monitor_info=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true)')
+monitor_name=$(echo "$monitor_info" | jq -r '.name')
+current_scale=$(echo "$monitor_info" | jq -r '.scale')
+width=$(echo "$monitor_info" | jq -r '.width')
+height=$(echo "$monitor_info" | jq -r '.height')
+refresh=$(echo "$monitor_info" | jq -r '.refreshRate')
+
+if [ -n "$1" ] && [ "$1" != "cycle" ]; then
+  hyprctl keyword monitor "$monitor_name,${width}x${height}@${refresh},auto,$1" >/dev/null
+  notify-send -u low "Display scaling: ${1}x"
+  exit 0
+fi
+
+current_idx=0
+best_diff=999
+for i in "${!SCALES[@]}"; do
+  diff=$(awk -v cur="$current_scale" -v s="${SCALES[$i]}" 'BEGIN { d = cur - s; if (d < 0) d = -d; print d }')
+  if awk -v d="$diff" -v b="$best_diff" 'BEGIN { exit !(d < b) }'; then
+    best_diff=$diff
+    current_idx=$i
+  fi
+done
+
+next_idx=$(( (current_idx + 1) % ${#SCALES[@]} ))
+new_scale=${SCALES[$next_idx]}
+
+hyprctl keyword monitor "$monitor_name,${width}x${height}@${refresh},auto,$new_scale" >/dev/null
+notify-send -u low "Display scaling: ${new_scale}x"
