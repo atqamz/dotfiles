@@ -1,1 +1,6 @@
 NavButton 1.0 NavButton.qml
+SettingSection 1.0 SettingSection.qml
+SettingSwitch 1.0 SettingSwitch.qml
+SettingSlider 1.0 SettingSlider.qml
+SettingSelect 1.0 SettingSelect.qml
+SettingText 1.0 SettingText.qml

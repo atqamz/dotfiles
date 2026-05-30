@@ -8,7 +8,7 @@ Item {
     signal requestClose()
 
     readonly property var pages: [
-        { name: "Appearance", icon: "palette",   source: "pages/_Placeholder.qml" },
+        { name: "Appearance", icon: "palette",   source: "pages/AppearancePage.qml" },
         { name: "Bar",        icon: "toolbar",    source: "pages/_Placeholder.qml" },
         { name: "Dock",       icon: "dock",       source: "pages/_Placeholder.qml" },
         { name: "Overview",   icon: "grid_view",  source: "pages/_Placeholder.qml" },
