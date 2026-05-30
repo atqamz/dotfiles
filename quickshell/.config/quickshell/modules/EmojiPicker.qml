@@ -56,9 +56,20 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: win
             required property var modelData
             screen: modelData
             visible: root.open
+
+            // Recipe D: drive enter animation off `shown`; the visible property
+            // is already final when the window appears, so a plain Behavior on
+            // it won't animate. Exit is instant (window hides) — exit animation
+            // out of scope (re-skin).
+            property bool shown: false
+            onVisibleChanged: {
+                shown = visible;
+                if (visible) searchField.forceActiveFocus();
+            }
 
             anchors {
                 top: true
@@ -67,25 +78,37 @@ Scope {
                 right: true
             }
 
-            color: Theme.scrim
+            color: "transparent"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            onVisibleChanged: if (visible) searchField.forceActiveFocus()
-
-            MouseArea {
+            Rectangle {
                 anchors.fill: parent
-                onClicked: root.open = false
+                color: Theme.scrim
+                opacity: win.shown ? 1 : 0
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.open = false
+                }
             }
 
             StyledRect {
+                id: card
                 anchors.centerIn: parent
                 width: 560
                 height: 520
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
+
+                opacity: win.shown ? 1 : 0
+                scale: win.shown ? 1 : 0.94
+                transformOrigin: Item.Center
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
 
                 MouseArea { anchors.fill: parent }
 
@@ -102,7 +125,7 @@ Scope {
                             Layout.alignment: Qt.AlignVCenter
                             text: "mood"
                             color: Theme.textVariant
-                            font.pixelSize: 22
+                            font.pixelSize: Theme.font.size.extraLarge
                         }
 
                         TextField {
@@ -116,10 +139,11 @@ Scope {
                             text: root.query
                             onTextChanged: if (text !== root.query) root.query = text
                             background: Rectangle {
-                                color: Theme.surfaceContainer
-                                border.color: Theme.outlineVariant
+                                radius: Theme.radius.small
+                                color: Theme.surfaceContainerHigh
                                 border.width: 1
-                                radius: Theme.radius.normal
+                                border.color: searchField.activeFocus ? Theme.primary : Theme.outline
+                                Behavior on border.color { CAnim {} }
                             }
                             padding: Theme.padding.normal
 
@@ -152,6 +176,8 @@ Scope {
                         Layout.fillHeight: true
                         clip: true
 
+                        ScrollBar.vertical: StyledScrollBar {}
+
                         ColumnLayout {
                             width: searchField.parent.parent.width - Theme.padding.larger * 2
                             spacing: Theme.spacing.normal
@@ -179,26 +205,29 @@ Scope {
                                         model: Emojis.recents
 
                                         StyledRect {
+                                            id: recCell
                                             required property string modelData
                                             Layout.preferredWidth: 36
                                             Layout.preferredHeight: 36
-                                            color: recHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                                            color: "transparent"
                                             radius: Theme.radius.small
 
-                                            HoverHandler { id: recHover }
+                                            StateLayer {
+                                                pressed: recMa.pressed
+                                            }
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: parent.modelData
-                                                font.pixelSize: 22
+                                                text: recCell.modelData
+                                                font.pixelSize: Theme.font.size.extraLarge
                                             }
                                             MouseArea {
+                                                id: recMa
                                                 anchors.fill: parent
-                                                hoverEnabled: true
                                                 onClicked: {
                                                     root.open = false;
-                                                    Emojis.bumpRecent(parent.modelData);
-                                                    copyProc.command = ["sh", "-c", `printf '%s' '${parent.modelData}' | wl-copy`];
+                                                    Emojis.bumpRecent(recCell.modelData);
+                                                    copyProc.command = ["sh", "-c", `printf '%s' '${recCell.modelData}' | wl-copy`];
                                                     copyProc.running = true;
                                                 }
                                             }
@@ -233,26 +262,29 @@ Scope {
                                             model: modelData.items
 
                                             StyledRect {
+                                                id: gridCell
                                                 required property var modelData
                                                 Layout.preferredWidth: 36
                                                 Layout.preferredHeight: 36
-                                                color: gridHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                                                color: "transparent"
                                                 radius: Theme.radius.small
 
-                                                HoverHandler { id: gridHover }
+                                                StateLayer {
+                                                    pressed: gridMa.pressed
+                                                }
 
                                                 Text {
                                                     anchors.centerIn: parent
-                                                    text: parent.modelData.ch
-                                                    font.pixelSize: 22
+                                                    text: gridCell.modelData.ch
+                                                    font.pixelSize: Theme.font.size.extraLarge
                                                 }
                                                 MouseArea {
+                                                    id: gridMa
                                                     anchors.fill: parent
-                                                    hoverEnabled: true
                                                     onClicked: {
                                                         root.open = false;
-                                                        Emojis.bumpRecent(parent.modelData.ch);
-                                                        copyProc.command = ["sh", "-c", `printf '%s' '${parent.modelData.ch}' | wl-copy`];
+                                                        Emojis.bumpRecent(gridCell.modelData.ch);
+                                                        copyProc.command = ["sh", "-c", `printf '%s' '${gridCell.modelData.ch}' | wl-copy`];
                                                         copyProc.running = true;
                                                     }
                                                 }

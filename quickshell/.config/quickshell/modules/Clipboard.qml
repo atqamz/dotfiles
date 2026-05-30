@@ -101,9 +101,20 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: win
             required property var modelData
             screen: modelData
             visible: root.open
+
+            // Recipe D: drive enter animation off `shown`; the visible property
+            // is already final when the window appears, so a plain Behavior on
+            // it won't animate. Exit is instant (window hides) — exit animation
+            // out of scope (re-skin).
+            property bool shown: false
+            onVisibleChanged: {
+                shown = visible;
+                if (visible) searchField.forceActiveFocus();
+            }
 
             anchors {
                 top: true
@@ -112,25 +123,37 @@ Scope {
                 right: true
             }
 
-            color: Theme.scrim
+            color: "transparent"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            onVisibleChanged: if (visible) searchField.forceActiveFocus()
-
-            MouseArea {
+            Rectangle {
                 anchors.fill: parent
-                onClicked: root.open = false
+                color: Theme.scrim
+                opacity: win.shown ? 1 : 0
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.open = false
+                }
             }
 
             StyledRect {
+                id: card
                 anchors.centerIn: parent
                 width: 680
                 height: 520
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
+
+                opacity: win.shown ? 1 : 0
+                scale: win.shown ? 1 : 0.94
+                transformOrigin: Item.Center
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
 
                 MouseArea { anchors.fill: parent }
 
@@ -147,7 +170,7 @@ Scope {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "content_paste"
                             color: Theme.textVariant
-                            font.pixelSize: 22
+                            font.pixelSize: Theme.font.size.extraLarge
                             width: 28
                         }
 
@@ -162,10 +185,11 @@ Scope {
                             text: root.query
                             onTextChanged: if (text !== root.query) root.query = text
                             background: Rectangle {
-                                color: Theme.surfaceContainer
-                                border.color: Theme.outlineVariant
+                                radius: Theme.radius.small
+                                color: Theme.surfaceContainerHigh
                                 border.width: 1
-                                radius: Theme.radius.normal
+                                border.color: searchField.activeFocus ? Theme.primary : Theme.outline
+                                Behavior on border.color { CAnim {} }
                             }
                             padding: Theme.padding.normal
 
@@ -202,6 +226,8 @@ Scope {
                         model: root.filteredEntries
                         spacing: 2
 
+                        ScrollBar.vertical: StyledScrollBar {}
+
                         onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
                         delegate: StyledRect {
@@ -209,8 +235,13 @@ Scope {
                             required property int index
                             width: ListView.view.width
                             height: 48
-                            color: index === root.currentIndex ? Theme.surfaceContainerHigh : "transparent"
+                            color: index === root.currentIndex ? Theme.surfaceContainerHighest : "transparent"
                             radius: Theme.radius.normal
+
+                            StateLayer {
+                                pressed: rowMa.pressed
+                                focused: ListView.isCurrentItem
+                            }
 
                             Row {
                                 anchors.fill: parent
@@ -236,7 +267,7 @@ Scope {
                                         return "subject";
                                     }
                                     color: Theme.textDim
-                                    font.pixelSize: 18
+                                    font.pixelSize: Theme.icon.size.small
                                     width: 22
                                 }
 
@@ -251,6 +282,7 @@ Scope {
                             }
 
                             MouseArea {
+                                id: rowMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
