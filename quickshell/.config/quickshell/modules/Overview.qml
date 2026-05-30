@@ -27,12 +27,12 @@ Scope {
             visible: root.open
             property bool shown: false
             onVisibleChanged: shown = visible
+            onShownChanged: if (shown) grid.forceActiveFocus()
 
             anchors { top: true; bottom: true; left: true; right: true }
             color: "transparent"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-            Keys.onEscapePressed: root.open = false
 
             Rectangle {
                 anchors.fill: parent
@@ -44,6 +44,8 @@ Scope {
 
             OverviewGrid {
                 id: grid
+                focus: true
+                Keys.onEscapePressed: root.open = false
                 anchors.centerIn: parent
                 screen: panel.modelData
                 overviewOpen: root.open
