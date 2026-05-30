@@ -17,3 +17,4 @@ singleton Hyprsunset 1.0 Hyprsunset.qml
 singleton Idle 1.0 Idle.qml
 singleton Todo 1.0 Todo.qml
 singleton DockService 1.0 DockService.qml
+singleton HyprlandData 1.0 HyprlandData.qml
