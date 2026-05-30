@@ -9,6 +9,7 @@ import qs.modules
 ShellRoot {
     Bar {}
     Dock {}
+    Overview {}
     Notifications {}
     Launcher {}
     Power {}
