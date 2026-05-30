@@ -109,10 +109,19 @@ QtObject {
             readonly property int normal: 200
             readonly property int large: 320
             readonly property int extraLarge: 480
+            readonly property int springFast: 350
+            readonly property int spring: 500
         }
-        // Material Design "emphasized" curve (approximation).
-        readonly property var standard: [0.2, 0.0, 0.0, 1.0]
-        readonly property var emphasized: [0.3, 0.0, 0.0, 1.0]
+        // Full-length bezier curves: groups of 3 points (c1,c2,end), end = 1,1.
+        readonly property var standard: [0.2, 0.0, 0.0, 1.0, 1, 1]
+        readonly property var standardDecel: [0.0, 0.0, 0.0, 1.0, 1, 1]
+        readonly property var standardAccel: [0.3, 0.0, 1.0, 1.0, 1, 1]
+        readonly property var emphasized: [0.05, 0.0, 0.133, 0.06, 0.166, 0.4, 0.208, 0.82, 0.25, 1.0, 1, 1]
+        readonly property var spring: [0.38, 1.21, 0.22, 1.0, 1, 1]
+        readonly property var springFast: [0.42, 1.67, 0.21, 0.90, 1, 1]
+        readonly property var decel: [0.05, 0.7, 0.1, 1.0, 1, 1]
+        readonly property var accel: [0.3, 0.0, 0.8, 0.15, 1, 1]
+        readonly property var clickBounce: [0.38, 1.21, 0.22, 1.0, 1, 1]
     }
 
     readonly property QtObject bar: QtObject {
