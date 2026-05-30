@@ -33,13 +33,24 @@ Item {
 
             Item { Layout.fillWidth: true }
 
-            MaterialIcon {
+            Item {
                 visible: NotificationHistory.history.length > 0
-                text: "clear_all"
-                color: Theme.textVariant
-                font.pixelSize: 18
+                property real radius: Theme.radius.full
+                implicitWidth: clearIcon.implicitWidth + 2 * Theme.padding.small
+                implicitHeight: clearIcon.implicitHeight + 2 * Theme.padding.small
+
+                MaterialIcon {
+                    id: clearIcon
+                    anchors.centerIn: parent
+                    text: "clear_all"
+                    color: Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+                }
+
+                StateLayer { pressed: clearTap.pressed }
 
                 MouseArea {
+                    id: clearTap
                     anchors.fill: parent
                     onClicked: NotificationHistory.clear()
                 }
@@ -53,7 +64,7 @@ Item {
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
-                color: Theme.surface
+                color: Theme.surfaceContainerHigh
                 radius: Theme.radius.normal
                 implicitHeight: notifCol.implicitHeight + 12
 
@@ -105,7 +116,10 @@ Item {
                     }
                 }
 
+                StateLayer { pressed: notifTap.pressed }
+
                 MouseArea {
+                    id: notifTap
                     anchors.fill: parent
                     acceptedButtons: Qt.RightButton
                     onClicked: NotificationHistory.removeAt(index)

@@ -80,7 +80,13 @@ Item {
                         color: root.mode === index ? Theme.text : Theme.textMuted
                     }
 
+                    StateLayer {
+                        focused: root.mode === index
+                        pressed: modeTap.pressed
+                    }
+
                     MouseArea {
+                        id: modeTap
                         anchors.fill: parent
                         onClicked: {
                             root.mode = index;
@@ -100,7 +106,7 @@ Item {
             // Background ring
             Rectangle {
                 anchors.centerIn: parent
-                width: 100; height: 100; radius: 50
+                width: 100; height: 100; radius: Theme.radius.full
                 color: "transparent"
                 border.color: Theme.outlineVariant
                 border.width: 4
@@ -109,13 +115,13 @@ Item {
             // Progress arc (simplified: filled circle clipped)
             Rectangle {
                 anchors.centerIn: parent
-                width: 100; height: 100; radius: 50
+                width: 100; height: 100; radius: Theme.radius.full
                 color: "transparent"
                 border.color: root.mode === 0 ? Theme.primary : Theme.tertiary
                 border.width: 4
                 opacity: root.progress
 
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
             }
 
             // Time text
@@ -134,7 +140,7 @@ Item {
             spacing: 12
 
             Rectangle {
-                width: 36; height: 36; radius: 18
+                width: 36; height: 36; radius: Theme.radius.full
                 color: Theme.surfaceContainerHigh
 
                 MaterialIcon {
@@ -143,24 +149,33 @@ Item {
                     color: Theme.textVariant
                 }
 
+                StateLayer { pressed: resetTap.pressed }
+
                 MouseArea {
+                    id: resetTap
                     anchors.fill: parent
                     onClicked: root.reset()
                 }
             }
 
             Rectangle {
-                width: 48; height: 48; radius: 24
+                width: 48; height: 48; radius: Theme.radius.full
                 color: root.running ? Theme.error : Theme.primary
 
                 MaterialIcon {
                     anchors.centerIn: parent
                     text: root.running ? "pause" : "play_arrow"
-                    color: root.running ? "#ffffff" : Theme.textOnPrimary
-                    font.pixelSize: 24
+                    color: root.running ? Theme.text : Theme.textOnPrimary
+                    font.pixelSize: Theme.icon.size.normal
+                }
+
+                StateLayer {
+                    pressed: playTap.pressed
+                    tint: root.running ? Theme.text : Theme.textOnPrimary
                 }
 
                 MouseArea {
+                    id: playTap
                     anchors.fill: parent
                     onClicked: root.running ? root.pause() : root.start()
                 }

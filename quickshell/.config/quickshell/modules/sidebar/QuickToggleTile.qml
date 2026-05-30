@@ -45,6 +45,7 @@ Rectangle {
                 visible: tile.model.statusText.length > 0
                 text: tile.model.statusText
                 font.pixelSize: Theme.font.size.smaller
+                // on-primary black text
                 color: tile.model.toggled ? Qt.rgba(0, 0, 0, 0.6) : Theme.textMuted
                 elide: Text.ElideRight
                 Layout.fillWidth: true

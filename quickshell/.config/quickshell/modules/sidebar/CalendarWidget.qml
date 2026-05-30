@@ -38,7 +38,7 @@ Item {
             Item { Layout.fillWidth: true }
 
             Rectangle {
-                width: 28; height: 28; radius: 14
+                width: 28; height: 28; radius: Theme.radius.full
                 color: "transparent"
 
                 StyledText {
@@ -47,14 +47,17 @@ Item {
                     color: Theme.text
                 }
 
+                StateLayer { pressed: prevTap.pressed }
+
                 MouseArea {
+                    id: prevTap
                     anchors.fill: parent
                     onClicked: root.monthShift--
                 }
             }
 
             Rectangle {
-                width: 28; height: 28; radius: 14
+                width: 28; height: 28; radius: Theme.radius.full
                 color: "transparent"
 
                 StyledText {
@@ -63,7 +66,10 @@ Item {
                     color: Theme.text
                 }
 
+                StateLayer { pressed: nextTap.pressed }
+
                 MouseArea {
+                    id: nextTap
                     anchors.fill: parent
                     onClicked: root.monthShift++
                 }
@@ -116,7 +122,7 @@ Item {
 
                         Rectangle {
                             anchors.centerIn: parent
-                            width: 28; height: 28; radius: 14
+                            width: 28; height: 28; radius: Theme.radius.full
                             color: isToday ? Theme.primary : "transparent"
                         }
 
