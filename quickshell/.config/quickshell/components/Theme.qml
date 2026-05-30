@@ -59,9 +59,10 @@ QtObject {
     }
 
     readonly property QtObject radius: QtObject {
-        readonly property int small: 4
-        readonly property int normal: 8
-        readonly property int large: 12
+        readonly property int small: 8
+        readonly property int normal: 16
+        readonly property int large: 22
+        readonly property int extraLarge: 28
         readonly property int full: 9999
     }
 
