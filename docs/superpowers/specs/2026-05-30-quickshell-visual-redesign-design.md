@@ -47,15 +47,21 @@ Reference: `~/repo/dots-hyprland/dots/.config/quickshell/ii/modules/common/`
 ### Typography
 
 - **UI font: `Rubik`.** Independent choice, not an end-4 match — end-4 uses
-  "Google Sans Flex" (not packaged for Fedora). Rubik is a rounded, geometric,
-  FOSS sans that suits the soft-rounded aesthetic and ships as the Fedora
-  package `google-rubik-fonts`. **The packaged family is static** (discrete
-  weight faces, no `[wght]` variable axis).
-- **Weights via `font.weight`, not variable axes.** Because the packaged Rubik
-  is static, use `font.weight: 400` (body) and `font.weight: 600` (title);
-  do NOT use `font.variableAxes` (end-4's pattern, which requires a variable
-  build). StyledText currently sets `font.variableAxes` — change it to
-  `font.weight`.
+  "Google Sans Flex" (Google-internal, not on Google Fonts, not Fedora-
+  packaged). Rubik is a rounded, geometric, FOSS sans that suits the soft-
+  rounded aesthetic and is Fedora-packaged as `google-rubik-fonts`.
+- **Primary change: repoint `Theme.font.family.sans` from `JetBrains Mono`
+  → `Rubik`.** Today `sans` is `JetBrains Mono` (Theme.qml:59), so the entire
+  UI currently renders monospace — repointing this single token is the
+  single most visually impactful change in the foundation.
+- **Weights via `font.weight`, not variable axes.** The *Fedora package* is a
+  static multi-weight family (no `[wght]` axis) — a variable Rubik build exists
+  upstream (Google Fonts / Fontsource) but we target the packaged static faces.
+  For static faces use `font.weight: 400` (body) / `600` (title); `font.weight`
+  is the correct Qt mechanism for static families. Do NOT use
+  `font.variableAxes` (Qt 6.7+; requires a variable font file, no effect on
+  static). Note: our `StyledText.qml` currently sets neither — the change is to
+  add `font.weight`, not to replace an existing axis.
 - **Icon font: `Material Icons Round`** (replaces `Material Icons`).
   Verified installed (`fc-list`). It is the rounded *style variant of the same
   Material Icons project* — identical ligature set to our current font, so all
@@ -96,6 +102,10 @@ Reference: `~/repo/dots-hyprland/dots/.config/quickshell/ii/modules/common/`
   (≈ +12%), `*Disabled` (surface mixed 40% toward background), and
   `textDisabled` (text at 38% opacity). Keep these as named tokens, not
   per-call literals.
+- **Distinct focus value (M3).** State-layer opacities: hover 8%, focus **12%**,
+  pressed 12%, dragged 16%. Keyboard focus is in scope (focus-grab convention
+  below), so `focus` is a separate 12% token — do not reuse the 8% hover value,
+  or focused and hovered elements look identical.
 
 ### Rounding (soft, end-4 style)
 
@@ -111,10 +121,12 @@ Reference: `~/repo/dots-hyprland/dots/.config/quickshell/ii/modules/common/`
 
 - `elevation.margin` (≈10px, matches end-4 `elevationMargin`) — reserved bleed
   around floating panels for shadow.
-- **Shadow via `RectangularShadow`** (QtQuick.Effects, `cached: true`) — newer
-  and cheaper than Qt5Compat `DropShadow`; model on end-4
+- **Shadow via `RectangularShadow`** (QtQuick.Effects, Qt 6.9+; we run 6.10.3)
+  — SDF-based, newer and cheaper than Qt5Compat `DropShadow`; model on end-4
   `StyledRectangularShadow`. Soft, low opacity, moderate blur; visible on black
-  by darkening/spreading edges.
+  by darkening/spreading edges. Use `cached: true` for static panels;
+  `cached: false` for panels that animate size/radius (spring-resizing sidebar,
+  overview) to avoid stale/thrashed cached textures.
 - **Z-order scale (new)** — named layers so dock/overview/settings/osd don't
   fight: `z.base 0`, `z.panel 10`, `z.overlay 20`, `z.popup 30`, `z.osd 40`.
 - **Focus-grab convention** — document that fullscreen-scrim modules
