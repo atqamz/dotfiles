@@ -87,12 +87,6 @@ Item {
     }
     StateLayer { pressed: clickMa.pressed }
 
-    Timer {
-        id: resnap
-        interval: 120; repeat: false
-        onTriggered: { win.x = Math.round(win.xWithin + win.xOffset); win.y = Math.round(win.yWithin + win.yOffset); }
-    }
-
     MouseArea {
         id: clickMa
         anchors.fill: parent
@@ -110,7 +104,11 @@ Item {
             if (target !== -1 && win.windowData && target !== win.windowData.workspace.id) {
                 Hyprland.dispatch("movetoworkspacesilent " + target + ",address:" + win.addr);
             }
-            resnap.restart();
+            // drag.target broke the x/y bindings; restore them so the tile stays
+            // reactive (Behavior animates the snap-back / move-to-new-cell). A
+            // plain imperative re-write would leave the bindings dead.
+            win.x = Qt.binding(function () { return win.xWithin + win.xOffset; });
+            win.y = Qt.binding(function () { return win.yWithin + win.yOffset; });
         }
         onClicked: function (mouse) {
             if (!win.windowData) return;
