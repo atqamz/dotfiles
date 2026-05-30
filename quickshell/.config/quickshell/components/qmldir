@@ -1,5 +1,6 @@
 module qs.components
 singleton Theme 1.0 Theme.qml
+singleton Config 1.0 Config.qml
 Anim 1.0 Anim.qml
 CAnim 1.0 CAnim.qml
 StyledRect 1.0 StyledRect.qml
