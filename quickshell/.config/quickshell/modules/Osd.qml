@@ -144,6 +144,7 @@ Scope {
                         from: 0
                         to: root.kind === "volume" ? 150 : 100
                         value: root.value
+                        fillColor: root.muted ? Theme.textDim : Theme.primary
                     }
 
                     StyledText {
