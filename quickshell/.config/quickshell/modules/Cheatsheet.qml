@@ -48,9 +48,16 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: win
             required property var modelData
             screen: modelData
             visible: root.open
+
+            property bool shown: false
+            onVisibleChanged: {
+                shown = visible;
+                if (visible) searchField.forceActiveFocus();
+            }
 
             anchors {
                 top: true
@@ -59,25 +66,37 @@ Scope {
                 right: true
             }
 
-            color: Theme.scrim
+            color: "transparent"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            onVisibleChanged: if (visible) searchField.forceActiveFocus()
-
-            MouseArea {
+            Rectangle {
                 anchors.fill: parent
-                onClicked: root.open = false
+                color: Theme.scrim
+                opacity: win.shown ? 1 : 0
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.open = false
+                }
             }
 
             StyledRect {
+                id: card
                 anchors.centerIn: parent
                 width: 640
                 height: 480
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
+
+                opacity: win.shown ? 1 : 0
+                scale: win.shown ? 1 : 0.94
+                transformOrigin: Item.Center
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
 
                 MouseArea { anchors.fill: parent }
 
@@ -94,7 +113,7 @@ Scope {
                             Layout.alignment: Qt.AlignVCenter
                             text: "keyboard"
                             color: Theme.textVariant
-                            font.pixelSize: 22
+                            font.pixelSize: Theme.font.size.extraLarge
                         }
                         StyledText {
                             Layout.alignment: Qt.AlignVCenter
@@ -115,10 +134,11 @@ Scope {
                             text: root.query
                             onTextChanged: if (text !== root.query) root.query = text
                             background: Rectangle {
-                                color: Theme.surfaceContainer
-                                border.color: Theme.outlineVariant
+                                radius: Theme.radius.small
+                                color: Theme.surfaceContainerHigh
                                 border.width: 1
-                                radius: Theme.radius.normal
+                                border.color: searchField.activeFocus ? Theme.primary : Theme.outline
+                                Behavior on border.color { CAnim {} }
                             }
                             padding: Theme.padding.normal
 
@@ -135,6 +155,8 @@ Scope {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
+
+                        ScrollBar.vertical: StyledScrollBar {}
 
                         ColumnLayout {
                             width: searchField.parent.parent.width - Theme.padding.larger * 2
@@ -166,7 +188,7 @@ Scope {
                                             StyledRect {
                                                 Layout.preferredWidth: 180
                                                 implicitHeight: 24
-                                                color: Theme.surfaceContainer
+                                                color: Theme.surfaceContainerHigh
                                                 border.color: Theme.outlineVariant
                                                 border.width: 1
                                                 radius: Theme.radius.small
