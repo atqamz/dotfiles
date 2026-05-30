@@ -25,10 +25,13 @@ Each module has its own `README.md` with setup notes and dependencies.
 
 ## Setup
 
-```sh
-# bootstrap system packages (Fedora)
-./fedora-fresh.sh
+System provisioning (packages, repos, services) is handled by the
+[dotmachines](https://github.com/atqamz/dotmachines) Ansible playbooks, which
+also stow these dotfiles via its `dotfiles` role.
 
+To stow manually:
+
+```sh
 # stow all modules
 make
 
