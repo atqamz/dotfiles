@@ -53,6 +53,7 @@ QtObject {
     }
 
     function _commitExit(): void {
+        if (pinned) return;   // a pin that landed mid-dwell must not let the timer hide us
         if (state === "Visible" || state === "Peeking") state = "Hiding";
     }
 
@@ -100,7 +101,7 @@ QtObject {
         _maybeExit();
     }
 
-    onPinnedChanged: { if (pinned) _enter(); else _maybeExit(); }
+    onPinnedChanged: { if (pinned) { _exitTimer.stop(); _enter(); } else _maybeExit(); }
     property Connections _initConn: Connections {
         target: peek
         Component.onCompleted: if (peek.pinned) peek._enter();
