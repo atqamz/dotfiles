@@ -57,11 +57,17 @@ Reference (study, don't copy blindly): `~/repo/dots-hyprland/.../ii/modules/ii/o
   `floating`, `fullscreen`, `mapped`.
 - Parses `hyprctl monitors -j` → `monitors` (array of `{ id, name, x, y, width,
   height, scale, transform, reserved:[l,t,r,b], activeWorkspace }`).
-- Refresh: run both Processes on load, and re-run on Hyprland events. Connect to
-  `Hyprland.rawEvent` (Quickshell.Hyprland emits this for every Hyprland IPC
-  event) → debounced refresh (a short Timer to coalesce bursts). Also expose a
-  `refresh()` the overview calls on open. Use the `Todo.qml`-style `Process` +
-  `StdioCollector` + `JSON.parse` (try/catch → keep last good).
+- Refresh: run both Processes on load, and re-run on Hyprland events. Connect via
+  `Connections { target: Hyprland; function onRawEvent(event) { ... } }` (the
+  signal is `rawEvent`; do NOT write `Hyprland.onRawEvent` as a property).
+  **Mandatory skip-list + debounce:** early-return on
+  `["openlayer","closelayer","screencast"].includes(event.name)` BEFORE
+  refreshing — `screencast` is emitted by `ScreencopyView` itself, so without
+  the skip the open overview creates a capture→event→`hyprctl`→re-render
+  feedback loop. Coalesce the rest through a short single-shot Timer
+  (~100ms). Also expose a `refresh()` the overview calls on open. Use the
+  `Todo.qml`-style `Process` + `StdioCollector` + `JSON.parse` (try/catch →
+  keep last good).
 - Helpers: `clientForToplevel(t)` → `windowByAddress["0x"+t.HyprlandToplevel?.address]`;
   `toplevelsForWorkspace(wsId)` → filter `ToplevelManager.toplevels.values` by
   the client's `workspace.id`.
@@ -93,9 +99,13 @@ fullscreen `PanelWindow`:
 - Active workspace: highlight border `Theme.primary` (the monochrome accent).
 - Click a cell's empty area → `Hyprland.dispatch("workspace " + wsId)` + close
   overview.
-- Window tiles: a `Repeater` over `ToplevelManager.toplevels.values` filtered to
-  this grid's shown workspaces. For each toplevel, resolve `windowData` via
-  `HyprlandData.clientForToplevel`; skip if no client (unmapped). Instantiate
+- Window tiles: a `Repeater` whose `model` is a
+  **`ScriptModel { values: ToplevelManager.toplevels.values.filter(...) }`**
+  (`import Quickshell` for `ScriptModel`), NOT a plain JS-array property — a
+  plain array bound to a Repeater tears down + rebuilds every delegate (and its
+  `ScreencopyView`) on each HyprlandData refresh; `ScriptModel` diffs and keeps
+  stable delegates. Filter to toplevels whose `clientForToplevel` resolves AND
+  whose `workspace.id` is in this grid's shown range. For each, instantiate
   `OverviewWindow { toplevel; windowData; monitorData; scale; ... }`, positioned
   ABSOLUTELY within the grid: `x = (cellWidth + spacing) * col + initX`,
   `y = (cellHeight + spacing) * row + initY` where `row/col` come from the
@@ -111,24 +121,38 @@ fullscreen `PanelWindow`:
   Set `x/y/width/height` from these with `Behavior` (`Theme.anim.emphasized` or
   `standardDecel`) for smooth re-layout.
 - `ScreencopyView { captureSource: <overview open> ? toplevel : null; live: true;
-  anchors.fill: parent }` + a rounded clip. Icon overlay
+  anchors.fill: parent }` (prop is `paintCursor`, singular, default false — leave
+  default) + a rounded clip. Icon overlay
   (`Quickshell.iconPath(<resolve class>, "image-missing")` — resolve via
-  `DesktopEntries.heuristicLookup(windowData.class)?.icon` then iconPath; or
-  reuse a small icon helper). `StateLayer` hover/press tint over the capture.
-- Interactions (single MouseArea, `Qt.LeftButton | Qt.MiddleButton`, + a
-  `DragHandler`/manual drag):
-  - left click (no drag) → `Hyprland.dispatch("focuswindow address:" +
-    windowData.address)` + close overview.
-  - middle click → `Hyprland.dispatch("closewindow address:" +
-    windowData.address)` (HyprlandData refresh will drop the tile).
-  - drag → raise z, follow cursor; on release over a workspace cell's DropArea →
-    `Hyprland.dispatch("movetoworkspacesilent " + targetWs + ",address:" +
-    windowData.address)`; snap back if dropped outside.
+  `DesktopEntries.heuristicLookup(windowData.class)?.icon` then iconPath).
+  `StateLayer` hover/press tint over the capture. Active-window border keys off
+  **`toplevel.HyprlandToplevel?.activated`** (the attached Hyprland object), NOT
+  `toplevel.activated`.
+- Interactions — **ONE MouseArea** (`acceptedButtons: Qt.LeftButton |
+  Qt.MiddleButton`, `drag.target: <tile>`); do NOT add a `DragHandler`/`TapHandler`
+  (gesture-arbitration conflict, like the dock's MouseArea-vs-TapHandler). This
+  is end-4's pattern. Distinguish drag from click via Qt's behavior (a real drag
+  suppresses `onClicked`):
+  - `onClicked` left → `Hyprland.dispatch("focuswindow address:" +
+    windowData.address)` + close overview. (`address` includes `0x`.)
+  - `onClicked` middle → `Hyprland.dispatch("closewindow address:" +
+    windowData.address)` (HyprlandData refresh drops the tile).
+  - `onPressed` set `Drag.active`/`Drag.hotSpot`, raise z; `onReleased` evaluate
+    the workspace `DropArea` under the cursor → `Hyprland.dispatch(
+    "movetoworkspacesilent " + targetWs + ",address:" + windowData.address)`.
+  - **Deferred re-snap:** after any release (drop or outside), restart a short
+    single-shot Timer that rewrites `x/y` back to `initX/initY` — the `hyprctl`
+    refresh races the drag release, so the tile must re-snap to its computed
+    position rather than stick at the cursor.
+- **Do NOT lift end-4's dispatch lines** — they use the new Lua `hl.dsp.*`
+  syntax; this repo uses the classic string dispatchers above (matches
+  `WorkspacesPill`).
 
 **Keybind:** add to `hypr/.config/hypr/hyprland.conf` (near the other
-`qs ipc call` binds, ~line 147): `bind = $mainMod, Tab, exec, qs ipc call
-overview toggle`. (Verify `$mainMod, Tab` is unbound; `ALT, Tab` is taken by
-`windows`. If taken, use `$mainMod, grave`.)
+`qs ipc call` binds, ~line 147): `bind = $mainMod, grave, exec, qs ipc call
+overview toggle`. **Use `grave` (backtick), NOT Tab** — `$mainMod, Tab` is
+already bound (`submap, wsrows`, line 253) and `ALT, Tab` is `windows`. `grave`
+is free.
 
 ### Styling
 - Grid background `Theme.surfaceContainer`; cells `surfaceContainerHigh`; active
