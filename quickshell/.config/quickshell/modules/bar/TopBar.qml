@@ -1,4 +1,4 @@
-// quickshell/.config/quickshell/modules/bar/BottomBar.qml
+// quickshell/.config/quickshell/modules/bar/TopBar.qml
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -13,10 +13,9 @@ PanelWindow {
     readonly property int edgeMargin: 6
     readonly property int hotZoneHeight: 12
     readonly property int panelHeight: pillHeight + edgeMargin + 2
-    readonly property int visibleY: panelHeight - pillHeight - edgeMargin
 
     anchors {
-        bottom: true
+        top: true
         left: true
         right: true
     }
@@ -32,7 +31,7 @@ PanelWindow {
         id: hotZone
         property bool hovered: hotHover.hovered
 
-        anchors.bottom: parent.bottom
+        anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         height: panel.hotZoneHeight
@@ -48,7 +47,7 @@ PanelWindow {
         anchors.leftMargin: panel.edgeMargin
         anchors.rightMargin: panel.edgeMargin
         height: panel.pillHeight
-        y: panel.panelHeight
+        y: peek.slideFromY
 
         LauncherPill {
             id: launcher
@@ -96,8 +95,8 @@ PanelWindow {
     PeekState {
         id: peek
         slideTarget: pillRow
-        slideFromY: panel.panelHeight
-        slideToY: panel.visibleY
+        slideFromY: -panel.panelHeight
+        slideToY: panel.edgeMargin
         hotZoneItem: hotZone
         watchedItems: [launcher, workspaces, media, clock, resources, tray, status]
         dwellMs: 600
@@ -134,8 +133,8 @@ PanelWindow {
 
     mask: Region {
         x: 0
-        y: peek.fullyHidden ? panel.panelHeight - panel.hotZoneHeight : 0
         width: panel.width
+        y: 0
         height: peek.fullyHidden ? panel.hotZoneHeight : panel.panelHeight
     }
 }
