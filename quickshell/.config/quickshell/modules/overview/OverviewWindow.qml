@@ -15,6 +15,7 @@ Item {
     property real xOffset: 0
     property real yOffset: 0
     property bool overviewOpen: false
+    property int dropTarget: -1
     signal requestClose()
 
     // ADAPT end-4 OverviewWindow.qml:20-31 — ratio handles monitor transform
@@ -43,6 +44,7 @@ Item {
 
     x: xWithin + xOffset
     y: yWithin + yOffset
+    z: clickMa.drag.active ? 9999 : (win.active ? 2 : 1)
     width: windowData ? windowData.size[0] * scale * widthRatio : 100
     height: windowData ? windowData.size[1] * scale * heightRatio : 80
     Behavior on x { Anim { curve: Theme.anim.standardDecel; duration: Theme.anim.durations.normal } }
@@ -85,11 +87,31 @@ Item {
     }
     StateLayer { pressed: clickMa.pressed }
 
+    Timer {
+        id: resnap
+        interval: 120; repeat: false
+        onTriggered: { win.x = Math.round(win.xWithin + win.xOffset); win.y = Math.round(win.yWithin + win.yOffset); }
+    }
+
     MouseArea {
         id: clickMa
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        drag.target: win
+        onPressed: function (mouse) {
+            win.Drag.active = true;
+            win.Drag.source = win;
+            win.Drag.hotSpot = Qt.point(mouse.x, mouse.y);
+        }
+        onReleased: {
+            win.Drag.active = false;
+            var target = win.dropTarget;
+            if (target !== -1 && win.windowData && target !== win.windowData.workspace.id) {
+                Hyprland.dispatch("movetoworkspacesilent " + target + ",address:" + win.addr);
+            }
+            resnap.restart();
+        }
         onClicked: function (mouse) {
             if (!win.windowData) return;
             if (mouse.button === Qt.LeftButton) {

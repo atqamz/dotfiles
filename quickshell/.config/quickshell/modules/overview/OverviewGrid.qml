@@ -9,6 +9,7 @@ Item {
     id: root
     required property var screen
     property bool overviewOpen: false
+    property int draggingTargetWorkspace: -1
     signal requestClose()
 
     readonly property var monitor: Hyprland.monitorFor(screen)
@@ -62,7 +63,7 @@ Item {
                             implicitWidth: root.cellWidth
                             implicitHeight: root.cellHeight
                             radius: Theme.radius.normal
-                            color: Theme.surfaceContainerHigh
+                            color: wsId === root.draggingTargetWorkspace ? Theme.surfaceContainerHighest : Theme.surfaceContainerHigh
                             border.color: wsId === root.activeWsId ? Theme.primary : "transparent"
                             border.width: 2
 
@@ -76,6 +77,11 @@ Item {
                                 id: cellMa
                                 anchors.fill: parent
                                 onClicked: { Hyprland.dispatch("workspace " + cell.wsId); root.requestClose(); }
+                            }
+                            DropArea {
+                                anchors.fill: parent
+                                onEntered: root.draggingTargetWorkspace = cell.wsId
+                                onExited: if (root.draggingTargetWorkspace === cell.wsId) root.draggingTargetWorkspace = -1
                             }
                             StateLayer { pressed: cellMa.pressed }
                         }
@@ -110,6 +116,7 @@ Item {
                     overviewOpen: root.overviewOpen
                     xOffset: (root.cellWidth + root.spacing) * col
                     yOffset: (root.cellHeight + root.spacing) * rowI
+                    dropTarget: root.draggingTargetWorkspace
                     onRequestClose: root.requestClose()
                 }
             }
