@@ -10,6 +10,7 @@ ShellRoot {
     Bar {}
     Dock {}
     Overview {}
+    Settings {}
     Notifications {}
     Launcher {}
     Power {}
