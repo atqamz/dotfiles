@@ -31,49 +31,78 @@ bottom edge to the top edge to free the bottom for the dock.
 Reference: `~/repo/dots-hyprland/.../ii/modules/dock/` (Dock, DockApps,
 DockAppButton, DockButton, DockSeparator) + `TaskbarApps` singleton.
 
-Confirmed Quickshell APIs (this install, 0.3.0):
-- **`Quickshell.Wayland` `ToplevelManager`** — `.toplevels` (reactive list),
-  `.activeToplevel`; each `Toplevel` has `appId`, `title`, `activated`,
-  `maximized`; methods `activate()`, `close()`; signal `closed`. Use this for
-  running apps — reactive, no `hyprctl` polling (the WindowPicker's approach).
-- **`DesktopEntries`** — `.applications`, heuristic lookup by id/name; each
-  `DesktopEntry` exposes `.icon` (theme icon name), `.name`, `.execute()`.
+Confirmed Quickshell APIs (this install, 0.3.0 — exact forms, use verbatim):
+- **`Quickshell.Wayland` `ToplevelManager`** — a SINGLETON (use
+  `ToplevelManager.toplevels` directly, do NOT instantiate). `.toplevels` is an
+  `UntypedObjectModel`: bind it directly as a `model:`, but for any JS
+  `.filter`/`.map`/`.length`/grouping use **`ToplevelManager.toplevels.values`**
+  (JS array). `.activeToplevel` for the focused window. Each `Toplevel`:
+  `appId`, `title`, `activated`, `maximized`/`minimized`/`fullscreen`; methods
+  `activate()`, `close()`; signal `closed`. Reactive — no `hyprctl` polling.
+- **`DesktopEntries`** (singleton) — `DesktopEntries.applications.values` (also
+  an `UntypedObjectModel`), `DesktopEntries.byId(id) -> DesktopEntry|null`,
+  `DesktopEntries.heuristicLookup(name) -> DesktopEntry|null`. `DesktopEntry`
+  exposes `.icon` (theme icon name, may be empty), `.name`, `.id`,
+  `.execute()`.
 - **`Quickshell.iconPath(name, fallback)`** — resolves a theme icon name to a
-  file path for an `Image`.
-- **`Quickshell.Io`** (`FileView`) — for pinned-app persistence.
+  file path; returns `""` if unresolved and no usable fallback.
+- **Persistence: match `services/Todo.qml` (the repo's established pattern).**
+  Read via `Process { command: ["cat", storePath] }` + `StdioCollector` →
+  `JSON.parse`; write via `Process { command: ["bash","-c","mkdir -p
+  ~/.local/state/quickshell && cat > " + storePath] }` with
+  `stdinEnabled`/`write`/`closeStdin`. `storePath = Quickshell.env("HOME") +
+  "/.local/state/quickshell/dock-pins.json"`. Do NOT use `FileView`/
+  `JsonAdapter` — not used anywhere in this repo.
 
 ### Components (files)
 
 **Bar relocation:**
 - `modules/bar/BottomBar.qml` → **rename to `TopBar.qml`**: flip `anchors`
-  `bottom`→`top`; hotZone anchored top; pillRow slides from above
-  (`y: -pillHeight` hidden) down to `edgeMargin` visible; mask reveals the top
-  hotzone strip when hidden. Recompute `visibleY`/slide offsets for the top
-  edge. `PeekState` is already generic ("TopBar / BottomBar") — reuse unchanged.
+  `bottom`→`top`; hotZone `anchors.top: parent.top`. Corrected geometry (the
+  bottom version's `y: panelHeight` hidden / `visibleY` visible inverts; do NOT
+  copy it):
+  - `PeekState { slideFromY: -panel.panelHeight; slideToY: panel.edgeMargin }`
+    — hidden parks the pillRow fully ABOVE the strip (`-panelHeight`, NOT
+    `-pillHeight`, or `edgeMargin+2`px of pill still pokes through); visible
+    sits `edgeMargin` below the top edge.
+  - pillRow initial `y: panel.slideFromY` (i.e. `-panelHeight`).
+  - mask flips to reveal the TOP strip when hidden:
+    `Region { x:0; width: panel.width; y: 0;
+      height: peek.fullyHidden ? panel.hotZoneHeight : panel.panelHeight }`
+    (the bottom version used `y: panelHeight - hotZoneHeight` — wrong for top;
+    must be `y: 0`, else the hotzone is unclickable and reveal is dead).
+  - `PeekState` is already edge-agnostic ("TopBar / BottomBar") — reuse
+    unchanged; it just consumes the new slideFrom/slideTo.
 - `modules/Bar.qml`: update the `Variants` delegate reference `BottomBar` →
   `TopBar`.
 - `modules/bar/PeekState.qml`: no change (already edge-agnostic; caller supplies
   slideFrom/slideTo).
 
 **Dock data layer:**
-- `services/DockService.qml` (new singleton, `pragma Singleton` + qmldir entry):
-  the dock's app model. Mirrors end-4 `TaskbarApps`:
-  - Reads persisted `pinnedApps` (array of desktop ids) from a state file.
+- `services/DockService.qml` (new singleton): file starts with
+  `pragma Singleton`, root is `Singleton { }`, registered in `services/qmldir`
+  as `singleton DockService 1.0 DockService.qml` (per `Todo.qml`). It may hold
+  child objects (the persistence `Process` pair, `Connections` on
+  ToplevelManager) — singletons in Quickshell host child objects fine. The
+  dock's app model, mirroring end-4 `TaskbarApps`:
+  - Reads persisted `pinnedApps` (JSON array of desktop ids) on load via the
+    Todo persistence pattern above; writes on pin/unpin.
   - Builds an ordered list of `DockEntry` objects: each pinned app first (with
     its matching toplevels, possibly empty), a separator marker, then
-    running-only apps (toplevels whose appId isn't pinned), grouped by appId.
+    running-only apps (toplevels whose resolved id isn't pinned), grouped by the
+    RESOLVED desktop id (group on the resolved id, not raw appId, so two windows
+    of the same app don't split).
   - Exposes `entries` (list), `pin(id)`, `unpin(id)`, `isPinned(id)`.
   - Each entry: `{ id, name, iconPath, toplevels: [Toplevel], pinned: bool }`.
-  - Icon: `DesktopEntries` heuristic lookup on `appId` → `.icon` →
-    `Quickshell.iconPath(icon, "application-x-executable")`. Fallback to a
-    generic glyph if unresolved.
-  - appId→desktop matching: try exact id, then lowercase, then
-    `DesktopEntries` heuristic (handles `org.foo.Bar` ↔ `foo`). Document the
-    matching order; imperfect matches fall back to the raw appId as the name.
-- `services/DockPins.qml` OR fold into DockService: persistence via `FileView`
-  on `~/.local/state/quickshell/dock-pins.json` (or
-  `$XDG_STATE_HOME`). Read on load, write on pin/unpin. JSON array of ids.
-  (Keep persistence isolated so the model logic stays testable/clear.)
+  - **appId → DesktopEntry resolution order:** `DesktopEntries.byId(appId)` →
+    `DesktopEntries.byId(appId.toLowerCase())` → `DesktopEntries.heuristicLookup(appId)`
+    → null. If resolved: `name = entry.name`, `icon = entry.icon`. If null:
+    `name = appId`, `icon = ""`.
+  - **Icon path:** `iconPath = Quickshell.iconPath(icon, "application-x-executable")`
+    where `icon` is the resolved (possibly empty) name. The `DockAppButton`
+    `Image` additionally guards `status === Image.Error` / empty source → show a
+    fallback `MaterialIcon` glyph (e.g. "terminal"/"window"), so an unresolved
+    icon never renders a broken-image box.
 
 **Dock UI:**
 - `modules/Dock.qml` (new): root `Scope` + `Variants` over screens →
@@ -86,9 +115,12 @@ Confirmed Quickshell APIs (this install, 0.3.0):
   buttons built from `DockService.entries`, with `DockSeparator` between pinned
   and running sections.
 - `modules/dock/DockAppButton.qml` (new): one app — icon `Image`
-  (`iconPath`), running indicator (a small dot/underline when `toplevels.length
-  > 0`), active highlight (when any toplevel `activated`), `StateLayer` for
-  hover/press, `StyledToolTip` with the app name. Interactions:
+  (`iconPath`) with the `Image.Error`/empty fallback glyph above, running
+  indicator (a small dot/underline when `toplevels.length > 0`), active
+  highlight (when any toplevel `activated`), and
+  `StateLayer { pressed: <mouseArea>.pressed; focused: <anyActivated> }` (both
+  are plain bools — must be bound, no shorthand), `StyledToolTip { text: name;
+  visible: <ma>.containsMouse }`. Interactions:
   - **left click:** if running → cycle/activate next toplevel
     (`activate()`); if not running → launch (`DesktopEntry.execute()`).
   - **middle click:** launch a new instance (`execute()`).
@@ -106,10 +138,13 @@ Confirmed Quickshell APIs (this install, 0.3.0):
   `Theme.radius.normal`, `StateLayer { pressed; focused: <activated> }`.
 - Running indicator + active highlight: monochrome (white dot / white-tint
   state), per the monochrome rule. App icons themselves stay colored (content).
-- Motion: reveal/hide via the bar's `PeekState` (slide), durations/curves
-  through `Theme.anim`. App launch/open: a subtle `clickBounce`
-  (`Theme.anim.clickBounce`) on the button. Width changes on app
-  add/remove animate via `Theme.anim.springFast`.
+- Motion (curve and duration are SEPARATE — always pair them):
+  reveal/hide via the bar's `PeekState` (slide). App launch/press: a subtle
+  bounce `Anim { curve: Theme.anim.clickBounce; duration:
+  Theme.anim.durations.normal }` on the button scale. Dock width changes on app
+  add/remove: needs an explicit `Behavior on implicitWidth { Anim { curve:
+  Theme.anim.springFast; duration: Theme.anim.durations.springFast } }` on the
+  Row/card (content-width does NOT animate for free). Color → `CAnim`.
 
 ### Multi-monitor
 
