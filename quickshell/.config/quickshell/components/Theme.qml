@@ -56,17 +56,38 @@ QtObject {
 
     readonly property QtObject font: QtObject {
         readonly property QtObject family: QtObject {
-            readonly property string sans: "JetBrains Mono"
+            // UI font: Rubik (Fedora google-rubik-fonts, static multi-weight).
+            readonly property string sans: "Rubik"
+            // Retained, unused by default UI.
             readonly property string mono: "JetBrains Mono"
-            readonly property string material: "Material Icons"
+            // Rounded variant of the legacy Material Icons set — identical
+            // ligature names to "Material Icons", so existing icon usages
+            // keep working. Deliberately NOT "Material Symbols Rounded".
+            readonly property string material: "Material Icons Round"
         }
+        // Static Rubik faces: select weight via font.weight, not variableAxes.
+        readonly property QtObject weight: QtObject {
+            readonly property int body: 400
+            readonly property int title: 600
+        }
+        // Rung names are offset from end-4's by ~one step; values track end-4.
         readonly property QtObject size: QtObject {
-            readonly property int smaller: 10
-            readonly property int small: 11
-            readonly property int normal: 12
-            readonly property int large: 14
-            readonly property int larger: 16
-            readonly property int extraLarge: 20
+            readonly property int smaller: 12
+            readonly property int small: 13
+            readonly property int normal: 15
+            readonly property int large: 17
+            readonly property int larger: 19
+            readonly property int extraLarge: 22
+        }
+    }
+
+    // Icon pixel sizes (Material Icons Round). Adopted by call sites in re-skin.
+    readonly property QtObject icon: QtObject {
+        readonly property QtObject size: QtObject {
+            readonly property int small: 18
+            readonly property int normal: 22
+            readonly property int large: 28
+            readonly property int larger: 36
         }
     }
 
