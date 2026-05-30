@@ -63,7 +63,13 @@ Item {
                 var e = DockService.resolve(btn.entry.id); if (e) e.execute();
             } else {
                 if (btn.running) {
-                    btn.cycleIdx = (btn.cycleIdx + 1) % btn.tops.length;
+                    // First click on an unfocused app focuses it; clicking the
+                    // already-active app cycles to its next window.
+                    if (btn.active) {
+                        btn.cycleIdx = (btn.cycleIdx + 1) % btn.tops.length;
+                    } else {
+                        btn.cycleIdx = 0;
+                    }
                     btn.tops[btn.cycleIdx].activate();
                 } else {
                     var de = DockService.resolve(btn.entry.id); if (de) de.execute();
