@@ -61,7 +61,8 @@ Item {
         height: width
         source: {
             if (!win.windowData) return "";
-            var e = DesktopEntries.heuristicLookup(win.windowData.class || "");
+            // 3-step resolve (byId → lowercase → heuristic), matching DockService.
+            var e = DockService.resolve(win.windowData.class || "");
             return Quickshell.iconPath(e ? e.icon : "", "image-missing");
         }
         visible: !capture.hasContent
