@@ -56,15 +56,21 @@ Pill {
             visible: Updates.available > 0
             spacing: 4
 
-            MaterialIcon {
+            Item {
+                id: updatesBtn
                 anchors.verticalCenter: parent.verticalCenter
-                text: "system_update"
-                color: Theme.warning
-                font.pixelSize: Theme.icon.size.small
-                StateLayer {
-                    radius: Theme.radius.small
-                    pressed: updatesTap.pressed
+                implicitWidth: updatesIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: updatesIcon.implicitHeight + 2 * Theme.padding.smaller
+                property real radius: Theme.radius.small
+
+                MaterialIcon {
+                    id: updatesIcon
+                    anchors.centerIn: parent
+                    text: "system_update"
+                    color: Theme.warning
+                    font.pixelSize: Theme.icon.size.small
                 }
+                StateLayer { pressed: updatesTap.pressed }
                 TapHandler {
                     id: updatesTap
                     onTapped: Quickshell.execDetached(["kitty", "-e", "bash", "-c", "sudo dnf upgrade; read -n 1 -s -r -p 'Press any key to close...'"])
@@ -83,15 +89,21 @@ Pill {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 4
 
-            MaterialIcon {
+            Item {
+                id: volumeBtn
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.volumeIcon
-                color: Audio.muted ? Theme.textDim : Theme.text
-                font.pixelSize: Theme.icon.size.small
-                StateLayer {
-                    radius: Theme.radius.small
-                    pressed: volumeTap.pressed
+                implicitWidth: volumeIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: volumeIcon.implicitHeight + 2 * Theme.padding.smaller
+                property real radius: Theme.radius.small
+
+                MaterialIcon {
+                    id: volumeIcon
+                    anchors.centerIn: parent
+                    text: root.volumeIcon
+                    color: Audio.muted ? Theme.textDim : Theme.text
+                    font.pixelSize: Theme.icon.size.small
                 }
+                StateLayer { pressed: volumeTap.pressed }
                 TapHandler { id: volumeTap; onTapped: Audio.toggleMute() }
             }
             StyledText {
@@ -103,16 +115,22 @@ Pill {
         }
 
         // bluetooth
-        MaterialIcon {
+        Item {
+            id: bluetoothBtn
             anchors.verticalCenter: parent.verticalCenter
             visible: Bluetooth.available
-            text: root.bluetoothIcon
-            color: root.bluetoothColor
-            font.pixelSize: Theme.icon.size.small
-            StateLayer {
-                radius: Theme.radius.small
-                pressed: bluetoothTap.pressed
+            implicitWidth: bluetoothIcon.implicitWidth + 2 * Theme.padding.smaller
+            implicitHeight: bluetoothIcon.implicitHeight + 2 * Theme.padding.smaller
+            property real radius: Theme.radius.small
+
+            MaterialIcon {
+                id: bluetoothIcon
+                anchors.centerIn: parent
+                text: root.bluetoothIcon
+                color: root.bluetoothColor
+                font.pixelSize: Theme.icon.size.small
             }
+            StateLayer { pressed: bluetoothTap.pressed }
             TapHandler { id: bluetoothTap; onTapped: Bluetooth.togglePowered() }
         }
 
