@@ -28,6 +28,7 @@ QtObject {
     property Item hotZoneItem: null
     property var watchedItems: []
     property int dwellMs: 150
+    property bool pinned: false
 
     property string state: "Collapsed"
     readonly property bool fullyHidden: state === "Collapsed"
@@ -39,6 +40,7 @@ QtObject {
     }
 
     function _maybeExit(): void {
+        if (pinned) return;
         // Called when hover changes; if no watched item is hovered and not
         // currently in hotZone, schedule Hiding after dwellMs.
         if (state !== "Visible" && state !== "Peeking") return;
@@ -96,5 +98,11 @@ QtObject {
 
     function notifyWatchedHoverChanged(): void {
         _maybeExit();
+    }
+
+    onPinnedChanged: { if (pinned) _enter(); else _maybeExit(); }
+    property Connections _initConn: Connections {
+        target: peek
+        Component.onCompleted: if (peek.pinned) peek._enter();
     }
 }

@@ -19,8 +19,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            visible: Config.options.dock.enable
 
-            readonly property int dockHeight: 60
+            readonly property int dockHeight: Config.options.dock.height
             readonly property int edgeMargin: Theme.elevation.margin
             readonly property int hotZoneHeight: 12
             readonly property int panelHeight: dockHeight + edgeMargin + 2
@@ -75,6 +76,7 @@ Scope {
                 hotZoneItem: hotZone
                 watchedItems: [card]                  // keep open while hovering the card
                 dwellMs: 600
+                pinned: !Config.options.dock.autoHide
             }
             Connections {
                 target: card

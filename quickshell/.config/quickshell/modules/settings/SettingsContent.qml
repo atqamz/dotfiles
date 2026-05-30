@@ -10,7 +10,7 @@ Item {
     readonly property var pages: [
         { name: "Appearance", icon: "palette",   source: "pages/AppearancePage.qml" },
         { name: "Bar",        icon: "toolbar",    source: "pages/BarPage.qml" },
-        { name: "Dock",       icon: "dock",       source: "pages/_Placeholder.qml" },
+        { name: "Dock",       icon: "dock",       source: "pages/DockPage.qml" },
         { name: "Overview",   icon: "grid_view",  source: "pages/_Placeholder.qml" },
         { name: "Behavior",   icon: "tune",       source: "pages/_Placeholder.qml" },
         { name: "About",      icon: "info",       source: "pages/_Placeholder.qml" }
