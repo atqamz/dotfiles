@@ -3,12 +3,19 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.components
 
 Singleton {
     id: root
 
     property bool active: false
     property int temperature: 4000
+
+    Component.onCompleted: root.temperature = Config.options.behavior.nightTemp;
+    Connections {
+        target: Config.options.behavior
+        function onNightTempChanged() { root.setTemperature(Config.options.behavior.nightTemp); }
+    }
 
     function toggle(): void {
         if (active) {
