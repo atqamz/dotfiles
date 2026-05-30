@@ -19,7 +19,7 @@ Switch {
     }
 
     indicator: Rectangle {
-        property int sz: (root.pressed || root.down) ? 28 : (root.checked ? 24 : 16)
+        property real sz: (root.pressed || root.down) ? 28 : (root.checked ? 24 : 16)
         width: sz * root.uiScale
         height: sz * root.uiScale
         radius: Theme.radius.full

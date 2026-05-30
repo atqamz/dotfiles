@@ -53,10 +53,11 @@ Rectangle {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         enabled: tile.model.available
         onClicked: tile.model.mainAction()
         onPressAndHold: tile.pressAndHold()
     }
-    StateLayer {}
+    StateLayer { pressed: mouseArea.pressed }
 }

@@ -15,6 +15,7 @@ QtObject {
     readonly property color surfaceContainerHigh: "#1a1a1a"
     readonly property color surfaceContainerHighest: "#202020"
     readonly property color surfaceBright: "#2a2a2a"
+    readonly property color surfaceVariant: "#2a2a2a"
     readonly property color outline: "#3a3a3a"
     readonly property color outlineVariant: "#262626"
     readonly property color text: "#ffffff"
