@@ -21,13 +21,24 @@ QtObject {
     readonly property color textVariant: "#cccccc"
     readonly property color textMuted: "#888888"
     readonly property color textDim: "#666666"
+    readonly property color textDisabled: "#5e5e5e"
+    readonly property color surfaceDisabled: "#0c0c0c"
     readonly property color primary: "#ffffff"
     readonly property color textOnPrimary: "#000000"
-    readonly property color secondary: "#b9c8da"
-    readonly property color tertiary: "#9ccbfb"
+    readonly property color secondary: "#c0c0c0"
+    readonly property color tertiary: "#a0a0a0"
     readonly property color warning: "#ffaa44"
     readonly property color error: "#ff4444"
     readonly property color scrim: "#cc000000"
+    readonly property color shadow: "#66000000"
+
+    // Interaction state-layer opacities (M3): overlay the layer's on-color.
+    readonly property QtObject state: QtObject {
+        readonly property real hover: 0.08
+        readonly property real focus: 0.12
+        readonly property real pressed: 0.12
+        readonly property real dragged: 0.16
+    }
 
     // Spacing scale (caelestia Tokens.spacing equivalent)
     readonly property QtObject spacing: QtObject {
