@@ -1,15 +1,17 @@
 // quickshell/.config/quickshell/modules/bar/TopBar.qml
 import QtQuick
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.components
+import qs.services
 
 PanelWindow {
     id: panel
     required property var modelData
     screen: modelData
 
-    readonly property int pillHeight: 28
+    readonly property int pillHeight: Config.options.bar.height
     readonly property int edgeMargin: 6
     readonly property int hotZoneHeight: 12
     readonly property int panelHeight: pillHeight + edgeMargin + 2
@@ -41,7 +43,6 @@ PanelWindow {
 
     Item {
         id: pillRow
-
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.leftMargin: panel.edgeMargin
@@ -49,46 +50,31 @@ PanelWindow {
         height: panel.pillHeight
         y: peek.slideFromY
 
-        LauncherPill {
-            id: launcher
+        RowLayout {
+            id: leftGroup
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-        }
-
-        WorkspacesPill {
-            id: workspaces
-            anchors.verticalCenter: parent.verticalCenter
-            x: launcher.x + launcher.width + 8
-        }
-
-        MediaPill {
-            id: media
-            anchors.verticalCenter: parent.verticalCenter
-            x: workspaces.x + workspaces.width + 8
+            spacing: 8
+            LauncherPill   { id: launcher;   visible: Config.options.bar.showLauncher;   Layout.alignment: Qt.AlignVCenter }
+            WorkspacesPill { id: workspaces; visible: Config.options.bar.showWorkspaces; Layout.alignment: Qt.AlignVCenter }
+            MediaPill      { id: media;      visible: Config.options.bar.showMedia && MprisService.hasPlayer; Layout.alignment: Qt.AlignVCenter }
         }
 
         ClockPill {
             id: clock
+            visible: Config.options.bar.showClock
             anchors.verticalCenter: parent.verticalCenter
             x: parent.width / 2 - width / 2
         }
 
-        TrayPill {
-            id: tray
-            anchors.verticalCenter: parent.verticalCenter
-            x: status.x - width - 8
-        }
-
-        ResourcesPill {
-            id: resources
-            anchors.verticalCenter: parent.verticalCenter
-            x: tray.visible ? (tray.x - width - 8) : (status.x - width - 8)
-        }
-
-        StatusPill {
-            id: status
+        RowLayout {
+            id: rightGroup
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+            ResourcesPill { id: resources; visible: Config.options.bar.showResources; Layout.alignment: Qt.AlignVCenter }
+            TrayPill      { id: tray;      visible: Config.options.bar.showTray && TrayService.count > 0; Layout.alignment: Qt.AlignVCenter }
+            StatusPill    { id: status;    visible: Config.options.bar.showStatus;    Layout.alignment: Qt.AlignVCenter }
         }
     }
 
