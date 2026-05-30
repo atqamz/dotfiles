@@ -13,7 +13,7 @@ Item {
         { name: "Dock",       icon: "dock",       source: "pages/DockPage.qml" },
         { name: "Overview",   icon: "grid_view",  source: "pages/OverviewPage.qml" },
         { name: "Behavior",   icon: "tune",       source: "pages/BehaviorPage.qml" },
-        { name: "About",      icon: "info",       source: "pages/_Placeholder.qml" }
+        { name: "About",      icon: "info",       source: "pages/AboutPage.qml" }
     ]
     property int currentPage: 0
 

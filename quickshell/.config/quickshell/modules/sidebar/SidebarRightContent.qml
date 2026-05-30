@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
 import qs.components
 import qs.services
 import "dialogs"
@@ -38,6 +39,28 @@ Flickable {
             }
 
             Item { Layout.fillWidth: true }
+
+            Rectangle {
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+                radius: Theme.radius.normal
+                color: "transparent"
+
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: "settings"
+                    font.pixelSize: Theme.icon.size.normal
+                    color: Theme.textVariant
+                }
+
+                StateLayer { pressed: settingsBtnTap.pressed }
+
+                MouseArea {
+                    id: settingsBtnTap
+                    anchors.fill: parent
+                    onClicked: Quickshell.execDetached(["qs", "ipc", "call", "settings", "open"])
+                }
+            }
         }
 
         QuickSliders {}
