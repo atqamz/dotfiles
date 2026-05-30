@@ -16,10 +16,20 @@ Pill {
     contentItem: MaterialIcon {
         text: "apps"
         color: Theme.text
-        font.pixelSize: 18
+        font.pixelSize: Theme.icon.size.small
+    }
+
+    StateLayer {
+        pressed: tapHandler.pressed
     }
 
     TapHandler {
+        id: tapHandler
         onTapped: Quickshell.execDetached(["qs", "ipc", "call", "launcher", "toggle"])
+    }
+
+    StyledToolTip {
+        text: "Apps"
+        visible: hoverHandler.hovered
     }
 }

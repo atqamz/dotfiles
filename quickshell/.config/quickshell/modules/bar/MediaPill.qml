@@ -20,7 +20,12 @@ Pill {
 
     HoverHandler { id: hoverHandler }
 
+    StateLayer {
+        pressed: leftTap.pressed
+    }
+
     TapHandler {
+        id: leftTap
         acceptedButtons: Qt.LeftButton
         onTapped: Quickshell.execDetached(["qs", "ipc", "call", "mediaControls", "toggle"])
     }
@@ -40,13 +45,13 @@ Pill {
             anchors.verticalCenter: parent.verticalCenter
             text: MprisService.isPlaying ? "pause" : "music_note"
             color: Theme.text
-            font.pixelSize: 14
+            font.pixelSize: Theme.icon.size.small
         }
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
             text: root.truncatedTitle
             color: Theme.text
-            font.pixelSize: 12
+            font.pixelSize: Theme.font.size.smaller
             visible: root.truncatedTitle.length > 0
         }
     }

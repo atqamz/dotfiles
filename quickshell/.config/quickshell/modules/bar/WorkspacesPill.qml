@@ -36,14 +36,22 @@ Pill {
                 implicitHeight: 6
                 implicitWidth: active ? 28 : 6
                 radius: Theme.radius.full
-                color: active ? Theme.text : (urgent ? Theme.warning : "#444444")
+                color: active ? Theme.text : (urgent ? Theme.warning : Theme.textDim)
                 border.width: 0
 
                 Behavior on implicitWidth {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    Anim {
+                        curve: Theme.anim.decel
+                        duration: Theme.anim.durations.normal
+                    }
+                }
+
+                StateLayer {
+                    pressed: wsTap.pressed
                 }
 
                 TapHandler {
+                    id: wsTap
                     onTapped: Hyprland.dispatch("workspace " + dot.wsId)
                 }
             }

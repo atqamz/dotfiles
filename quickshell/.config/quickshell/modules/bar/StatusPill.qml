@@ -60,8 +60,13 @@ Pill {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "system_update"
                 color: Theme.warning
-                font.pixelSize: 16
+                font.pixelSize: Theme.icon.size.small
+                StateLayer {
+                    radius: Theme.radius.small
+                    pressed: updatesTap.pressed
+                }
                 TapHandler {
+                    id: updatesTap
                     onTapped: Quickshell.execDetached(["kitty", "-e", "bash", "-c", "sudo dnf upgrade; read -n 1 -s -r -p 'Press any key to close...'"])
                 }
             }
@@ -69,7 +74,7 @@ Pill {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Updates.available.toString()
                 color: Theme.warning
-                font.pixelSize: 11
+                font.pixelSize: Theme.font.size.smaller
             }
         }
 
@@ -82,14 +87,18 @@ Pill {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.volumeIcon
                 color: Audio.muted ? Theme.textDim : Theme.text
-                font.pixelSize: 16
-                TapHandler { onTapped: Audio.toggleMute() }
+                font.pixelSize: Theme.icon.size.small
+                StateLayer {
+                    radius: Theme.radius.small
+                    pressed: volumeTap.pressed
+                }
+                TapHandler { id: volumeTap; onTapped: Audio.toggleMute() }
             }
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Audio.muted ? "--" : Audio.volume.toString()
                 color: Audio.muted ? Theme.textDim : Theme.textVariant
-                font.pixelSize: 11
+                font.pixelSize: Theme.font.size.smaller
             }
         }
 
@@ -99,8 +108,12 @@ Pill {
             visible: Bluetooth.available
             text: root.bluetoothIcon
             color: root.bluetoothColor
-            font.pixelSize: 16
-            TapHandler { onTapped: Bluetooth.togglePowered() }
+            font.pixelSize: Theme.icon.size.small
+            StateLayer {
+                radius: Theme.radius.small
+                pressed: bluetoothTap.pressed
+            }
+            TapHandler { id: bluetoothTap; onTapped: Bluetooth.togglePowered() }
         }
 
         // network
@@ -108,7 +121,7 @@ Pill {
             anchors.verticalCenter: parent.verticalCenter
             text: Network.connected ? "wifi" : "wifi_off"
             color: Network.connected ? Theme.text : Theme.warning
-            font.pixelSize: 16
+            font.pixelSize: Theme.icon.size.small
         }
 
         // battery
@@ -121,13 +134,13 @@ Pill {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.batteryIcon
                 color: root.batteryColor
-                font.pixelSize: 16
+                font.pixelSize: Theme.icon.size.small
             }
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Battery.percent.toString()
                 color: root.batteryColor === Theme.text ? Theme.textVariant : root.batteryColor
-                font.pixelSize: 11
+                font.pixelSize: Theme.font.size.smaller
             }
         }
     }

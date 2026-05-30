@@ -37,7 +37,13 @@ Pill {
                     asynchronous: true
                 }
 
+                StateLayer {
+                    radius: Theme.radius.small
+                    pressed: itemMouse.pressed
+                }
+
                 MouseArea {
+                    id: itemMouse
                     anchors.fill: parent
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     hoverEnabled: true
