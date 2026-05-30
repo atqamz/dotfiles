@@ -6,3 +6,9 @@ StyledRect 1.0 StyledRect.qml
 StyledText 1.0 StyledText.qml
 MaterialIcon 1.0 MaterialIcon.qml
 StateLayer 1.0 StateLayer.qml
+StyledShadow 1.0 StyledShadow.qml
+StyledSwitch 1.0 StyledSwitch.qml
+StyledSlider 1.0 StyledSlider.qml
+StyledToolTip 1.0 StyledToolTip.qml
+StyledScrollBar 1.0 StyledScrollBar.qml
+StyledProgressBar 1.0 StyledProgressBar.qml

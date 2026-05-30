@@ -15,7 +15,7 @@ Rectangle {
     color: model.toggled ? Theme.primary : Theme.surface
     opacity: model.available ? 1.0 : 0.4
 
-    Behavior on color { ColorAnimation { duration: 200 } }
+    Behavior on color { CAnim { curve: Theme.anim.springFast; duration: Theme.anim.durations.springFast } }
 
     RowLayout {
         anchors.fill: parent
@@ -25,7 +25,7 @@ Rectangle {
         MaterialIcon {
             text: tile.model.icon
             color: tile.model.toggled ? Theme.textOnPrimary : Theme.text
-            font.pixelSize: 20
+            font.pixelSize: Theme.icon.size.normal
         }
 
         ColumnLayout {
@@ -34,7 +34,7 @@ Rectangle {
 
             StyledText {
                 text: tile.model.name
-                font.pixelSize: Theme.font.size.small
+                font.pixelSize: Theme.font.size.normal
                 font.bold: true
                 color: tile.model.toggled ? Theme.textOnPrimary : Theme.text
                 elide: Text.ElideRight
@@ -45,7 +45,7 @@ Rectangle {
                 visible: tile.model.statusText.length > 0
                 text: tile.model.statusText
                 font.pixelSize: Theme.font.size.smaller
-                color: tile.model.toggled ? Qt.rgba(1, 1, 1, 0.7) : Theme.textMuted
+                color: tile.model.toggled ? Qt.rgba(0, 0, 0, 0.6) : Theme.textMuted
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -53,9 +53,11 @@ Rectangle {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
         enabled: tile.model.available
         onClicked: tile.model.mainAction()
         onPressAndHold: tile.pressAndHold()
     }
+    StateLayer { pressed: mouseArea.pressed }
 }
