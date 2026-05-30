@@ -3,14 +3,14 @@ import QtQuick
 import Quickshell
 import qs.modules.bar as BarModules
 
-// Single bottom bar holding all pills (launcher | workspaces | media |
+// Single top bar holding all pills (launcher | workspaces | media |
 // clock | resources | tray | status). Floats above windows
-// (ExclusionMode.Ignore), peeks on bottom-edge hover.
+// (ExclusionMode.Ignore), peeks on top-edge hover.
 Scope {
     id: bar
 
     Variants {
         model: Quickshell.screens
-        BarModules.BottomBar {}
+        BarModules.TopBar {}
     }
 }
