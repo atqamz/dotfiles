@@ -202,6 +202,7 @@ Rectangle {
                 }
 
                 MouseArea {
+                    id: devMa
                     anchors.fill: parent
                     z: -1
                     onClicked: expanded = !expanded
