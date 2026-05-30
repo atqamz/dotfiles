@@ -96,6 +96,7 @@ Exit is instant (window hides) — OUT OF SCOPE, leave a `// exit animation out 
   StyledToolTip { text: "Apps"; visible: ma.containsMouse }
   ```
 - raw `Slider` that must keep a gradient track (NightLight temp) → leave raw, normalize to tokens only.
+- **TextField normalize** (no shared widget — do inline): set background `Rectangle { radius: Theme.radius.small; color: Theme.surfaceContainerHigh; border.width: 1; border.color: <field>.activeFocus ? Theme.primary : Theme.outline; Behavior on border.color { CAnim {} } }`, text/placeholder colors to `Theme.text`/`Theme.textMuted`, font via the default StyledText family (Rubik). **Focus border is a bright SOLID color (`Theme.primary`), never the `Theme.state.focus` opacity** — 12% white composites dimmer than the unfocused outline and reads backwards.
 
 ### Recipe F — Motion tokens (R6)
 No raw ms literals in animations. Route every `Behavior`/`*Animation` `duration` through `Theme.anim.durations.*` and `easing.bezierCurve` through a `Theme.anim` curve. Color → `CAnim`; geometry → `Anim`/`NumberAnimation` with a Theme curve. (e.g. RecordingIndicator `700`ms → `Theme.anim.durations.spring`.)

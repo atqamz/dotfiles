@@ -105,8 +105,8 @@ keyboard navigation is visible — distinct from hover (8%).
   (`NightLightDialog.qml:110-140`) is a raw `Slider` with a **gradient track**
   that visualizes warmth; `StyledSlider` has no gradient hook and the gradient
   is semantic data-viz (see R5). **Leave it a raw `Slider`, normalized to
-  tokens** (token rounding/colors/font, `Theme.state.focus` border on focus),
-  gradient kept. Document it as the one non-`StyledSlider` slider.
+  tokens** (token rounding/colors/font, bright solid `Theme.primary` focus
+  border), gradient kept. Document it as the one non-`StyledSlider` slider.
 - ad-hoc toggle Rectangle → `StyledSwitch` (NightLightDialog enable toggle;
   bind `checked: Hyprsunset.active`, `onToggled: Hyprsunset.toggle()`).
 - raw `ScrollBar`/unstyled Flickable/ListView scroll → attach
@@ -121,8 +121,10 @@ keyboard navigation is visible — distinct from hover (8%).
   or the bar clips. MediaControls position: `from:0 to:length value:position`.
 - hover affordances that warrant a label → `StyledToolTip` (bar pills).
 - TextField: not a foundation widget; keep inline but normalize to tokens
-  (Rubik font, `Theme.radius.small`, surface color, `Theme.state.focus` border
-  on `activeFocus`). Do NOT add a new shared widget for it in this sub-project
+  (Rubik font, `Theme.radius.small`, surface color, and a **bright solid** focus
+  border `border.color: activeFocus ? Theme.primary : Theme.outline` — never use
+  the `state.focus` opacity as a border color, it composites dimmer than the
+  unfocused outline and reads backwards). Do NOT add a new shared widget for it
   (YAGNI — 8 sites, all simple search fields).
 
 ### R4 — Scrim fade + panel enter motion on overlays
