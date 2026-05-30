@@ -51,7 +51,7 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: 480
                 implicitHeight: 600
-                color: Theme.surface
+                color: Theme.surfaceContainer
                 border.color: Theme.outline
                 border.width: 1
                 radius: Theme.radius.large
@@ -74,17 +74,18 @@ Scope {
 
                         StyledRect {
                             id: clearBtn
-                            property bool hovered: clearHover.hovered
                             Layout.preferredHeight: 24
                             implicitWidth: clearLabel.implicitWidth + Theme.padding.large * 2
-                            color: clearBtn.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                            color: Theme.surfaceContainer
                             border.color: Theme.outlineVariant
                             border.width: 1
                             radius: Theme.radius.full
                             visible: NotificationHistory.history.length > 0
 
-                            HoverHandler { id: clearHover }
+                            StateLayer { pressed: clearTap.pressed }
+
                             MouseArea {
+                                id: clearTap
                                 anchors.fill: parent
                                 onClicked: NotificationHistory.clear()
                             }
@@ -118,6 +119,8 @@ Scope {
                         visible: NotificationHistory.history.length > 0
                         clip: true
 
+                        ScrollBar.vertical: StyledScrollBar {}
+
                         ColumnLayout {
                             width: parent.width
                             spacing: Theme.spacing.small
@@ -129,17 +132,18 @@ Scope {
                                     id: row
                                     required property var modelData
                                     required property int index
-                                    property bool hovered: rowHover.hovered
 
                                     Layout.fillWidth: true
                                     implicitHeight: rowCol.implicitHeight + Theme.padding.normal * 2
-                                    color: row.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                                    color: Theme.surfaceContainerHigh
                                     border.color: Theme.outlineVariant
                                     border.width: 1
                                     radius: Theme.radius.normal
 
-                                    HoverHandler { id: rowHover }
+                                    StateLayer { pressed: rowTap.pressed }
+
                                     MouseArea {
+                                        id: rowTap
                                         anchors.fill: parent
                                         acceptedButtons: Qt.RightButton
                                         onClicked: NotificationHistory.removeAt(row.index)

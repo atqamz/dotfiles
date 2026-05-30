@@ -48,7 +48,7 @@ Scope {
                 id: pill
                 implicitWidth: row.implicitWidth + 24
                 implicitHeight: 28
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.full
@@ -62,14 +62,14 @@ Scope {
                         anchors.verticalCenter: parent.verticalCenter
                         implicitWidth: 12
                         implicitHeight: 12
-                        radius: 6
+                        radius: Theme.radius.small
                         color: Theme.error
 
                         SequentialAnimation on opacity {
                             running: root.recording
                             loops: Animation.Infinite
-                            NumberAnimation { to: 0.3; duration: 700; easing.type: Easing.InOutQuad }
-                            NumberAnimation { to: 1.0; duration: 700; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 0.3; duration: Theme.anim.durations.spring; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: Theme.anim.durations.spring; easing.type: Easing.InOutQuad }
                         }
                     }
 
@@ -77,7 +77,7 @@ Scope {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "REC"
                         color: Theme.text
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.font.size.smaller
                         font.bold: true
                     }
                 }

@@ -51,7 +51,7 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: 420
                 implicitHeight: 220
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
@@ -98,7 +98,7 @@ Scope {
                                 visible: MprisService.artUrl.length === 0
                                 text: "music_note"
                                 color: Theme.textMuted
-                                font.pixelSize: 40
+                                font.pixelSize: Theme.icon.size.larger
                             }
                         }
 
@@ -124,22 +124,13 @@ Scope {
                         }
                     }
 
-                    Item {
+                    StyledProgressBar {
                         Layout.fillWidth: true
                         implicitHeight: 4
                         visible: MprisService.length > 0
-
-                        Rectangle {
-                            anchors.fill: parent
-                            color: Theme.surfaceContainerHigh
-                            radius: Theme.radius.full
-                        }
-                        Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1, MprisService.position / Math.max(1, MprisService.length)))
-                            height: parent.height
-                            color: Theme.text
-                            radius: Theme.radius.full
-                        }
+                        from: 0
+                        to: Math.max(1, MprisService.length)
+                        value: MprisService.position
                     }
 
                     RowLayout {
@@ -165,7 +156,7 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_previous"
                                 color: Theme.text
-                                font.pixelSize: 22
+                                font.pixelSize: Theme.icon.size.normal
                             }
                         }
 
@@ -187,7 +178,7 @@ Scope {
                                 anchors.centerIn: parent
                                 text: MprisService.isPlaying ? "pause" : "play_arrow"
                                 color: Theme.text
-                                font.pixelSize: 28
+                                font.pixelSize: Theme.icon.size.large
                             }
                         }
 
@@ -210,7 +201,7 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_next"
                                 color: Theme.text
-                                font.pixelSize: 22
+                                font.pixelSize: Theme.icon.size.normal
                             }
                         }
                     }
