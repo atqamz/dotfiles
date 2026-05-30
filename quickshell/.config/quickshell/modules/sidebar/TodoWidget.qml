@@ -218,7 +218,7 @@ Item {
 
                 background: Rectangle {
                     radius: Theme.radius.small
-                    color: Theme.surface
+                    color: Theme.surfaceContainerHighest
                     border.color: addInput.activeFocus ? Theme.primary : Theme.outline
                     border.width: 1
 

@@ -141,13 +141,13 @@ Scope {
                             implicitWidth: 40
                             implicitHeight: 40
                             radius: Theme.radius.full
-                            color: prevHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                            color: "transparent"
                             border.color: Theme.outlineVariant
                             border.width: 1
                             opacity: MprisService.canGoPrevious ? 1.0 : 0.4
 
-                            HoverHandler { id: prevHover }
                             MouseArea {
+                                id: prevMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.previous()
@@ -158,18 +158,19 @@ Scope {
                                 color: Theme.text
                                 font.pixelSize: Theme.icon.size.normal
                             }
+                            StateLayer { pressed: prevMa.pressed }
                         }
 
                         StyledRect {
                             implicitWidth: 52
                             implicitHeight: 52
                             radius: Theme.radius.full
-                            color: playHover.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                            color: Theme.surfaceContainerHigh
                             border.color: Theme.outlineVariant
                             border.width: 1
 
-                            HoverHandler { id: playHover }
                             MouseArea {
+                                id: playMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.togglePlaying()
@@ -180,19 +181,20 @@ Scope {
                                 color: Theme.text
                                 font.pixelSize: Theme.icon.size.large
                             }
+                            StateLayer { pressed: playMa.pressed }
                         }
 
                         StyledRect {
                             implicitWidth: 40
                             implicitHeight: 40
                             radius: Theme.radius.full
-                            color: nextHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                            color: "transparent"
                             border.color: Theme.outlineVariant
                             border.width: 1
                             opacity: MprisService.canGoNext ? 1.0 : 0.4
 
-                            HoverHandler { id: nextHover }
                             MouseArea {
+                                id: nextMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.next()
@@ -203,6 +205,7 @@ Scope {
                                 color: Theme.text
                                 font.pixelSize: Theme.icon.size.normal
                             }
+                            StateLayer { pressed: nextMa.pressed }
                         }
                     }
                 }
