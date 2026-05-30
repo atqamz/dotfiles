@@ -5,14 +5,17 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import qs.components
 
 Singleton {
     id: root
 
-    readonly property int historyLimit: 50
+    readonly property int historyLimit: Config.options.behavior.notifHistoryMax
     property var history: []
     property bool doNotDisturb: false
     readonly property alias server: notifServer
+
+    Component.onCompleted: doNotDisturb = Config.options.behavior.dndDefault;
 
     function _push(notif) {
         const entry = {

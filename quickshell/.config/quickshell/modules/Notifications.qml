@@ -8,7 +8,7 @@ import qs.services
 Scope {
     id: root
 
-    readonly property int maxVisible: 5
+    readonly property int maxVisible: Config.options.behavior.notifMaxVisible
 
     readonly property var visibleNotifications: {
         const all = NotificationHistory.server.trackedNotifications.values;
@@ -195,7 +195,7 @@ Scope {
                         }
 
                         Timer {
-                            interval: card.modelData.expireTimeout > 0 ? card.modelData.expireTimeout : 5000
+                            interval: card.modelData.expireTimeout > 0 ? card.modelData.expireTimeout : Config.options.behavior.notifTimeout
                             running: !card.hovered && !card.dismissed
                             onTriggered: card.dismissed = true
                         }

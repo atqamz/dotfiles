@@ -12,8 +12,8 @@ Item {
     readonly property bool active: tops.some(function (t) { return t.activated; })
     property int cycleIdx: 0
 
-    implicitWidth: Theme.icon.size.larger + 2 * Theme.padding.small
-    implicitHeight: Theme.icon.size.larger + 2 * Theme.padding.small
+    implicitWidth: Config.options.dock.iconSize + 2 * Theme.padding.small
+    implicitHeight: Config.options.dock.iconSize + 2 * Theme.padding.small
     scale: ma.pressed ? 0.92 : 1
     Behavior on scale { Anim { curve: Theme.anim.clickBounce; duration: Theme.anim.durations.normal } }
 
@@ -22,7 +22,7 @@ Item {
     Image {
         id: icon
         anchors.centerIn: parent
-        width: Theme.icon.size.larger
+        width: Config.options.dock.iconSize
         height: width
         sourceSize.width: width
         sourceSize.height: width

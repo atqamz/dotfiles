@@ -13,7 +13,7 @@ Pill {
     HoverHandler { id: hoverHandler }
 
     contentItem: StyledText {
-        text: Time.now ? Qt.formatDateTime(Time.now, "HH:mm") : "--:--"
+        text: Time.now ? Qt.formatDateTime(Time.now, Config.options.bar.clock24h ? "HH:mm" : "hh:mm AP") : "--:--"
         color: Theme.text
         font.pixelSize: Theme.font.size.normal
         font.bold: true

@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import qs.components
 
 QtObject {
     id: root
@@ -60,17 +61,17 @@ QtObject {
     }
 
     readonly property QtObject radius: QtObject {
-        readonly property int small: 8
-        readonly property int normal: 16
-        readonly property int large: 22
-        readonly property int extraLarge: 28
+        readonly property int small: Math.round(8 * Config.options.appearance.radiusScale)
+        readonly property int normal: Math.round(16 * Config.options.appearance.radiusScale)
+        readonly property int large: Math.round(22 * Config.options.appearance.radiusScale)
+        readonly property int extraLarge: Math.round(28 * Config.options.appearance.radiusScale)
         readonly property int full: 9999
     }
 
     readonly property QtObject font: QtObject {
         readonly property QtObject family: QtObject {
             // UI font: Rubik (Fedora google-rubik-fonts, static multi-weight).
-            readonly property string sans: "Rubik"
+            readonly property string sans: Config.options.appearance.fontFamily
             // Retained, unused by default UI.
             readonly property string mono: "JetBrains Mono"
             // Rounded variant of the legacy Material Icons set — identical
@@ -85,33 +86,33 @@ QtObject {
         }
         // Rung names are offset from end-4's by ~one step; values track end-4.
         readonly property QtObject size: QtObject {
-            readonly property int smaller: 12
-            readonly property int small: 13
-            readonly property int normal: 15
-            readonly property int large: 17
-            readonly property int larger: 19
-            readonly property int extraLarge: 22
+            readonly property int smaller: Math.round(12 * Config.options.appearance.fontScale)
+            readonly property int small: Math.round(13 * Config.options.appearance.fontScale)
+            readonly property int normal: Math.round(15 * Config.options.appearance.fontScale)
+            readonly property int large: Math.round(17 * Config.options.appearance.fontScale)
+            readonly property int larger: Math.round(19 * Config.options.appearance.fontScale)
+            readonly property int extraLarge: Math.round(22 * Config.options.appearance.fontScale)
         }
     }
 
     // Icon pixel sizes (Material Icons Round). Adopted by call sites in re-skin.
     readonly property QtObject icon: QtObject {
         readonly property QtObject size: QtObject {
-            readonly property int small: 18
-            readonly property int normal: 22
-            readonly property int large: 28
-            readonly property int larger: 36
+            readonly property int small: Math.round(18 * Config.options.appearance.fontScale)
+            readonly property int normal: Math.round(22 * Config.options.appearance.fontScale)
+            readonly property int large: Math.round(28 * Config.options.appearance.fontScale)
+            readonly property int larger: Math.round(36 * Config.options.appearance.fontScale)
         }
     }
 
     readonly property QtObject anim: QtObject {
         readonly property QtObject durations: QtObject {
-            readonly property int small: 120
-            readonly property int normal: 200
-            readonly property int large: 320
-            readonly property int extraLarge: 480
-            readonly property int springFast: 350
-            readonly property int spring: 500
+            readonly property int small: Math.max(1, Math.round(120 * Config.options.appearance.motionScale))
+            readonly property int normal: Math.max(1, Math.round(200 * Config.options.appearance.motionScale))
+            readonly property int large: Math.max(1, Math.round(320 * Config.options.appearance.motionScale))
+            readonly property int extraLarge: Math.max(1, Math.round(480 * Config.options.appearance.motionScale))
+            readonly property int springFast: Math.max(1, Math.round(350 * Config.options.appearance.motionScale))
+            readonly property int spring: Math.max(1, Math.round(500 * Config.options.appearance.motionScale))
         }
         // Full-length bezier curves: groups of 3 points (c1,c2,end), end = 1,1.
         readonly property var standard: [0.2, 0.0, 0.0, 1.0, 1, 1]

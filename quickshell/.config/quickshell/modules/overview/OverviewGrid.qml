@@ -15,9 +15,9 @@ Item {
     readonly property var monitor: Hyprland.monitorFor(screen)
     readonly property var monitorData: HyprlandData.monitors.find(function (m) { return m.id === (root.monitor ? root.monitor.id : -1); })
 
-    readonly property real wsScale: 0.18
-    readonly property int rows: 2
-    readonly property int columns: 5
+    readonly property real wsScale: Config.options.overview.scale
+    readonly property int rows: Config.options.overview.rows
+    readonly property int columns: Config.options.overview.columns
     readonly property int spacing: 6
     readonly property int activeWsId: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : 1
 
