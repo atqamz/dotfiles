@@ -6,3 +6,4 @@ StyledRect 1.0 StyledRect.qml
 StyledText 1.0 StyledText.qml
 MaterialIcon 1.0 MaterialIcon.qml
 StateLayer 1.0 StateLayer.qml
+StyledShadow 1.0 StyledShadow.qml
