@@ -219,9 +219,7 @@ Item {
                 background: Rectangle {
                     radius: Theme.radius.small
                     color: Theme.surface
-                    border.color: addInput.activeFocus
-                        ? Qt.rgba(Theme.text.r, Theme.text.g, Theme.text.b, Theme.state.focus)
-                        : Theme.outline
+                    border.color: addInput.activeFocus ? Theme.primary : Theme.outline
                     border.width: 1
 
                     Behavior on border.color { CAnim {} }

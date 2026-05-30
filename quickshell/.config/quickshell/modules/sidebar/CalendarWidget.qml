@@ -23,13 +23,24 @@ Item {
         RowLayout {
             Layout.fillWidth: true
 
-            StyledText {
-                text: root.viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
-                font.pixelSize: Theme.font.size.large
-                font.bold: true
-                color: root.monthShift !== 0 ? Theme.tertiary : Theme.text
+            Item {
+                property real radius: Theme.radius.full
+                implicitWidth: monthLabel.implicitWidth + 2 * Theme.padding.small
+                implicitHeight: monthLabel.implicitHeight + 2 * Theme.padding.small
+
+                StyledText {
+                    id: monthLabel
+                    anchors.centerIn: parent
+                    text: root.viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
+                    font.pixelSize: Theme.font.size.large
+                    font.bold: true
+                    color: root.monthShift !== 0 ? Theme.tertiary : Theme.text
+                }
+
+                StateLayer { pressed: monthTap.pressed }
 
                 MouseArea {
+                    id: monthTap
                     anchors.fill: parent
                     onClicked: root.monthShift = 0
                 }
