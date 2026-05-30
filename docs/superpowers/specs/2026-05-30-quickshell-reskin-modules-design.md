@@ -38,15 +38,35 @@ to implementation tasks:
 These are the shared structural gaps the audit found. Every batch task applies
 the relevant subset.
 
-### R1 — Elevation on floating surfaces
-Every panel that floats over content (bar pills, sidebar panel, all 6 overlay
-cards, OSD, notification cards, dialogs) gets a `StyledShadow` sibling placed
-before the panel rect, `target:` the rect. Keep `cached: true` for
-static-size panels; `cached: false` for panels that animate size/radius
-(sidebar, overview later, any spring-resizing rect). Reserve `Theme.elevation.margin`
-bleed in the parent so the shadow is not clipped. Replace decorative hard 1px
-borders with shadow elevation; keep a border only where it carries meaning
-(e.g. a faint `outlineVariant` hairline on the sidebar panel edge is fine).
+### R1 — Elevation by surface tier (not drop shadow) on a pure-black desktop
+**Correction over the foundation spec's shadow-centric elevation.** The desktop
+is `#000000`. A drop shadow is `Theme.shadow` (`#66000000`, semi-transparent
+*black*); black-on-black is invisible, so a `StyledShadow` on any surface that
+sits directly on the black desktop produces zero visual change. This is exactly
+the M3 dark-theme model: **elevation is conveyed by a lighter surface tier and
+soft rounding, not by shadows.** Apply that:
+
+- **Top-level panels that sit on the black desktop** (bar pills, sidebar panel,
+  all 6 overlay cards, OSD, dialogs, notification cards) read as elevated by
+  using a **grey surface tier**, not `Theme.background`. Today many are
+  `Theme.background` (`Pill.qml:19`, `SidebarRight.qml` panel) distinguished
+  only by a 1px border. Move them to `surfaceContainerLow`/`surfaceContainer`
+  (the panel) so the grey-on-black contrast *is* the elevation. Keep soft
+  rounding. Keep a faint `outlineVariant` hairline where it sharpens the edge
+  (meaningful, not decorative) — bar pills keep their border; it is what reads
+  the capsule on black.
+- **`StyledShadow` is reserved for NESTED elevation only** — a surface that
+  floats over an already-grey surface, so the shadow has a lighter backdrop to
+  darken: a dialog over the grey sidebar panel, a hovered/selected list row
+  lifting off a grey list, a future menu over a grey panel. There the shadow
+  reads. Use `cached: true` for static-size, `cached: false` for size/radius-
+  animating targets. Because nested targets that live in a Layout cannot take a
+  sibling `StyledShadow` (see `StyledShadow.qml` header — anchors fight the
+  Layout), wrap such a target in a plain `Item` and put shadow + rect inside it.
+- **Do NOT** blanket-add shadows or reserve `elevation.margin` bleed on the
+  black-backdrop top-level panels — there is nothing to clip and nothing to
+  show. `elevation.margin` bleed is reserved only where R1 actually places a
+  `StyledShadow` (nested cases).
 
 ### R2 — State feedback on every interactive surface
 Any element with a `MouseArea`/`onClicked` (bar pills that act, ListView/
@@ -57,41 +77,72 @@ child. StateLayer already reads `Theme.state.*`. Delegates additionally show a
 keyboard navigation is visible — distinct from hover (8%).
 
 ### R3 — Swap raw Qt.Controls onto shared widgets
-- `Slider` → `StyledSlider` (QuickSliders ×2; MediaControls seek bar).
-- ad-hoc toggle Rectangle → `StyledSwitch` (NightLightDialog).
-- raw `ScrollBar`/unstyled Flickable/ListView scroll → attach `StyledScrollBar`
-  (all 6 overlays, NotificationHistory, sidebar lists).
-- custom progress Rectangle / ring → `StyledProgressBar` (Osd level bar,
-  MediaControls position, download/battery progress where present).
+- **`Slider` → `StyledSlider`**: QuickSliders ×2 (brightness, volume) — the only
+  *interactive* sliders re-skinned here. The NightLightDialog temperature slider
+  (`NightLightDialog.qml:110-140`) is a raw `Slider` with a **gradient track**
+  that visualizes warmth; `StyledSlider` has no gradient hook and the gradient
+  is semantic data-viz (see R5). **Leave it a raw `Slider`, normalized to
+  tokens** (token rounding/colors/font, `Theme.state.focus` border on focus),
+  gradient kept. Document it as the one non-`StyledSlider` slider.
+- ad-hoc toggle Rectangle → `StyledSwitch` (NightLightDialog enable toggle;
+  bind `checked: Hyprsunset.active`, `onToggled: Hyprsunset.toggle()`).
+- raw `ScrollBar`/unstyled Flickable/ListView scroll → attach
+  `ScrollBar.vertical: StyledScrollBar {}` (all 6 overlays, NotificationHistory,
+  sidebar lists).
+- **display-only** progress Rectangles / rings → `StyledProgressBar`: Osd level
+  bar (`Osd.qml:152`), MediaControls position indicator
+  (`MediaControls.qml:127-143`, a non-interactive 2-rect fill — NOT a seek
+  slider; do not make it seekable). **Range note:** `StyledProgressBar` uses
+  `from`/`to`/`value` (`visualPosition`). The Osd volume kind reaches 150, so
+  set `to: 150` (or normalize `value` to 0..1) — do not leave the default 0..1
+  or the bar clips. MediaControls position: `from:0 to:length value:position`.
 - hover affordances that warrant a label → `StyledToolTip` (bar pills).
 - TextField: not a foundation widget; keep inline but normalize to tokens
-  (Rubik via StyledText-equivalent font, `Theme.radius.small`, surface color,
-  `Theme.state.focus` border on `activeFocus`). Do NOT add a new shared widget
-  for it in this sub-project (YAGNI — 8 sites, all simple search fields).
+  (Rubik font, `Theme.radius.small`, surface color, `Theme.state.focus` border
+  on `activeFocus`). Do NOT add a new shared widget for it in this sub-project
+  (YAGNI — 8 sites, all simple search fields).
 
-### R4 — Scrim fade + panel motion on overlays
-The 6 overlays + sidebar set `color: Theme.scrim` instantly. Add
-`Behavior on opacity { CAnim {} }` (or a fade via a `states`/`Loader.opacity`)
-so the scrim fades in/out over `Theme.anim.durations.normal`. The panel card
-itself enters with a spring (`Theme.anim.spring`) on scale/opacity — model on
-end-4's overlay open. Closing reverses. Pills/OSD keep their existing
-enter/exit but route durations/curves through `Theme.anim`.
+### R4 — Scrim fade + panel enter motion on overlays
+The 6 overlays + sidebar toggle the whole `PanelWindow` via `visible: root.open`,
+so a plain `Behavior on opacity` never plays — when the window appears the
+property is already at its final value. Use a deterministic **enter** mechanism,
+identical across all overlays:
+
+- Give the scrim and the card a `shown` driver: a local `property bool shown`
+  on the PanelWindow, set `false` initially and flipped `true` via
+  `onVisibleChanged: if (visible) shown = true; else shown = false`.
+- Scrim `opacity: shown ? 1 : 0` with `Behavior on opacity { CAnim { duration:
+  Theme.anim.durations.normal } }`.
+- Card `opacity: shown ? 1 : 0` and `scale: shown ? 1 : 0.94` with
+  `Behavior on scale { Anim { curve: Theme.anim.spring; duration:
+  Theme.anim.durations.spring } }` + a matching opacity Behavior. Because the
+  card item persists between opens, flipping `shown` on each `visible` re-fires
+  the spring — the enter plays every time.
+- **Exit animation is OUT OF SCOPE** (decoupling window `visible` from `open`
+  to hold the window alive during a close tween is a behavioral change, not a
+  re-skin). Close stays instant. Document this per overlay.
+- Pills/OSD keep their existing enter/exit but route durations/curves through
+  `Theme.anim` (R6).
 
 ### R5 — Literal → token migration (mechanical, every file)
 Migrate the known hardcoded literals onto tokens. Mapping table:
 
 **font.pixelSize (52 sites)** — map by role, not by raw number:
-- body/label text → `Theme.font.size.normal` (15) or `.small` (13) for captions.
-- section titles / dialog headers → `Theme.font.size.large` (17) /
-  `.larger` (19).
-- big numerals (Power `48`, MediaControls `40`, PomodoroWidget `24`) →
-  `Theme.font.size.extraLarge` (22) is too small for hero numerals; these are
-  legitimately large display text — keep as explicit large sizes but pull from
-  a local `readonly property int` at top of the file with a comment, OR accept
-  they exceed the scale (hero numerals are an intentional exception, like
-  `warning`/`error` colors). Implementer picks per-site; document the choice.
-- MaterialIcon `font.pixelSize` → `Theme.icon.size.*` (18/22/28/36), nearest
-  rung. (e.g. Osd `28`→`icon.size.large`; TagInput `18`→`icon.size.small`.)
+- **Text** (`StyledText`/`Text`): body/label → `Theme.font.size.normal` (15) or
+  `.small` (13) for captions; section titles / dialog headers →
+  `.large` (17) / `.larger` (19); largest text numerals →
+  `.extraLarge` (22). No text site needs to exceed 22 — the values the audit
+  called "hero numerals" (Power 48, MediaControls 40, PomodoroWidget 24) are all
+  `MaterialIcon` glyph sizes, not text. Every text `font.pixelSize` maps to a
+  rung; no text exception exists.
+- **`MaterialIcon` `font.pixelSize`** → `Theme.icon.size.*` (18/22/28/36),
+  nearest rung (Osd `28`→`icon.size.large`; TagInput `18`→`icon.size.small`;
+  MediaControls `40`→`icon.size.larger` 36; PomodoroWidget `24`→`icon.size.normal`
+  22 or `.large` 28 by visual fit). **The single allowed inline exception:**
+  Power's action glyph (`Power.qml:141`, `48`) is a deliberate hero size with no
+  matching rung — keep an explicit numeric with a `// hero glyph, no rung`
+  comment. Every other icon size snaps to a rung. This is the only per-file
+  judgement call; it is named here so each batch subagent does the same thing.
 
 **radius (19 sites)**:
 - circle/pill shapes where `radius == width/2 == height/2`
@@ -143,20 +194,24 @@ visual completeness. Each batch task's done-definition:
    errors (the hard gate — kill the instance after).
 2. Every interactive surface in the batch has visible hover + press feedback.
 3. No hardcoded `font.pixelSize` numeric literals remain in the batch's files
-   except documented hero-numeral exceptions; no hardcoded `radius` numeric
+   except the one documented Power hero-glyph; no hardcoded `radius` numeric
    literals except where a shared widget owns the shape.
-4. Floating panels in the batch cast a shadow.
+4. Panels in the batch read as elevated — grey surface tier on the black
+   desktop (R1), soft rounding, hairline where meaningful. `StyledShadow` only
+   where a surface nests over a grey surface.
 5. Implementer states which files changed and confirms the grep for residual
    literals in those files is clean (or lists the documented exceptions).
 
 ## Migration order (dependency-aware)
 
 1. `StyledSlider` `fillColor` enhancement (unblocks QuickSliders).
-2. Bar pills (most-visible, smallest surfaces, proves the shadow+tooltip+state
-   pattern on a contained scope).
-3. Sidebar widgets (uses StyledSlider, sets the panel-shadow pattern).
-4. Sidebar dialogs (uses StyledSwitch).
-5. Overlays (scrim fade + spring + delegate state, repeated 6×).
+2. Bar pills (most-visible, contained; proves the tier+tooltip+state pattern on
+   a small scope).
+3. Sidebar widgets (uses StyledSlider; sets the grey-tier + nested-shadow
+   pattern for cards inside the panel).
+4. Sidebar dialogs (uses StyledSwitch; dialogs nest over the grey sidebar →
+   first real `StyledShadow` use).
+5. Overlays (scrim fade + enter spring + delegate state, repeated 6×).
 6. Feedback/status (StyledProgressBar, motion cleanup).
 
 Bar first because it is always on screen and contained; overlays later because
