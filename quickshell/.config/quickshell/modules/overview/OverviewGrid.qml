@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import qs.components
 import qs.services
 
@@ -79,6 +80,37 @@ Item {
                             StateLayer { pressed: cellMa.pressed }
                         }
                     }
+                }
+            }
+        }
+
+        Item {
+            id: windowSpace
+            anchors.centerIn: parent
+            width: cellCol.implicitWidth
+            height: cellCol.implicitHeight
+            Repeater {
+                model: ScriptModel {
+                    values: ToplevelManager.toplevels.values.filter(function (t) {
+                        var c = HyprlandData.clientForToplevel(t);
+                        return c && c.workspace && c.workspace.id >= 1 && c.workspace.id <= root.rows * root.columns;
+                    })
+                }
+                delegate: OverviewWindow {
+                    required property var modelData
+                    readonly property var wd: HyprlandData.clientForToplevel(modelData)
+                    readonly property int wsId: wd ? wd.workspace.id : 1
+                    readonly property int col: (wsId - 1) % root.columns
+                    readonly property int rowI: Math.floor((wsId - 1) / root.columns) % root.rows
+                    toplevel: modelData
+                    windowData: wd
+                    monitorData: HyprlandData.monitors.find(function (m) { return m.id === (wd ? wd.monitor : -1); })
+                    widgetMonitor: root.monitorData
+                    scale: root.wsScale
+                    overviewOpen: root.overviewOpen
+                    xOffset: (root.cellWidth + root.spacing) * col
+                    yOffset: (root.cellHeight + root.spacing) * rowI
+                    onRequestClose: root.requestClose()
                 }
             }
         }
