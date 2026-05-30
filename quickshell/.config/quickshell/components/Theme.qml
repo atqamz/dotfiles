@@ -120,4 +120,16 @@ QtObject {
         readonly property int margin: 6
         readonly property int innerSpacing: 10
     }
+
+    readonly property QtObject elevation: QtObject {
+        readonly property int margin: 10
+    }
+
+    readonly property QtObject z: QtObject {
+        readonly property int base: 0
+        readonly property int panel: 10
+        readonly property int overlay: 20
+        readonly property int popup: 30
+        readonly property int osd: 40
+    }
 }
