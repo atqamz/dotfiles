@@ -17,8 +17,8 @@ Item {
     ]
     property int currentPage: 0
 
-    implicitWidth: Math.min(900, Screen.width - 80)
-    implicitHeight: Math.min(620, Screen.height - 80)
+    implicitWidth: Screen.width > 0 ? Math.min(900, Screen.width - 80) : 900
+    implicitHeight: Screen.height > 0 ? Math.min(620, Screen.height - 80) : 620
 
     Rectangle {
         anchors.fill: parent
