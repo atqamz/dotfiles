@@ -2,6 +2,7 @@
 
 Date: 2026-05-30
 Status: approved (design), pending implementation plan
+Revised: 2026-05-30 after peer review (font facts, migration risk, missing tokens)
 
 ## Goal
 
@@ -11,8 +12,8 @@ theming, no AI. Add three new feature modules (dock, overview, settings GUI).
 
 The visual gap with end-4 is not color — we cannot copy their wallpaper-derived
 Material You palette and do not want to. The gap is in typography, rounding,
-elevation, motion, state feedback, and spacing. All of these are
-color-independent, so we can match end-4's polish while staying monochrome.
+elevation, motion, state feedback, and spacing. All color-independent, so we can
+match end-4's polish while staying monochrome.
 
 ## Constraints
 
@@ -25,13 +26,14 @@ color-independent, so we can match end-4's polish while staying monochrome.
 
 ## Decomposition
 
-This redesign is too large for one spec. Five sub-projects, dependency-ordered.
-Each later sub-project gets its own spec → plan → build cycle.
+Too large for one spec. Five sub-projects, dependency-ordered. Each later
+sub-project gets its own spec → plan → build cycle.
 
-1. **Design-system foundation** (this spec): Theme.qml tokens + shared widgets.
-   Everything else depends on it.
+1. **Design-system foundation** (this spec): Theme.qml tokens + shared widgets
+   + Anim/CAnim curve refactor. Everything else depends on it.
 2. **Re-skin existing modules**: apply new tokens to bar, sidebar, osd,
-   notifications, launcher, cheatsheet, media controls, power, etc. Mechanical.
+   notifications, launcher, cheatsheet, media controls, power, etc. Includes
+   migrating hardcoded literals onto tokens (see Migration).
 3. **Dock**: app dock (new feature module).
 4. **Overview**: workspace exposé / grid (new feature module).
 5. **Settings GUI**: full multi-page settings app, end-4 "waffle" style
@@ -39,59 +41,96 @@ Each later sub-project gets its own spec → plan → build cycle.
 
 ## Design-system foundation (sub-project 1)
 
-### Theme.qml token changes
+Reference: `~/repo/dots-hyprland/dots/.config/quickshell/ii/modules/common/`
+(`Appearance.qml`, `widgets/`).
 
-Reference: `~/repo/dots-hyprland/dots/.config/quickshell/ii/modules/common/Appearance.qml`.
+### Typography
 
-**Typography**
-- UI font family: `Rubik` (proportional sans, matches end-4 `main`).
-- Icon font: `Material Symbols Rounded` (replaces `Material Icons` — rounded
-  variant is softer, matches the rounded aesthetic).
-- Monospace: `JetBrains Mono` retained in tokens but not used by default UI;
-  available for any future code/terminal surface.
-- Font sizes bumped toward end-4 scale:
+- **UI font: `Rubik`.** Independent choice, not an end-4 match — end-4 uses
+  "Google Sans Flex" (not packaged for Fedora). Rubik is a rounded, geometric,
+  FOSS sans that suits the soft-rounded aesthetic and ships as the Fedora
+  package `google-rubik-fonts`. **The packaged family is static** (discrete
+  weight faces, no `[wght]` variable axis).
+- **Weights via `font.weight`, not variable axes.** Because the packaged Rubik
+  is static, use `font.weight: 400` (body) and `font.weight: 600` (title);
+  do NOT use `font.variableAxes` (end-4's pattern, which requires a variable
+  build). StyledText currently sets `font.variableAxes` — change it to
+  `font.weight`.
+- **Icon font: `Material Icons Round`** (replaces `Material Icons`).
+  Verified installed (`fc-list`). It is the rounded *style variant of the same
+  Material Icons project* — identical ligature set to our current font, so all
+  46 existing `MaterialIcon` call sites keep working unchanged. This is
+  deliberately NOT "Material Symbols Rounded": Symbols is not installed, not
+  packaged in Fedora, and renamed/removed ligatures (would break glyphs). We
+  forgo the `opsz`/`FILL` axes to get a zero-breakage, zero-new-dep rounded
+  icon set.
+- **Monospace: `JetBrains Mono`** retained in tokens; not used by default UI.
+- **Font size scale** bumped toward end-4 (our rung names are offset from
+  end-4's by ~one step; comment the mapping in Theme.qml):
 
-  | token | old | new |
-  |-------|-----|-----|
-  | smaller | 10 | 12 |
-  | small | 11 | 13 |
-  | normal | 12 | 15 |
-  | large | 14 | 17 |
-  | larger | 16 | 19 |
-  | extraLarge | 20 | 22 |
+  | token | old | new | ≈ end-4 |
+  |-------|-----|-----|---------|
+  | smaller | 10 | 12 | smaller 12 |
+  | small | 11 | 13 | smallie 13 |
+  | normal | 12 | 15 | small 15 |
+  | large | 14 | 17 | large 17 |
+  | larger | 16 | 19 | larger 19 |
+  | extraLarge | 20 | 22 | huge 22 |
 
-- Optional weight tokens for variable Rubik: body 450, title 550.
+- **Icon size scale (new)** — replaces the 10 hardcoded `MaterialIcon`
+  pixelSizes: `small 18`, `normal 22`, `large 28`, `larger 36`.
 
-**Color** (anchored to pure black, monochrome)
-- `background #000000`, surface tiers unchanged (`#0a0a0a`→`#202020`).
+### Color (pure black, monochrome)
+
+- `background #000000`; surface tiers unchanged (`#0a0a0a`→`#202020`).
 - `primary #ffffff`, `textOnPrimary #000000` (active = white fill, black text).
-- Neutralize `secondary` and `tertiary` to neutral greys
-  (e.g. `secondary #c0c0c0`, `tertiary #a0a0a0`) — no blue.
+- Neutralize `secondary`→`#c0c0c0`, `tertiary`→`#a0a0a0` (no blue).
+  **Prerequisite task:** grep current `secondary`/`tertiary` consumers to
+  confirm none relied on blue as an info/link *signal* before flattening.
 - Keep `warning #ffaa44`, `error #ff4444` as semantic exceptions.
-- `success` added (grey-green or kept minimal) only if a component needs it.
+- **No `success` token** — monochrome; convey success via icon/text, not hue.
+- **Surface-state ladder (new)** — the foundation must define hover/active/
+  disabled surface tints and a disabled-text opacity, since re-skin + dock +
+  overview all need them and end-4 derives a full ladder. Concretely add, per
+  surface tier used interactively: `*Hover` (≈ +6% white overlay), `*Active`
+  (≈ +12%), `*Disabled` (surface mixed 40% toward background), and
+  `textDisabled` (text at 38% opacity). Keep these as named tokens, not
+  per-call literals.
 
-**Rounding** (soft, end-4 style)
+### Rounding (soft, end-4 style)
 
-  | token | old | new |
-  |-------|-----|-----|
-  | small | 4 | 8 |
-  | normal | 8 | 16 |
-  | large | 12 | 22 |
-  | (new) extraLarge | — | 28 |
-  | full | 9999 | 9999 |
+  | token | old | new | ≈ end-4 |
+  |-------|-----|-----|---------|
+  | small | 4 | 8 | verysmall 8 |
+  | normal | 8 | 16 | normal 17 |
+  | large | 12 | 22 | large 23 |
+  | (new) extraLarge | — | 28 | verylarge 30 |
+  | full | 9999 | 9999 | full |
 
-**Elevation** (new)
-- `elevation.margin` (≈10px) reserve for shadow bleed around floating panels.
-- Shadow tokens: soft drop shadow, low opacity, moderate blur. Visible even on
-  black because it darkens edges and adds spread separation.
+### Elevation & z-order (new)
 
-**Motion** (adopt end-4 spring curves)
-- Add expressive spatial bezier curves with overshoot for element movement.
-- Add `clickBounce` curve for press feedback.
-- Add enter (decel) / exit (accel) curves for panel show/hide.
-- Keep existing duration scale, add longer expressive durations (350/500ms).
+- `elevation.margin` (≈10px, matches end-4 `elevationMargin`) — reserved bleed
+  around floating panels for shadow.
+- **Shadow via `RectangularShadow`** (QtQuick.Effects, `cached: true`) — newer
+  and cheaper than Qt5Compat `DropShadow`; model on end-4
+  `StyledRectangularShadow`. Soft, low opacity, moderate blur; visible on black
+  by darkening/spreading edges.
+- **Z-order scale (new)** — named layers so dock/overview/settings/osd don't
+  fight: `z.base 0`, `z.panel 10`, `z.overlay 20`, `z.popup 30`, `z.osd 40`.
+- **Focus-grab convention** — document that fullscreen-scrim modules
+  (launcher, overview, settings, sidebar) use `WlrLayershell` keyboard focus
+  `Exclusive` while open and release on close; pills/OSD never grab focus.
 
-**Bar** sizing reviewed during re-skin (sub-project 2), not changed here.
+### Motion (adopt end-4 spring curves)
+
+- Add expressive spatial bezier curves with overshoot for element movement,
+  a `clickBounce` press curve, and enter (decel) / exit (accel) curves.
+- **Anim.qml / CAnim.qml refactor (required):** current code hardcodes a
+  4-element curve padded to 6 (`[..[0..3], 1, 1]`), which cannot express
+  overshoot (control-point y > 1) or end-4's 12-element multi-segment
+  `emphasized`. Refactor both to consume full-length curve arrays from Theme so
+  the new springs actually apply. Without this the motion tokens are inert.
+- Keep existing durations; add longer expressive durations (350/500ms).
 
 ### Shared widgets (components/)
 
@@ -99,45 +138,55 @@ Existing: `StyledRect`, `StyledText`, `MaterialIcon`, `StateLayer`, `Anim`,
 `CAnim`.
 
 Add (modeled on end-4 `common/widgets/`):
-- `StyledSwitch` — Material toggle switch (replaces ad-hoc switch rectangles in
-  NightLightDialog etc.).
-- `StyledSlider` — Material slider with track/handle (replaces custom slider
-  styling in QuickSliders).
-- `StyledShadow` — reusable drop shadow for floating panels.
+- `StyledSwitch` — Material toggle (replaces ad-hoc switch rects, e.g.
+  NightLightDialog).
+- `StyledSlider` — Material slider (replaces custom slider styling in
+  QuickSliders).
+- `StyledShadow` — wraps `RectangularShadow` (see Elevation).
 - `StyledToolTip` — hover tooltip (bar pills, toggle tiles).
 - `StyledScrollBar` — themed scrollbar for Flickables/ListViews.
-- `StyledProgressBar` — for pomodoro ring / battery / download progress.
+- `StyledProgressBar` — pomodoro ring / battery / download progress.
 
-Upgrade `StateLayer` to proper Material state layers:
-hover overlay ~8% opacity, pressed ~12%, using the layer's `onColor`.
+Upgrade `StateLayer`: read overlay opacities from new Theme tokens
+(deliberate values: hover 8%, pressed 12% — a deliberate change from the
+current hardcoded 16% pressed, toward M3), not `Qt.rgba` literals.
 
-### Migration approach
+### Migration approach (honest)
 
-- Token changes land first (Theme.qml) — visually breaks nothing because
-  component code reads tokens by name.
-- New/upgraded widgets land next, with no consumers yet.
-- Re-skin (sub-project 2) swaps consumers onto new widgets and verifies each
-  module visually.
+- Token changes (Theme.qml) land first. **This is NOT visually transparent:**
+  ~45% of module `font.pixelSize` (53 occurrences) and ~24% of `radius`
+  (19 occurrences) are hardcoded literals that bypass Theme. When tokens jump,
+  token-reading surfaces grow/round immediately while literal surfaces stay
+  put → transient half-migrated look until re-skin. Known desync hotspots:
+  `MediaControls.qml`, `ResourcesPill.qml`, `PomodoroWidget.qml`,
+  `CalendarWidget.qml`.
+- New/upgraded widgets land next, no consumers yet (safe).
+- **Re-skin (sub-project 2)** swaps consumers onto new widgets AND migrates the
+  53 + 19 hardcoded literals onto tokens, verifying each module visually.
+- Therefore the "qs log clean" gate proves only *no QML errors*, not visual
+  completeness. Visual acceptance is per-module in sub-project 2.
 
 ## Dependencies
 
-Add to dotmachines (`hyprland`/fonts role) before re-skin lands:
-- `rubik-fonts` (Rubik UI font)
-- `google-material-symbols-fonts` or equivalent (Material Symbols Rounded)
-
-File as dotmachines issue if not packaged.
+- `google-rubik-fonts` (Rubik UI font) — Fedora-packaged, add to dotmachines
+  fonts/hyprland role before re-skin lands.
+- Icon font: **no new dependency** — `Material Icons Round` already installed.
 
 ## Out of scope
 
-- Wallpaper, dynamic theming, matugen, any color extraction.
+- Wallpaper, dynamic theming, matugen, color extraction.
 - AI: sidebarLeft, chat, booru, translation, songrec, latex.
 - screenCorners (conflicts with sharp solid-black desktop), onScreenKeyboard.
-- Re-skin work, dock, overview, settings GUI — separate sub-project specs.
+- `opsz`/`FILL` icon axes (Material Symbols only; we use Material Icons Round).
+- Re-skin, dock, overview, settings GUI — separate sub-project specs.
 
 ## Success criteria
 
-- `qs log` clean after Theme.qml token changes; no QML errors.
-- Rubik + Material Symbols Rounded render in a smoke module.
+- `qs log` clean after Theme.qml token changes; no QML errors. (Proves no
+  breakage; does NOT prove visual completeness — see Migration.)
+- Rubik renders (after dep lands); `Material Icons Round` glyphs render for all
+  46 existing call sites with no missing-glyph boxes.
 - New shared widgets instantiate standalone without errors.
-- A single re-skinned reference component (e.g. one sidebar tile) visibly
-  matches end-4 polish: rounded, proper sans, spring motion, state feedback.
+- Anim/CAnim apply an overshoot curve without clamping (visible spring).
+- One re-skinned reference component (e.g. a sidebar tile) visibly matches
+  end-4 polish: rounded, Rubik, spring motion, state feedback.
