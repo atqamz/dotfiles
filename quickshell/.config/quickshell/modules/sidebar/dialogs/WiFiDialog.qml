@@ -9,7 +9,7 @@ Rectangle {
 
     signal dismiss()
 
-    color: Theme.background
+    color: Theme.surfaceContainerHigh
     radius: Theme.radius.large
     border.color: Theme.outlineVariant
     border.width: 1
@@ -35,30 +35,57 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            MaterialIcon {
-                text: "refresh"
-                color: Network.scanning ? Theme.tertiary : Theme.textVariant
-                font.pixelSize: 18
+            Item {
+                property real radius: Theme.radius.small
+                implicitWidth: refreshIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: refreshIcon.implicitHeight + 2 * Theme.padding.smaller
 
-                RotationAnimation on rotation {
-                    running: Network.scanning
-                    from: 0; to: 360
-                    duration: 1000
-                    loops: Animation.Infinite
+                StateLayer {
+                    pressed: refreshMa.pressed
+                }
+
+                MaterialIcon {
+                    id: refreshIcon
+                    anchors.centerIn: parent
+                    text: "refresh"
+                    color: Network.scanning ? Theme.tertiary : Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+
+                    RotationAnimation on rotation {
+                        running: Network.scanning
+                        from: 0; to: 360
+                        duration: Theme.anim.durations.spring
+                        easing.type: Easing.Linear
+                        loops: Animation.Infinite
+                    }
                 }
 
                 MouseArea {
+                    id: refreshMa
                     anchors.fill: parent
                     onClicked: Network.scanWifi()
                 }
             }
 
-            MaterialIcon {
-                text: "close"
-                color: Theme.textVariant
-                font.pixelSize: 18
+            Item {
+                property real radius: Theme.radius.small
+                implicitWidth: closeIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: closeIcon.implicitHeight + 2 * Theme.padding.smaller
+
+                StateLayer {
+                    pressed: closeMa.pressed
+                }
+
+                MaterialIcon {
+                    id: closeIcon
+                    anchors.centerIn: parent
+                    text: "close"
+                    color: Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+                }
 
                 MouseArea {
+                    id: closeMa
                     anchors.fill: parent
                     onClicked: root.dismiss()
                 }
@@ -75,18 +102,24 @@ Rectangle {
             model: Network.wifiNetworks
 
             Rectangle {
+                id: netRow
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
                 height: 40
                 radius: Theme.radius.normal
-                color: modelData.active ? Theme.surfaceContainerHigh : "transparent"
+                color: modelData.active ? Theme.surfaceContainerHighest : "transparent"
+
+                StateLayer {
+                    pressed: netMa.pressed
+                    focused: netRow.modelData.active
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
+                    anchors.leftMargin: Theme.padding.normal
+                    anchors.rightMargin: Theme.padding.normal
+                    spacing: Theme.spacing.normal
 
                     MaterialIcon {
                         text: modelData.signal > 75 ? "signal_wifi_4_bar"
@@ -94,7 +127,7 @@ Rectangle {
                             : modelData.signal > 25 ? "network_wifi_2_bar"
                             : "network_wifi_1_bar"
                         color: modelData.active ? Theme.tertiary : Theme.textVariant
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.icon.size.small
                     }
 
                     StyledText {
@@ -108,18 +141,19 @@ Rectangle {
                         visible: modelData.security.length > 0
                         text: "lock"
                         color: Theme.textMuted
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.icon.size.small
                     }
 
                     MaterialIcon {
                         visible: modelData.active
                         text: "check"
                         color: Theme.tertiary
-                        font.pixelSize: 18
+                        font.pixelSize: Theme.icon.size.small
                     }
                 }
 
                 MouseArea {
+                    id: netMa
                     anchors.fill: parent
                     onClicked: {
                         if (!modelData.active)

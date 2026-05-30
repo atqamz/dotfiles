@@ -9,7 +9,7 @@ Rectangle {
 
     signal dismiss()
 
-    color: Theme.background
+    color: Theme.surfaceContainerHigh
     radius: Theme.radius.large
     border.color: Theme.outlineVariant
     border.width: 1
@@ -33,12 +33,26 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            MaterialIcon {
-                text: "close"
-                color: Theme.textVariant
-                font.pixelSize: 18
+            Item {
+                property real radius: Theme.radius.small
+                implicitWidth: closeIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: closeIcon.implicitHeight + 2 * Theme.padding.smaller
+
+                StateLayer {
+                    id: closeState
+                    pressed: closeMa.pressed
+                }
+
+                MaterialIcon {
+                    id: closeIcon
+                    anchors.centerIn: parent
+                    text: "close"
+                    color: Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+                }
 
                 MouseArea {
+                    id: closeMa
                     anchors.fill: parent
                     onClicked: root.dismiss()
                 }
@@ -62,25 +76,9 @@ Rectangle {
                 color: Theme.text
             }
 
-            Rectangle {
-                width: 48; height: 28; radius: 14
-                color: Hyprsunset.active ? Theme.primary : Theme.surfaceContainerHigh
-
-                Behavior on color { ColorAnimation { duration: 200 } }
-
-                Rectangle {
-                    width: 20; height: 20; radius: 10
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Hyprsunset.active ? parent.width - width - 4 : 4
-                    color: Hyprsunset.active ? Theme.textOnPrimary : Theme.textMuted
-
-                    Behavior on x { NumberAnimation { duration: 200 } }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Hyprsunset.toggle()
-                }
+            StyledSwitch {
+                checked: Hyprsunset.active
+                onToggled: Hyprsunset.toggle()
             }
         }
 
@@ -121,8 +119,9 @@ Rectangle {
                     y: tempSlider.topPadding + tempSlider.availableHeight / 2 - height / 2
                     width: tempSlider.availableWidth
                     height: 4
-                    radius: 2
+                    radius: Theme.radius.small
 
+                    // warmth data-viz, intentional
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0.0; color: "#ff8800" }
@@ -134,8 +133,10 @@ Rectangle {
                 handle: Rectangle {
                     x: tempSlider.leftPadding + tempSlider.visualPosition * (tempSlider.availableWidth - width)
                     y: tempSlider.topPadding + tempSlider.availableHeight / 2 - height / 2
-                    width: 16; height: 16; radius: 8
+                    width: 16; height: 16; radius: Theme.radius.full
                     color: Theme.primary
+                    border.width: tempSlider.activeFocus ? 2 : 0
+                    border.color: Theme.primary
                 }
             }
         }
@@ -154,20 +155,28 @@ Rectangle {
                 ]
 
                 Rectangle {
+                    id: presetRow
                     required property var modelData
+                    readonly property bool selected: Hyprsunset.temperature === modelData.temp
                     Layout.fillWidth: true
                     height: 32
                     radius: Theme.radius.normal
-                    color: Hyprsunset.temperature === modelData.temp ? Theme.surfaceContainerHigh : "transparent"
+                    color: selected ? Theme.surfaceContainerHighest : "transparent"
+
+                    StateLayer {
+                        pressed: presetMa.pressed
+                        focused: presetRow.selected
+                    }
 
                     StyledText {
                         anchors.centerIn: parent
                         text: modelData.label
                         font.pixelSize: Theme.font.size.smaller
-                        color: Hyprsunset.temperature === modelData.temp ? Theme.text : Theme.textMuted
+                        color: presetRow.selected ? Theme.text : Theme.textMuted
                     }
 
                     MouseArea {
+                        id: presetMa
                         anchors.fill: parent
                         onClicked: {
                             Hyprsunset.setTemperature(modelData.temp);
