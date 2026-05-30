@@ -51,7 +51,7 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: 420
                 implicitHeight: 220
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
@@ -98,7 +98,7 @@ Scope {
                                 visible: MprisService.artUrl.length === 0
                                 text: "music_note"
                                 color: Theme.textMuted
-                                font.pixelSize: 40
+                                font.pixelSize: Theme.icon.size.larger
                             }
                         }
 
@@ -124,22 +124,13 @@ Scope {
                         }
                     }
 
-                    Item {
+                    StyledProgressBar {
                         Layout.fillWidth: true
                         implicitHeight: 4
                         visible: MprisService.length > 0
-
-                        Rectangle {
-                            anchors.fill: parent
-                            color: Theme.surfaceContainerHigh
-                            radius: Theme.radius.full
-                        }
-                        Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1, MprisService.position / Math.max(1, MprisService.length)))
-                            height: parent.height
-                            color: Theme.text
-                            radius: Theme.radius.full
-                        }
+                        from: 0
+                        to: Math.max(1, MprisService.length)
+                        value: MprisService.position
                     }
 
                     RowLayout {
@@ -150,13 +141,13 @@ Scope {
                             implicitWidth: 40
                             implicitHeight: 40
                             radius: Theme.radius.full
-                            color: prevHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                            color: "transparent"
                             border.color: Theme.outlineVariant
                             border.width: 1
                             opacity: MprisService.canGoPrevious ? 1.0 : 0.4
 
-                            HoverHandler { id: prevHover }
                             MouseArea {
+                                id: prevMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.previous()
@@ -165,20 +156,21 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_previous"
                                 color: Theme.text
-                                font.pixelSize: 22
+                                font.pixelSize: Theme.icon.size.normal
                             }
+                            StateLayer { pressed: prevMa.pressed }
                         }
 
                         StyledRect {
                             implicitWidth: 52
                             implicitHeight: 52
                             radius: Theme.radius.full
-                            color: playHover.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                            color: Theme.surfaceContainerHigh
                             border.color: Theme.outlineVariant
                             border.width: 1
 
-                            HoverHandler { id: playHover }
                             MouseArea {
+                                id: playMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.togglePlaying()
@@ -187,21 +179,22 @@ Scope {
                                 anchors.centerIn: parent
                                 text: MprisService.isPlaying ? "pause" : "play_arrow"
                                 color: Theme.text
-                                font.pixelSize: 28
+                                font.pixelSize: Theme.icon.size.large
                             }
+                            StateLayer { pressed: playMa.pressed }
                         }
 
                         StyledRect {
                             implicitWidth: 40
                             implicitHeight: 40
                             radius: Theme.radius.full
-                            color: nextHover.hovered ? Theme.surfaceContainerHigh : "transparent"
+                            color: "transparent"
                             border.color: Theme.outlineVariant
                             border.width: 1
                             opacity: MprisService.canGoNext ? 1.0 : 0.4
 
-                            HoverHandler { id: nextHover }
                             MouseArea {
+                                id: nextMa
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: MprisService.next()
@@ -210,8 +203,9 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_next"
                                 color: Theme.text
-                                font.pixelSize: 22
+                                font.pixelSize: Theme.icon.size.normal
                             }
+                            StateLayer { pressed: nextMa.pressed }
                         }
                     }
                 }

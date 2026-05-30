@@ -113,7 +113,7 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: 360
                 implicitHeight: 72
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.full
@@ -134,34 +134,17 @@ Scope {
                             return "volume_up";
                         }
                         color: root.muted ? Theme.textDim : Theme.text
-                        font.pixelSize: 28
+                        font.pixelSize: Theme.icon.size.large
                     }
 
-                    Item {
+                    StyledProgressBar {
                         anchors.verticalCenter: parent.verticalCenter
                         implicitWidth: 220
                         implicitHeight: 10
-
-                        Rectangle {
-                            anchors.fill: parent
-                            color: Theme.surfaceContainerHigh
-                            radius: Theme.radius.full
-                        }
-
-                        Rectangle {
-                            width: parent.width * Math.max(0, Math.min(1, root.value / 100))
-                            height: parent.height
-                            color: root.muted ? Theme.textDim : Theme.primary
-                            radius: Theme.radius.full
-
-                            Behavior on width {
-                                NumberAnimation {
-                                    duration: Theme.anim.durations.normal
-                                    easing.type: Easing.OutBack
-                                    easing.overshoot: 1.4
-                                }
-                            }
-                        }
+                        from: 0
+                        to: root.kind === "volume" ? 150 : 100
+                        value: root.value
+                        fillColor: root.muted ? Theme.textDim : Theme.primary
                     }
 
                     StyledText {

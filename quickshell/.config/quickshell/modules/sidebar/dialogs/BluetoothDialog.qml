@@ -8,7 +8,7 @@ Rectangle {
 
     signal dismiss()
 
-    color: Theme.background
+    color: Theme.surfaceContainerHigh
     radius: Theme.radius.large
     border.color: Theme.outlineVariant
     border.width: 1
@@ -35,26 +35,52 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            MaterialIcon {
-                text: "bluetooth_searching"
-                color: Bluetooth.discovering ? Theme.tertiary : Theme.textVariant
-                font.pixelSize: 18
-                opacity: Bluetooth.discovering ? 1.0 : 0.5
+            Item {
+                property real radius: Theme.radius.small
+                implicitWidth: scanIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: scanIcon.implicitHeight + 2 * Theme.padding.smaller
 
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                StateLayer {
+                    pressed: scanMa.pressed
+                }
+
+                MaterialIcon {
+                    id: scanIcon
+                    anchors.centerIn: parent
+                    text: "bluetooth_searching"
+                    color: Bluetooth.discovering ? Theme.tertiary : Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+                    opacity: Bluetooth.discovering ? 1.0 : 0.5
+
+                    Behavior on opacity { Anim { curve: Theme.anim.standard } }
+                }
 
                 MouseArea {
+                    id: scanMa
                     anchors.fill: parent
                     onClicked: Bluetooth.discovering ? Bluetooth.stopScan() : Bluetooth.startScan()
                 }
             }
 
-            MaterialIcon {
-                text: "close"
-                color: Theme.textVariant
-                font.pixelSize: 18
+            Item {
+                property real radius: Theme.radius.small
+                implicitWidth: closeIcon.implicitWidth + 2 * Theme.padding.smaller
+                implicitHeight: closeIcon.implicitHeight + 2 * Theme.padding.smaller
+
+                StateLayer {
+                    pressed: closeMa.pressed
+                }
+
+                MaterialIcon {
+                    id: closeIcon
+                    anchors.centerIn: parent
+                    text: "close"
+                    color: Theme.textVariant
+                    font.pixelSize: Theme.icon.size.small
+                }
 
                 MouseArea {
+                    id: closeMa
                     anchors.fill: parent
                     onClicked: root.dismiss()
                 }
@@ -71,29 +97,35 @@ Rectangle {
             model: Bluetooth.allDevices
 
             Rectangle {
+                id: devItem
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
                 implicitHeight: devRow.implicitHeight + 16
                 radius: Theme.radius.normal
-                color: modelData.connected ? Theme.surfaceContainerHigh : "transparent"
+                color: modelData.connected ? Theme.surfaceContainerHighest : "transparent"
 
                 property bool expanded: false
+
+                StateLayer {
+                    pressed: devMa.pressed
+                    focused: devItem.modelData.connected
+                }
 
                 ColumnLayout {
                     id: devRow
                     anchors.fill: parent
-                    anchors.margins: 8
-                    spacing: 4
+                    anchors.margins: Theme.padding.normal
+                    spacing: Theme.spacing.smaller
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: Theme.spacing.normal
 
                         MaterialIcon {
                             text: modelData.connected ? "bluetooth_connected" : "bluetooth"
                             color: modelData.connected ? Theme.tertiary : Theme.textVariant
-                            font.pixelSize: 18
+                            font.pixelSize: Theme.icon.size.small
                         }
 
                         StyledText {
@@ -114,13 +146,17 @@ Rectangle {
                     RowLayout {
                         visible: expanded
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: Theme.spacing.smaller
 
                         Rectangle {
                             Layout.fillWidth: true
                             height: 28
                             radius: Theme.radius.normal
                             color: Theme.surfaceContainerLow
+
+                            StateLayer {
+                                pressed: connectMa.pressed
+                            }
 
                             StyledText {
                                 anchors.centerIn: parent
@@ -130,6 +166,7 @@ Rectangle {
                             }
 
                             MouseArea {
+                                id: connectMa
                                 anchors.fill: parent
                                 onClicked: modelData.connected
                                     ? Bluetooth.disconnectDevice(modelData.mac)
@@ -143,6 +180,11 @@ Rectangle {
                             radius: Theme.radius.normal
                             color: Theme.surfaceContainerLow
 
+                            StateLayer {
+                                pressed: forgetMa.pressed
+                                tint: Theme.error
+                            }
+
                             StyledText {
                                 anchors.centerIn: parent
                                 text: "Forget"
@@ -151,6 +193,7 @@ Rectangle {
                             }
 
                             MouseArea {
+                                id: forgetMa
                                 anchors.fill: parent
                                 onClicked: Bluetooth.forgetDevice(modelData.mac)
                             }
@@ -159,6 +202,7 @@ Rectangle {
                 }
 
                 MouseArea {
+                    id: devMa
                     anchors.fill: parent
                     z: -1
                     onClicked: expanded = !expanded

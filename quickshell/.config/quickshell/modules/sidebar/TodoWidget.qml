@@ -46,7 +46,13 @@ Item {
                     color: !root.showDone ? Theme.text : Theme.textMuted
                 }
 
+                StateLayer {
+                    focused: !root.showDone
+                    pressed: todoTabTap.pressed
+                }
+
                 MouseArea {
+                    id: todoTabTap
                     anchors.fill: parent
                     onClicked: root.showDone = false
                 }
@@ -65,7 +71,13 @@ Item {
                     color: root.showDone ? Theme.text : Theme.textMuted
                 }
 
+                StateLayer {
+                    focused: root.showDone
+                    pressed: doneTabTap.pressed
+                }
+
                 MouseArea {
+                    id: doneTabTap
                     anchors.fill: parent
                     onClicked: root.showDone = true
                 }
@@ -79,7 +91,7 @@ Item {
             StyledRect {
                 required property var modelData
                 Layout.fillWidth: true
-                color: Theme.surface
+                color: Theme.surfaceContainerHigh
                 radius: Theme.radius.normal
                 implicitHeight: taskRow.implicitHeight + 16
 
@@ -97,23 +109,48 @@ Item {
                         font.strikeout: modelData.done
                     }
 
-                    MaterialIcon {
-                        text: modelData.done ? "undo" : "check"
-                        color: Theme.textVariant
-                        font.pixelSize: 18
+                    Item {
+                        property real radius: Theme.radius.full
+                        implicitWidth: doneIcon.implicitWidth + 2 * Theme.padding.small
+                        implicitHeight: doneIcon.implicitHeight + 2 * Theme.padding.small
+
+                        MaterialIcon {
+                            id: doneIcon
+                            anchors.centerIn: parent
+                            text: modelData.done ? "undo" : "check"
+                            color: Theme.textVariant
+                            font.pixelSize: Theme.icon.size.small
+                        }
+
+                        StateLayer { pressed: doneTap.pressed }
 
                         MouseArea {
+                            id: doneTap
                             anchors.fill: parent
                             onClicked: Todo.markDone(modelData.index)
                         }
                     }
 
-                    MaterialIcon {
-                        text: "delete"
-                        color: Theme.error
-                        font.pixelSize: 18
+                    Item {
+                        property real radius: Theme.radius.full
+                        implicitWidth: deleteIcon.implicitWidth + 2 * Theme.padding.small
+                        implicitHeight: deleteIcon.implicitHeight + 2 * Theme.padding.small
+
+                        MaterialIcon {
+                            id: deleteIcon
+                            anchors.centerIn: parent
+                            text: "delete"
+                            color: Theme.error
+                            font.pixelSize: Theme.icon.size.small
+                        }
+
+                        StateLayer {
+                            pressed: deleteTap.pressed
+                            tint: Theme.error
+                        }
 
                         MouseArea {
+                            id: deleteTap
                             anchors.fill: parent
                             onClicked: Todo.deleteItem(modelData.index)
                         }
@@ -153,7 +190,10 @@ Item {
                 }
             }
 
+            StateLayer { pressed: addBtnTap.pressed }
+
             MouseArea {
+                id: addBtnTap
                 anchors.fill: parent
                 onClicked: {
                     root.showAddDialog = true;
@@ -177,10 +217,12 @@ Item {
                 font.pixelSize: Theme.font.size.normal
 
                 background: Rectangle {
-                    radius: Theme.radius.normal
-                    color: Theme.surface
-                    border.color: Theme.outline
+                    radius: Theme.radius.small
+                    color: Theme.surfaceContainerHighest
+                    border.color: addInput.activeFocus ? Theme.primary : Theme.outline
                     border.width: 1
+
+                    Behavior on border.color { CAnim {} }
                 }
 
                 Keys.onReturnPressed: {
@@ -197,7 +239,7 @@ Item {
             }
 
             Rectangle {
-                width: 36; height: 36; radius: 18
+                width: 36; height: 36; radius: Theme.radius.full
                 color: addInput.text.length > 0 ? Theme.primary : Theme.surfaceContainerHigh
 
                 MaterialIcon {
@@ -206,7 +248,13 @@ Item {
                     color: addInput.text.length > 0 ? Theme.textOnPrimary : Theme.textMuted
                 }
 
+                StateLayer {
+                    pressed: addSubmitTap.pressed
+                    tint: addInput.text.length > 0 ? Theme.textOnPrimary : Theme.text
+                }
+
                 MouseArea {
+                    id: addSubmitTap
                     anchors.fill: parent
                     onClicked: {
                         if (addInput.text.length > 0) {

@@ -53,7 +53,7 @@ Scope {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 width: 380
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
 

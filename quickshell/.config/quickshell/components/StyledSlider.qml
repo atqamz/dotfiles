@@ -5,6 +5,7 @@ import qs.components
 Slider {
     id: root
     implicitHeight: 24
+    property color fillColor: Theme.primary
 
     background: Rectangle {
         x: root.leftPadding
@@ -18,7 +19,7 @@ Slider {
             width: root.visualPosition * parent.width
             height: parent.height
             radius: Theme.radius.full
-            color: Theme.primary
+            color: root.fillColor
         }
     }
 
@@ -28,7 +29,7 @@ Slider {
         implicitWidth: 18
         implicitHeight: 18
         radius: Theme.radius.full
-        color: Theme.primary
+        color: root.fillColor
         border.color: Theme.background
         border.width: root.pressed ? 3 : 0
 

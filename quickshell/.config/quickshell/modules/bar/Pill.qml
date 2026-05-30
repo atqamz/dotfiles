@@ -14,7 +14,7 @@ StyledRect {
     implicitHeight: 28
     implicitWidth: (contentItem ? contentItem.implicitWidth : 0) + 2 * horizontalPadding
 
-    color: Theme.background
+    color: Theme.surfaceContainer
     border.color: Theme.outlineVariant
     border.width: 1
     radius: Theme.radius.full

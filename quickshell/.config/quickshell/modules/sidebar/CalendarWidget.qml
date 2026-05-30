@@ -23,13 +23,24 @@ Item {
         RowLayout {
             Layout.fillWidth: true
 
-            StyledText {
-                text: root.viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
-                font.pixelSize: Theme.font.size.large
-                font.bold: true
-                color: root.monthShift !== 0 ? Theme.tertiary : Theme.text
+            Item {
+                property real radius: Theme.radius.full
+                implicitWidth: monthLabel.implicitWidth + 2 * Theme.padding.small
+                implicitHeight: monthLabel.implicitHeight + 2 * Theme.padding.small
+
+                StyledText {
+                    id: monthLabel
+                    anchors.centerIn: parent
+                    text: root.viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
+                    font.pixelSize: Theme.font.size.large
+                    font.bold: true
+                    color: root.monthShift !== 0 ? Theme.tertiary : Theme.text
+                }
+
+                StateLayer { pressed: monthTap.pressed }
 
                 MouseArea {
+                    id: monthTap
                     anchors.fill: parent
                     onClicked: root.monthShift = 0
                 }
@@ -38,7 +49,7 @@ Item {
             Item { Layout.fillWidth: true }
 
             Rectangle {
-                width: 28; height: 28; radius: 14
+                width: 28; height: 28; radius: Theme.radius.full
                 color: "transparent"
 
                 StyledText {
@@ -47,14 +58,17 @@ Item {
                     color: Theme.text
                 }
 
+                StateLayer { pressed: prevTap.pressed }
+
                 MouseArea {
+                    id: prevTap
                     anchors.fill: parent
                     onClicked: root.monthShift--
                 }
             }
 
             Rectangle {
-                width: 28; height: 28; radius: 14
+                width: 28; height: 28; radius: Theme.radius.full
                 color: "transparent"
 
                 StyledText {
@@ -63,7 +77,10 @@ Item {
                     color: Theme.text
                 }
 
+                StateLayer { pressed: nextTap.pressed }
+
                 MouseArea {
+                    id: nextTap
                     anchors.fill: parent
                     onClicked: root.monthShift++
                 }
@@ -116,7 +133,7 @@ Item {
 
                         Rectangle {
                             anchors.centerIn: parent
-                            width: 28; height: 28; radius: 14
+                            width: 28; height: 28; radius: Theme.radius.full
                             color: isToday ? Theme.primary : "transparent"
                         }
 

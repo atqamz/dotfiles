@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import qs.components
 import qs.services
@@ -12,6 +13,8 @@ Flickable {
     clip: true
     contentHeight: layout.implicitHeight
     boundsBehavior: Flickable.StopAtBounds
+
+    ScrollBar.vertical: StyledScrollBar {}
 
     ColumnLayout {
         id: layout

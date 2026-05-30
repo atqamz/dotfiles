@@ -88,7 +88,7 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: buttonRow.implicitWidth + Theme.padding.larger * 2
                 implicitHeight: buttonRow.implicitHeight + Theme.padding.larger * 2
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
@@ -121,13 +121,13 @@ Scope {
                             radius: Theme.radius.large
                             scale: card.hovered || card.selected ? 1.04 : 1.0
 
-                            Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                            Behavior on border.color { ColorAnimation { duration: 120 } }
+                            Behavior on scale { Anim { curve: Theme.anim.standardDecel; duration: Theme.anim.durations.small } }
+                            Behavior on color { CAnim { duration: Theme.anim.durations.small } }
+                            Behavior on border.color { CAnim { duration: Theme.anim.durations.small } }
 
                             HoverHandler { id: cardHover }
 
-                            StateLayer { id: layer; radius: parent.radius }
+                            StateLayer { id: layer; radius: parent.radius; pressed: cardTap.pressed }
 
                             ColumnLayout {
                                 anchors.centerIn: parent
@@ -138,7 +138,7 @@ Scope {
                                     text: card.confirming ? "warning" : card.modelData.icon
                                     color: card.confirming ? Theme.textOnPrimary :
                                            (card.hovered || card.selected ? Theme.primary : Theme.text)
-                                    font.pixelSize: 48
+                                    font.pixelSize: 48 // hero glyph, no rung
                                 }
                                 StyledText {
                                     Layout.alignment: Qt.AlignHCenter
@@ -150,6 +150,7 @@ Scope {
                             }
 
                             MouseArea {
+                                id: cardTap
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onEntered: root.currentIndex = card.index

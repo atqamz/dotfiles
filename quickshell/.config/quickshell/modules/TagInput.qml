@@ -35,9 +35,19 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: win
             required property var modelData
             screen: modelData
             visible: root.open
+
+            property bool shown: false
+            onVisibleChanged: {
+                shown = visible;
+                if (visible) {
+                    field.text = "";
+                    field.forceActiveFocus();
+                }
+            }
 
             anchors {
                 top: true
@@ -46,30 +56,37 @@ Scope {
                 right: true
             }
 
-            color: Theme.scrim
+            color: "transparent"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-            onVisibleChanged: {
-                if (visible) {
-                    field.text = "";
-                    field.forceActiveFocus();
+            Rectangle {
+                anchors.fill: parent
+                color: Theme.scrim
+                opacity: win.shown ? 1 : 0
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.open = false
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.open = false
-            }
-
             StyledRect {
+                id: card
                 anchors.centerIn: parent
                 width: 440
                 implicitHeight: column.implicitHeight + Theme.padding.larger * 2
-                color: Theme.background
+                color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
+
+                opacity: win.shown ? 1 : 0
+                scale: win.shown ? 1 : 0.94
+                transformOrigin: Item.Center
+                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
 
                 MouseArea { anchors.fill: parent }
 
@@ -87,7 +104,7 @@ Scope {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "label"
                             color: Theme.textVariant
-                            font.pixelSize: 18
+                            font.pixelSize: Theme.icon.size.small
                         }
                         StyledText {
                             anchors.verticalCenter: parent.verticalCenter
@@ -102,14 +119,15 @@ Scope {
                         width: parent.width
                         placeholderText: "tag name"
                         color: Theme.text
-                        placeholderTextColor: Theme.textDim
+                        placeholderTextColor: Theme.textMuted
                         font.pixelSize: Theme.font.size.large
                         font.family: Theme.font.family.sans
                         background: Rectangle {
-                            color: Theme.surfaceContainer
-                            border.color: Theme.outlineVariant
+                            radius: Theme.radius.small
+                            color: Theme.surfaceContainerHigh
                             border.width: 1
-                            radius: Theme.radius.normal
+                            border.color: field.activeFocus ? Theme.primary : Theme.outline
+                            Behavior on border.color { CAnim {} }
                         }
                         padding: Theme.padding.normal
 

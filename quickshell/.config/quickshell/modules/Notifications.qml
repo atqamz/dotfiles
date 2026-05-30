@@ -50,7 +50,7 @@ Scope {
                     Layout.fillWidth: true
                     visible: root.overflowCount > 0
                     implicitHeight: overflowLabel.implicitHeight + Theme.padding.normal * 2
-                    color: Theme.background
+                    color: Theme.surfaceContainer
                     border.color: Theme.outlineVariant
                     border.width: 1
                     radius: Theme.radius.full
@@ -75,26 +75,25 @@ Scope {
 
                         Layout.fillWidth: true
                         implicitHeight: content.implicitHeight + Theme.padding.large * 2
-                        color: Theme.background
+                        color: Theme.surfaceContainer
                         border.color: Theme.outlineVariant
                         border.width: 1
                         radius: Theme.radius.large
                         opacity: dismissed ? 0 : 1
                         x: dismissed ? width + 20 : 0
 
-                        Behavior on opacity { NumberAnimation { duration: 180 } }
-                        Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InCubic } }
+                        Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
+                        Behavior on x { Anim { curve: Theme.anim.accel } }
 
                         Component.onCompleted: slideInAnim.start()
 
-                        NumberAnimation {
+                        Anim {
                             id: slideInAnim
                             target: card
                             property: "x"
                             from: card.width + 20
                             to: 0
-                            duration: 200
-                            easing.type: Easing.OutCubic
+                            curve: Theme.anim.decel
                         }
 
                         HoverHandler { id: hoverHandler }
@@ -121,7 +120,7 @@ Scope {
                                         anchors.centerIn: parent
                                         text: "notifications"
                                         color: Theme.tertiary
-                                        font.pixelSize: 16
+                                        font.pixelSize: Theme.font.size.normal
                                     }
                                 }
 
@@ -164,19 +163,19 @@ Scope {
                                     StyledRect {
                                         id: actionBtn
                                         required property var modelData
-                                        property bool hovered: actionHover.hovered
 
                                         Layout.preferredHeight: 24
                                         implicitWidth: actionLabel.implicitWidth + Theme.padding.normal * 2
-                                        color: actionBtn.hovered ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+                                        color: Theme.surfaceContainer
                                         border.color: Theme.outlineVariant
                                         border.width: 1
                                         radius: Theme.radius.full
 
-                                        HoverHandler { id: actionHover }
+                                        StateLayer { pressed: actionTap.pressed }
+
                                         MouseArea {
+                                            id: actionTap
                                             anchors.fill: parent
-                                            hoverEnabled: true
                                             onClicked: {
                                                 actionBtn.modelData.invoke();
                                                 card.dismissed = true;

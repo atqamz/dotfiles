@@ -15,7 +15,7 @@ Pill {
     contentItem: StyledText {
         text: Time.now ? Qt.formatDateTime(Time.now, "HH:mm") : "--:--"
         color: Theme.text
-        font.pixelSize: 14
+        font.pixelSize: Theme.font.size.normal
         font.bold: true
     }
 }
