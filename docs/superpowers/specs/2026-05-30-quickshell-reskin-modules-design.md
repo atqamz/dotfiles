@@ -68,6 +68,29 @@ soft rounding, not by shadows.** Apply that:
   show. `elevation.margin` bleed is reserved only where R1 actually places a
   `StyledShadow` (nested cases).
 
+**Explicit tier ladder (mandatory — removes per-subagent guessing).** Subtle
+tiers (`#101010`/`#141414` on `#000`) are only ~6-8% luminance, so the tier
+*assignment* must be deterministic and give ≥3 readable steps. Today many
+surfaces (sidebar panel, all 3 dialog roots, overlay cards) are
+`Theme.background` (black) — re-skin moves each to the rung below:
+
+  | layer | surface | tier (Theme) | hex |
+  |-------|---------|--------------|-----|
+  | desktop backdrop | wallpaper/root | `background` | `#000000` |
+  | top-level panel / overlay card / OSD / pill body | sidebar panel, Launcher/Clipboard/Emoji/Cheatsheet/PassMenu/WindowPicker card, OSD, notification card | `surfaceContainer` | `#141414` |
+  | card / dialog nested in a panel | the 3 dialog roots (today `background`→ fix), CalendarWidget/TodoWidget/PomodoroWidget/QuickSliders/NotificationList widget surfaces | `surfaceContainerHigh` | `#1a1a1a` |
+  | selected / hovered list row inside a card | Bluetooth/WiFi connected rows, launcher current item | `surfaceContainerHighest` | `#202020` |
+
+Net stack `#000 < #141414 < #1a1a1a < #202020` — four readable steps. The 3 dialog
+roots (`NightLightDialog.qml:12`, `WiFiDialog.qml:12`, `BluetoothDialog.qml:11`)
+are currently `color: Theme.background` (black) — they nest inside the grey
+sidebar panel, so leaving them black inverts the elevation. Move them to
+`surfaceContainerHigh` (batch 4), then a `StyledShadow` under the dialog (Item-
+wrapped per the Layout rule) reads against the panel grey. Pill bodies move off
+`Theme.background` to `surfaceContainer` too (`Pill.qml:19`), keeping the
+`outlineVariant` hairline. Note: the `shown`/enter mechanism (R4) relies on the
+card item persisting (windows toggle `visible`, not `Loader.active`).
+
 ### R2 — State feedback on every interactive surface
 Any element with a `MouseArea`/`onClicked` (bar pills that act, ListView/
 GridView delegates, dialog rows, calendar nav, mode selectors, dismiss/clear
