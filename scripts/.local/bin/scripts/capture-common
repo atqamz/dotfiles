@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+#
+# Shared Hyprland capture-geometry helpers for `screenshot` and `screen-record`.
+# Source after bash-common. Requires hyprctl and jq on PATH.
+
+# Rotation-aware monitor geometry: swap logical width/height for 90/270-degree
+# transforms (transform 1 and 3), divide by scale, emit a grim "X,Y WxH" string.
+readonly CAPTURE_JQ_MONITOR_GEO='
+  def format_geo:
+    .x as $x | .y as $y |
+    (.width / .scale | floor) as $w |
+    (.height / .scale | floor) as $h |
+    .transform as $t |
+    if $t == 1 or $t == 3 then
+      "\($x),\($y) \($h)x\($w)"
+    else
+      "\($x),\($y) \($w)x\($h)"
+    end;
+'
+
+# Grim-geometry rectangles for every monitor and every client on the focused
+# monitor's active workspace (monitors first, then clients).
+capture_rectangles() {
+  local ws
+  ws=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+  hyprctl monitors -j | jq -r --arg ws "$ws" \
+    "${CAPTURE_JQ_MONITOR_GEO} .[] | select(.activeWorkspace.id == (\$ws | tonumber)) | format_geo"
+  hyprctl clients -j | jq -r --arg ws "$ws" \
+    '.[] | select(.workspace.id == ($ws | tonumber)) | "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"'
+}
+
+# capture_snap_to_rect SELECTION RECTS
+# A near-zero-area selection means the user clicked rather than dragged: return
+# the first rectangle in RECTS containing the click point. Otherwise echo
+# SELECTION unchanged.
+capture_snap_to_rect() {
+  local selection="$1" rects="$2"
+  [[ $selection =~ ^(-?[0-9]+),(-?[0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]] || { printf '%s' "$selection"; return; }
+  local sx=${BASH_REMATCH[1]} sy=${BASH_REMATCH[2]} sw=${BASH_REMATCH[3]} sh=${BASH_REMATCH[4]}
+  if ((sw * sh < 20)); then
+    while IFS= read -r rect; do
+      [[ $rect =~ ^(-?[0-9]+),(-?[0-9]+)[[:space:]]([0-9]+)x([0-9]+)$ ]] || continue
+      local rx=${BASH_REMATCH[1]} ry=${BASH_REMATCH[2]} rw=${BASH_REMATCH[3]} rh=${BASH_REMATCH[4]}
+      if ((sx >= rx && sx < rx + rw && sy >= ry && sy < ry + rh)); then
+        printf '%s,%s %sx%s' "$rx" "$ry" "$rw" "$rh"
+        return
+      fi
+    done <<< "$rects"
+  fi
+  printf '%s' "$selection"
+}
+
+# capture_match_monitor X Y W H
+# Echo the name of the monitor whose rotation-aware grim geometry exactly equals
+# the given rectangle, or nothing. Used to capture a whole output by name.
+capture_match_monitor() {
+  hyprctl monitors -j | jq -r --argjson x "$1" --argjson y "$2" --argjson w "$3" --argjson h "$4" '
+    .[]
+    | (.width / .scale | floor) as $mw
+    | (.height / .scale | floor) as $mh
+    | (if .transform == 1 or .transform == 3 then [$mh, $mw] else [$mw, $mh] end) as $dim
+    | select(.x == $x and .y == $y and $dim[0] == $w and $dim[1] == $h)
+    | .name' | head -1
+}
