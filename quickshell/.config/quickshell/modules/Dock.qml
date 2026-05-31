@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import qs.components
@@ -8,10 +7,6 @@ import "dock"
 
 Scope {
     id: root
-    IpcHandler {
-        target: "dock"
-        function toggle(): void { /* manual reveal hook (optional) */ }
-    }
 
     Variants {
         model: Quickshell.screens

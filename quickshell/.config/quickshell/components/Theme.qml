@@ -72,7 +72,7 @@ QtObject {
         readonly property QtObject family: QtObject {
             // UI font: Rubik (Fedora google-rubik-fonts, static multi-weight).
             readonly property string sans: Config.options.appearance.fontFamily
-            // Retained, unused by default UI.
+            // Monospace for code/preview text (cheatsheet, clipboard, about).
             readonly property string mono: "JetBrains Mono"
             // Rounded variant of the legacy Material Icons set — identical
             // ligature names to "Material Icons", so existing icon usages

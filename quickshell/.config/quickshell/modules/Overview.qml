@@ -55,7 +55,6 @@ Scope {
                 Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
                 Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
                 onRequestClose: root.open = false
-                // exit animation out of scope
             }
         }
     }
