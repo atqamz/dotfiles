@@ -1,5 +1,6 @@
 // quickshell/.config/quickshell/modules/EmojiPicker.qml
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
@@ -21,6 +22,15 @@ Scope {
         return Emojis.allEmojis.filter(e => e.name.includes(q) || e.ch === q);
     }
 
+    // Single flat list backing both the grid render and keyboard navigation, so
+    // currentIndex always maps to a visible cell. In browse mode recents are
+    // prepended, so arrow keys reach them too.
+    readonly property var displayList: {
+        if (root.query.length > 0) return root.allFiltered;
+        const rec = Emojis.recents.map(c => ({ ch: c, name: "recent" }));
+        return rec.concat(Emojis.allEmojis);
+    }
+
     function toggle(): void {
         root.open = !root.open;
         if (root.open) {
@@ -30,22 +40,28 @@ Scope {
     }
 
     function moveSelection(delta: int): void {
-        const len = root.allFiltered.length;
+        const len = root.displayList.length;
         if (len === 0) return;
-        root.currentIndex = (root.currentIndex + delta + len) % len;
+        let n = root.currentIndex + delta;
+        if (n < 0) n = 0;
+        if (n >= len) n = len - 1;
+        root.currentIndex = n;
     }
 
-    function copySelected(): void {
-        const list = root.allFiltered;
-        if (root.currentIndex < 0 || root.currentIndex >= list.length) return;
-        const e = list[root.currentIndex];
+    function copyEntry(ch: string): void {
+        if (!ch) return;
         root.open = false;
-        Emojis.bumpRecent(e.ch);
-        copyProc.command = ["sh", "-c", `printf '%s' '${e.ch}' | wl-copy`];
-        copyProc.running = true;
+        Emojis.bumpRecent(ch);
+        // Fresh process per copy — avoids the Process.running re-trigger race.
+        // $1 carries the emoji so there are no shell quoting/injection issues.
+        Quickshell.execDetached(["sh", "-c", 'printf %s "$1" | wl-copy', "emoji", ch]);
     }
 
-    Process { id: copyProc }
+    function copyCurrent(): void {
+        const l = root.displayList;
+        if (root.currentIndex >= 0 && root.currentIndex < l.length)
+            root.copyEntry(l[root.currentIndex].ch);
+    }
 
     IpcHandler {
         target: "emoji"
@@ -59,16 +75,17 @@ Scope {
             id: win
             required property var modelData
             screen: modelData
-            visible: root.open
+            // Only on the focused monitor — avoids duplicate cards on other
+            // screens and the keyboard-focus split between them.
+            visible: root.open && (!Hyprland.focusedMonitor || modelData.name === Hyprland.focusedMonitor.name)
 
-            // Recipe D: drive enter animation off `shown`; the visible property
-            // is already final when the window appears, so a plain Behavior on
-            // it won't animate. Exit is instant (window hides) — exit animation
-            // out of scope (re-skin).
             property bool shown: false
             onVisibleChanged: {
                 shown = visible;
-                if (visible) searchField.forceActiveFocus();
+                if (visible) {
+                    searchField.text = "";
+                    searchField.forceActiveFocus();
+                }
             }
 
             anchors {
@@ -97,15 +114,15 @@ Scope {
             StyledRect {
                 id: card
                 anchors.centerIn: parent
-                width: 560
-                height: 520
+                width: 600
+                height: 560
                 color: Theme.surfaceContainer
                 border.color: Theme.outlineVariant
                 border.width: 1
                 radius: Theme.radius.large
 
                 opacity: win.shown ? 1 : 0
-                scale: win.shown ? 1 : 0.94
+                scale: win.shown ? 1 : 0.96
                 transformOrigin: Item.Center
                 Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
                 Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
@@ -117,27 +134,31 @@ Scope {
                     anchors.margins: Theme.padding.larger
                     spacing: Theme.spacing.large
 
-                    RowLayout {
+                    Row {
                         Layout.fillWidth: true
                         spacing: Theme.spacing.large
 
                         MaterialIcon {
-                            Layout.alignment: Qt.AlignVCenter
-                            text: "mood"
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "search"
                             color: Theme.textVariant
                             font.pixelSize: Theme.font.size.extraLarge
+                            width: 28
                         }
 
                         TextField {
                             id: searchField
-                            Layout.fillWidth: true
+                            width: parent.width - 28 - parent.spacing
                             placeholderText: "Search emoji…"
                             color: Theme.text
                             placeholderTextColor: Theme.textMuted
+                            renderType: Text.NativeRendering
                             font.pixelSize: Theme.font.size.large
                             font.family: Theme.font.family.sans
-                            text: root.query
-                            onTextChanged: if (text !== root.query) root.query = text
+                            onTextChanged: {
+                                root.query = text;
+                                root.currentIndex = 0;
+                            }
                             background: Rectangle {
                                 radius: Theme.radius.small
                                 color: Theme.surfaceContainerHigh
@@ -158,142 +179,84 @@ Scope {
                                     root.moveSelection(-1);
                                     event.accepted = true;
                                 } else if (event.key === Qt.Key_Down) {
-                                    root.moveSelection(12);
+                                    root.moveSelection(grid.cols);
                                     event.accepted = true;
                                 } else if (event.key === Qt.Key_Up) {
-                                    root.moveSelection(-12);
+                                    root.moveSelection(-grid.cols);
                                     event.accepted = true;
                                 } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    root.copySelected();
+                                    root.copyCurrent();
                                     event.accepted = true;
                                 }
                             }
                         }
                     }
 
-                    ScrollView {
+                    GridView {
+                        id: grid
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
 
+                        property int cols: 9
+                        cellWidth: Math.floor(width / cols)
+                        cellHeight: 50
+
+                        model: root.displayList
+                        currentIndex: root.currentIndex
+                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, GridView.Contain)
+
+                        boundsBehavior: Flickable.StopAtBounds
+                        highlightMoveDuration: Theme.anim.durations.small
+                        highlight: Rectangle {
+                            radius: Theme.radius.small
+                            color: Theme.surfaceContainerHighest
+                            border.width: 1
+                            border.color: Theme.outline
+                        }
+
                         ScrollBar.vertical: StyledScrollBar {}
 
-                        ColumnLayout {
-                            width: searchField.parent.parent.width - Theme.padding.larger * 2
-                            spacing: Theme.spacing.normal
+                        delegate: Item {
+                            required property var modelData
+                            required property int index
+                            width: grid.cellWidth
+                            height: grid.cellHeight
 
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: Theme.spacing.small
-                                visible: root.query.length === 0 && Emojis.recents.length > 0
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: "RECENT"
-                                    color: Theme.textVariant
-                                    font.pixelSize: Theme.font.size.small
-                                    font.bold: true
-                                }
-
-                                GridLayout {
-                                    Layout.fillWidth: true
-                                    columns: 12
-                                    columnSpacing: 4
-                                    rowSpacing: 4
-
-                                    Repeater {
-                                        model: Emojis.recents
-
-                                        StyledRect {
-                                            id: recCell
-                                            required property string modelData
-                                            Layout.preferredWidth: 36
-                                            Layout.preferredHeight: 36
-                                            color: "transparent"
-                                            radius: Theme.radius.small
-
-                                            StateLayer {
-                                                pressed: recMa.pressed
-                                            }
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: recCell.modelData
-                                                font.pixelSize: Theme.font.size.extraLarge
-                                            }
-                                            MouseArea {
-                                                id: recMa
-                                                anchors.fill: parent
-                                                onClicked: {
-                                                    root.open = false;
-                                                    Emojis.bumpRecent(recCell.modelData);
-                                                    copyProc.command = ["sh", "-c", `printf '%s' '${recCell.modelData}' | wl-copy`];
-                                                    copyProc.running = true;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.ch
+                                font.pixelSize: 26
                             }
 
-                            Repeater {
-                                model: root.query.length === 0 ? Emojis.categories : [{ name: "Results", items: root.allFiltered }]
-
-                                ColumnLayout {
-                                    required property var modelData
-                                    Layout.fillWidth: true
-                                    spacing: Theme.spacing.small
-
-                                    StyledText {
-                                        Layout.fillWidth: true
-                                        text: modelData.name.toUpperCase()
-                                        color: Theme.textVariant
-                                        font.pixelSize: Theme.font.size.small
-                                        font.bold: true
-                                    }
-
-                                    GridLayout {
-                                        Layout.fillWidth: true
-                                        columns: 12
-                                        columnSpacing: 4
-                                        rowSpacing: 4
-
-                                        Repeater {
-                                            model: modelData.items
-
-                                            StyledRect {
-                                                id: gridCell
-                                                required property var modelData
-                                                Layout.preferredWidth: 36
-                                                Layout.preferredHeight: 36
-                                                color: "transparent"
-                                                radius: Theme.radius.small
-
-                                                StateLayer {
-                                                    pressed: gridMa.pressed
-                                                }
-
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: gridCell.modelData.ch
-                                                    font.pixelSize: Theme.font.size.extraLarge
-                                                }
-                                                MouseArea {
-                                                    id: gridMa
-                                                    anchors.fill: parent
-                                                    onClicked: {
-                                                        root.open = false;
-                                                        Emojis.bumpRecent(gridCell.modelData.ch);
-                                                        copyProc.command = ["sh", "-c", `printf '%s' '${gridCell.modelData.ch}' | wl-copy`];
-                                                        copyProc.running = true;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: root.currentIndex = index
+                                onClicked: root.copyEntry(modelData.ch)
                             }
                         }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: root.displayList.length > 0
+                        text: "↑ ↓ ← →  navigate      ↵  copy      esc  close"
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.font.size.smaller
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.displayList.length === 0
+                        text: "No emoji found"
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.font.size.normal
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                 }
             }
