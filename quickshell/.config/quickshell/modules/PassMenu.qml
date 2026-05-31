@@ -134,7 +134,7 @@ Scope {
 
                         MaterialIcon {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "key"
+                            text: "vpn_key"
                             color: Theme.textVariant
                             font.pixelSize: Theme.font.size.extraLarge
                             width: 28

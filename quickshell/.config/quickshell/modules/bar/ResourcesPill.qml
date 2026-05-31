@@ -64,7 +64,7 @@ Pill {
             spacing: 3
             MaterialIcon {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "auto_awesome_motion"
+                text: "gradient"
                 color: root.rampColor(Math.max(Resources.gpuUtilPct, Resources.gpuMemPct))
                 font.pixelSize: Theme.icon.size.small
             }
@@ -83,7 +83,7 @@ Pill {
             spacing: 3
             MaterialIcon {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "smart_toy"
+                text: "psychology"
                 color: {
                     if (ClaudeUsage.status === "critical") return Theme.error;
                     if (ClaudeUsage.status === "warning") return Theme.warning;

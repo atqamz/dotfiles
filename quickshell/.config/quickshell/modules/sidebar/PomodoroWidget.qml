@@ -145,7 +145,7 @@ Item {
 
                 MaterialIcon {
                     anchors.centerIn: parent
-                    text: "restart_alt"
+                    text: "autorenew"
                     color: Theme.textVariant
                 }
 

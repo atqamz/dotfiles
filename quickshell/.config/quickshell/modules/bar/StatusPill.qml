@@ -32,12 +32,12 @@ Pill {
         return Theme.textVariant;
     }
 
+    // The graduated battery_N_bar icons are Material Symbols only and absent
+    // from this repo's Material Icons font, so they would render as literal
+    // text. Stick to ligatures the classic font actually ships.
     readonly property string batteryIcon: {
         if (Battery.charging) return "battery_charging_full";
-        if (Battery.percent < 10) return "battery_alert";
-        if (Battery.percent < 25) return "battery_2_bar";
-        if (Battery.percent < 50) return "battery_4_bar";
-        if (Battery.percent < 75) return "battery_5_bar";
+        if (Battery.percent < 25) return "battery_alert";
         return "battery_full";
     }
 
