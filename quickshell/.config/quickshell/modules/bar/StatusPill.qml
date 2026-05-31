@@ -73,7 +73,7 @@ Pill {
                 StateLayer { pressed: updatesTap.pressed }
                 TapHandler {
                     id: updatesTap
-                    onTapped: Quickshell.execDetached(["kitty", "-e", "bash", "-c", "sudo dnf upgrade; read -n 1 -s -r -p 'Press any key to close...'"])
+                    onTapped: Quickshell.execDetached(["alacritty", "-e", "bash", "-c", "sudo dnf upgrade; read -n 1 -s -r -p 'Press any key to close...'"])
                 }
             }
             StyledText {
