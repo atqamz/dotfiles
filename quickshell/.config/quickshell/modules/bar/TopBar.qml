@@ -26,7 +26,10 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+    // Reserve the bar's strip so tiled windows never sit underneath it; the
+    // peek bar slides within this always-present bottom gap.
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: panel.panelHeight
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     Item {
@@ -50,31 +53,37 @@ PanelWindow {
         height: panel.pillHeight
         y: peek.slideFromY
 
-        RowLayout {
-            id: leftGroup
-            anchors.left: parent.left
+        // One cohesive island centered at the bottom edge. Pills are grouped
+        // by purpose (navigation / now-playing + time / system) with a wider
+        // gap between groups than within them, so the cluster reads as
+        // intentional instead of three things stranded across an empty bar.
+        Row {
+            id: island
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
-            LauncherPill   { id: launcher;   visible: Config.options.bar.showLauncher;   Layout.alignment: Qt.AlignVCenter }
-            WorkspacesPill { id: workspaces; visible: Config.options.bar.showWorkspaces; Layout.alignment: Qt.AlignVCenter }
-            MediaPill      { id: media;      visible: Config.options.bar.showMedia && MprisService.hasPlayer; Layout.alignment: Qt.AlignVCenter }
-        }
+            spacing: 14
 
-        ClockPill {
-            id: clock
-            visible: Config.options.bar.showClock
-            anchors.verticalCenter: parent.verticalCenter
-            x: parent.width / 2 - width / 2
-        }
+            Row {
+                spacing: 6
+                anchors.verticalCenter: parent.verticalCenter
+                LauncherPill   { id: launcher;   visible: Config.options.bar.showLauncher;   anchors.verticalCenter: parent.verticalCenter }
+                WorkspacesPill { id: workspaces; visible: Config.options.bar.showWorkspaces; anchors.verticalCenter: parent.verticalCenter }
+            }
 
-        RowLayout {
-            id: rightGroup
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
-            ResourcesPill { id: resources; visible: Config.options.bar.showResources; Layout.alignment: Qt.AlignVCenter }
-            TrayPill      { id: tray;      visible: Config.options.bar.showTray && TrayService.count > 0; Layout.alignment: Qt.AlignVCenter }
-            StatusPill    { id: status;    visible: Config.options.bar.showStatus;    Layout.alignment: Qt.AlignVCenter }
+            Row {
+                spacing: 6
+                anchors.verticalCenter: parent.verticalCenter
+                MediaPill { id: media; visible: Config.options.bar.showMedia && MprisService.hasPlayer; anchors.verticalCenter: parent.verticalCenter }
+                ClockPill { id: clock; visible: Config.options.bar.showClock;                            anchors.verticalCenter: parent.verticalCenter }
+            }
+
+            Row {
+                spacing: 6
+                anchors.verticalCenter: parent.verticalCenter
+                ResourcesPill { id: resources; visible: Config.options.bar.showResources;                 anchors.verticalCenter: parent.verticalCenter }
+                TrayPill      { id: tray;      visible: Config.options.bar.showTray && TrayService.count > 0; anchors.verticalCenter: parent.verticalCenter }
+                StatusPill    { id: status;    visible: Config.options.bar.showStatus;                    anchors.verticalCenter: parent.verticalCenter }
+            }
         }
     }
 
