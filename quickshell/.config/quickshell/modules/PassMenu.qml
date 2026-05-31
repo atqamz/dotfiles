@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import qs.components
+import "../components/Fuzzy.js" as Fuzzy
 
 Scope {
     id: root
@@ -15,9 +16,16 @@ Scope {
     property string storeDir: Quickshell.env("PASSWORD_STORE_DIR") || (Quickshell.env("HOME") + "/.password-store")
 
     readonly property var filteredEntries: {
-        const q = root.query.toLowerCase();
+        const q = root.query;
         if (q.length === 0) return root.entries;
-        return root.entries.filter(e => e.toLowerCase().includes(q));
+        const scored = [];
+        for (let i = 0; i < root.entries.length; ++i) {
+            const s = Fuzzy.score(q, root.entries[i]);
+            if (s !== null) scored.push({ e: root.entries[i], s, i });
+        }
+        // Sort by score desc; original (sorted) order breaks ties.
+        scored.sort((a, b) => (b.s - a.s) || (a.i - b.i));
+        return scored.map(x => x.e);
     }
 
     onFilteredEntriesChanged: root.currentIndex = 0
