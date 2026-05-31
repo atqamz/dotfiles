@@ -11,9 +11,12 @@ PanelWindow {
     screen: modelData
 
     readonly property int pillHeight: Config.options.bar.height
-    readonly property int edgeMargin: 6
+    readonly property int edgeMargin: 0
+    readonly property int topMargin: 4
     readonly property int hotZoneHeight: 12
-    readonly property int panelHeight: pillHeight + edgeMargin + 2
+    // Dock the islands flush to the bottom/side edges with a small top float:
+    // pillRow sits at y = topMargin and its bottom lands on the screen bottom.
+    readonly property int panelHeight: pillHeight + topMargin
 
     anchors {
         bottom: true
@@ -133,7 +136,7 @@ PanelWindow {
         id: peek
         slideTarget: pillRow
         slideFromY: panel.panelHeight
-        slideToY: 2
+        slideToY: panel.topMargin
         hotZoneItem: hotZone
         watchedItems: [hoverRegion]
         dwellMs: 600
