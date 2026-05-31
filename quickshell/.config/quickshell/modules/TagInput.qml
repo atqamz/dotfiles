@@ -64,7 +64,7 @@ Scope {
                 anchors.fill: parent
                 color: Theme.scrim
                 opacity: win.shown ? 1 : 0
-                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
 
                 MouseArea {
                     anchors.fill: parent
@@ -85,7 +85,7 @@ Scope {
                 opacity: win.shown ? 1 : 0
                 scale: win.shown ? 1 : 0.94
                 transformOrigin: Item.Center
-                Behavior on opacity { CAnim { duration: Theme.anim.durations.normal } }
+                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
                 Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
 
                 MouseArea { anchors.fill: parent }
