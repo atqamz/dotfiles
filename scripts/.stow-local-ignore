@@ -1,0 +1,15 @@
+# Top-level repo-tooling scripts (graphify-sync.sh, memory-stale-report.sh,
+# promote-memory.sh) are invoked by systemd user units via their path inside
+# the repo, not from $HOME. Keep stow from symlinking them into $HOME.
+^/[^/]+\.sh$
+
+# Stow's built-in ignore list is replaced once this file exists, so re-state
+# the defaults we still want (README/LICENSE ignored at the package root, plus
+# VCS and editor cruft).
+\.git
+\.gitignore
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING
