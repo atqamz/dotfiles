@@ -17,7 +17,7 @@ PanelWindow {
     readonly property int panelHeight: pillHeight + edgeMargin + 2
 
     anchors {
-        top: true
+        bottom: true
         left: true
         right: true
     }
@@ -33,7 +33,7 @@ PanelWindow {
         id: hotZone
         property bool hovered: hotHover.hovered
 
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         height: panel.hotZoneHeight
@@ -81,8 +81,8 @@ PanelWindow {
     PeekState {
         id: peek
         slideTarget: pillRow
-        slideFromY: -panel.panelHeight
-        slideToY: panel.edgeMargin
+        slideFromY: panel.panelHeight
+        slideToY: 2
         hotZoneItem: hotZone
         watchedItems: [launcher, workspaces, media, clock, resources, tray, status]
         dwellMs: 600
@@ -120,7 +120,7 @@ PanelWindow {
     mask: Region {
         x: 0
         width: panel.width
-        y: 0
+        y: peek.fullyHidden ? panel.panelHeight - panel.hotZoneHeight : 0
         height: peek.fullyHidden ? panel.hotZoneHeight : panel.panelHeight
     }
 }
