@@ -11,18 +11,13 @@ notifications, workspace helpers, web app manager, and utility scripts.
 
 - cliphist
 - wl-clipboard (`wl-paste`, `wl-copy`)
-- wtype
 - grim
 - slurp
 - hyprpicker
 - jq
 - satty (optional, screenshot editor)
-- rofi-wayland
-- rofimoji
 - pass
 - notify-send (libnotify)
-- python3
-- nvidia-smi (optional, for GPU status)
 - gpu-screen-recorder
 - ffmpeg (provides ffprobe)
 - v4l2-utils (v4l2-ctl, webcam overlay)

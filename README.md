@@ -12,14 +12,11 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `gnupg` | GnuPG agent configuration (symlinked manually, not stowed) |
 | `hypr` | Hyprland window manager, lock, and idle |
 | `opencode` | OpenCode AI assistant config |
+| `quickshell` | Quickshell desktop shell (bar, launcher, sidebar, overview) |
 | `readline` | Readline input configuration |
-| `rofi` | Application launcher theme |
 | `scripts` | Helper scripts (`~/.local/bin/scripts`) |
 | `swappy` | Screenshot editor configuration |
-| `swaync` | Notification center |
 | `tmux` | Terminal multiplexer |
-| `waybar` | Status bar |
-| `wlogout` | Logout menu |
 
 Each module has its own `README.md` with setup notes and dependencies.
 
