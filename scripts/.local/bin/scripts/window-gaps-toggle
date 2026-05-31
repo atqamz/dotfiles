@@ -4,11 +4,25 @@ script_dir="$(dirname "$(readlink -f "$0")")"
 source "${BASH_COMMON:-$script_dir/bash-common}"
 
 require_cmd hyprctl
+require_cmd jq
+
+gaps_state="$HOME/.local/state/toggles/gaps-in-value"
 
 if toggle gaps-off status; then
-  hyprctl keyword general:gaps_in 2 >/dev/null
+  # Gaps are currently zeroed: restore the value saved when they were turned
+  # off, so the toggle tracks whatever hyprland.conf configures (fallback 2).
+  restore="$(cat "$gaps_state" 2>/dev/null)"
+  [ -n "$restore" ] || restore=2
+  hyprctl keyword general:gaps_in "$restore" >/dev/null
   toggle gaps-off off
 else
+  # Capture the live (configured) gaps before zeroing. Skip the save when the
+  # value is already all-zero so a double-toggle can't lose the real value.
+  cur="$(hyprctl getoption general:gaps_in -j | jq -r '.custom // empty')"
+  if printf '%s' "$cur" | grep -q '[1-9]'; then
+    mkdir -p "$(dirname "$gaps_state")"
+    printf '%s\n' "$cur" > "$gaps_state"
+  fi
   hyprctl keyword general:gaps_in 0 >/dev/null
   toggle gaps-off on
 fi
