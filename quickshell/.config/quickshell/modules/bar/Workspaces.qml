@@ -1,5 +1,6 @@
 // quickshell/.config/quickshell/modules/bar/Workspaces.qml
 import QtQuick
+import Quickshell
 import Quickshell.Hyprland
 import qs.components
 
@@ -59,6 +60,14 @@ Item {
             else if (event.angleDelta.y > 0)
                 Hyprland.dispatch("workspace r-1");
         }
+    }
+
+    // Right-click anywhere on the strip toggles the overview (end-4 behaviour).
+    // Per-cell TapHandlers only accept LeftButton, so the right-click falls
+    // through to here.
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: Quickshell.execDetached(["qs", "ipc", "call", "overview", "toggle"])
     }
 
     // Occupied highlights

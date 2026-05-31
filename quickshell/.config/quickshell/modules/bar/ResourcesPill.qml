@@ -1,5 +1,6 @@
 // quickshell/.config/quickshell/modules/bar/ResourcesPill.qml
 import QtQuick
+import Quickshell
 import qs.components
 import qs.services
 
@@ -17,6 +18,13 @@ Pill {
     }
 
     HoverHandler { id: hoverHandler }
+
+    StateLayer { pressed: resourcesTap.pressed }
+
+    TapHandler {
+        id: resourcesTap
+        onTapped: Quickshell.execDetached(["qs", "ipc", "call", "sidebarRight", "toggle"])
+    }
 
     contentItem: Row {
         spacing: 10

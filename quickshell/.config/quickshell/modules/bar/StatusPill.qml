@@ -140,6 +140,10 @@ Pill {
             text: Network.connected ? "wifi" : "wifi_off"
             color: Network.connected ? Theme.text : Theme.warning
             font.pixelSize: Theme.icon.size.small
+
+            TapHandler {
+                onTapped: Quickshell.execDetached(["qs", "ipc", "call", "sidebarRight", "toggle"])
+            }
         }
 
         // battery
@@ -147,6 +151,10 @@ Pill {
             anchors.verticalCenter: parent.verticalCenter
             visible: Battery.present
             spacing: 4
+
+            TapHandler {
+                onTapped: Quickshell.execDetached(["qs", "ipc", "call", "sidebarRight", "toggle"])
+            }
 
             MaterialIcon {
                 anchors.verticalCenter: parent.verticalCenter

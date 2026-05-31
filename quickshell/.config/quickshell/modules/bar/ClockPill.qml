@@ -1,5 +1,6 @@
 // quickshell/.config/quickshell/modules/bar/ClockPill.qml
 import QtQuick
+import Quickshell
 import qs.components
 import qs.services
 
@@ -11,6 +12,13 @@ Pill {
     horizontalPadding: 12
 
     HoverHandler { id: hoverHandler }
+
+    StateLayer { pressed: clockTap.pressed }
+
+    TapHandler {
+        id: clockTap
+        onTapped: Quickshell.execDetached(["qs", "ipc", "call", "sidebarRight", "toggle"])
+    }
 
     contentItem: StyledText {
         text: Time.now ? Qt.formatDateTime(Time.now, Config.options.bar.clock24h ? "HH:mm" : "hh:mm AP") : "--:--"
