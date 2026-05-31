@@ -33,29 +33,9 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
-            Item {
-                property real radius: Theme.radius.small
-                implicitWidth: closeIcon.implicitWidth + 2 * Theme.padding.smaller
-                implicitHeight: closeIcon.implicitHeight + 2 * Theme.padding.smaller
-
-                StateLayer {
-                    id: closeState
-                    pressed: closeMa.pressed
-                }
-
-                MaterialIcon {
-                    id: closeIcon
-                    anchors.centerIn: parent
-                    text: "close"
-                    color: Theme.textVariant
-                    font.pixelSize: Theme.icon.size.small
-                }
-
-                MouseArea {
-                    id: closeMa
-                    anchors.fill: parent
-                    onClicked: root.dismiss()
-                }
+            IconButton {
+                icon: "close"
+                onClicked: root.dismiss()
             }
         }
 

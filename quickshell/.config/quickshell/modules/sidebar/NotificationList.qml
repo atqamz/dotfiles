@@ -33,27 +33,12 @@ Item {
 
             Item { Layout.fillWidth: true }
 
-            Item {
+            IconButton {
                 visible: NotificationHistory.history.length > 0
-                property real radius: Theme.radius.full
-                implicitWidth: clearIcon.implicitWidth + 2 * Theme.padding.small
-                implicitHeight: clearIcon.implicitHeight + 2 * Theme.padding.small
-
-                MaterialIcon {
-                    id: clearIcon
-                    anchors.centerIn: parent
-                    text: "clear_all"
-                    color: Theme.textVariant
-                    font.pixelSize: Theme.icon.size.small
-                }
-
-                StateLayer { pressed: clearTap.pressed }
-
-                MouseArea {
-                    id: clearTap
-                    anchors.fill: parent
-                    onClicked: NotificationHistory.clear()
-                }
+                radius: Theme.radius.full
+                padding: Theme.padding.small
+                icon: "clear_all"
+                onClicked: NotificationHistory.clear()
             }
         }
 

@@ -14,3 +14,4 @@ StyledToolTip 1.0 StyledToolTip.qml
 StyledScrollBar 1.0 StyledScrollBar.qml
 StyledProgressBar 1.0 StyledProgressBar.qml
 SearchOverlay 1.0 SearchOverlay.qml
+IconButton 1.0 IconButton.qml

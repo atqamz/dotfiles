@@ -109,51 +109,20 @@ Item {
                         font.strikeout: modelData.done
                     }
 
-                    Item {
-                        property real radius: Theme.radius.full
-                        implicitWidth: doneIcon.implicitWidth + 2 * Theme.padding.small
-                        implicitHeight: doneIcon.implicitHeight + 2 * Theme.padding.small
-
-                        MaterialIcon {
-                            id: doneIcon
-                            anchors.centerIn: parent
-                            text: modelData.done ? "undo" : "check"
-                            color: Theme.textVariant
-                            font.pixelSize: Theme.icon.size.small
-                        }
-
-                        StateLayer { pressed: doneTap.pressed }
-
-                        MouseArea {
-                            id: doneTap
-                            anchors.fill: parent
-                            onClicked: Todo.markDone(modelData.index)
-                        }
+                    IconButton {
+                        radius: Theme.radius.full
+                        padding: Theme.padding.small
+                        icon: modelData.done ? "undo" : "check"
+                        onClicked: Todo.markDone(modelData.index)
                     }
 
-                    Item {
-                        property real radius: Theme.radius.full
-                        implicitWidth: deleteIcon.implicitWidth + 2 * Theme.padding.small
-                        implicitHeight: deleteIcon.implicitHeight + 2 * Theme.padding.small
-
-                        MaterialIcon {
-                            id: deleteIcon
-                            anchors.centerIn: parent
-                            text: "delete"
-                            color: Theme.error
-                            font.pixelSize: Theme.icon.size.small
-                        }
-
-                        StateLayer {
-                            pressed: deleteTap.pressed
-                            tint: Theme.error
-                        }
-
-                        MouseArea {
-                            id: deleteTap
-                            anchors.fill: parent
-                            onClicked: Todo.deleteItem(modelData.index)
-                        }
+                    IconButton {
+                        radius: Theme.radius.full
+                        padding: Theme.padding.small
+                        icon: "delete"
+                        iconColor: Theme.error
+                        tint: Theme.error
+                        onClicked: Todo.deleteItem(modelData.index)
                     }
                 }
             }
