@@ -64,7 +64,7 @@ PanelWindow {
             acceptedButtons: Qt.NoButton
             property bool hovered: containsMouse
 
-            // LEFT: launcher + focused-window title
+            // LEFT: launcher + workspace numbers + focused-window title
             BarGroup {
                 id: leftGroup
                 anchors.left: parent.left
@@ -75,65 +75,46 @@ PanelWindow {
                     visible: Config.options.bar.showLauncher
                     anchors.verticalCenter: parent.verticalCenter
                 }
+                Workspaces {
+                    id: workspaces
+                    visible: Config.options.bar.showWorkspaces
+                    anchors.verticalCenter: parent.verticalCenter
+                }
                 ActiveWindow {
                     id: activeWindow
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
 
-            // CENTER: resources + media | workspaces | clock
-            Row {
-                id: centerRow
+            // CENTER: clock only
+            BarGroup {
+                id: centerGroup
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                visible: Config.options.bar.showClock
 
-                BarGroup {
-                    id: centerLeftGroup
+                ClockPill {
+                    chrome: false
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: Config.options.bar.showResources || (Config.options.bar.showMedia && MprisService.hasPlayer)
-
-                    ResourcesPill {
-                        chrome: false
-                        visible: Config.options.bar.showResources
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    MediaPill {
-                        chrome: false
-                        visible: Config.options.bar.showMedia && MprisService.hasPlayer
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                BarGroup {
-                    id: centerGroup
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Config.options.bar.showWorkspaces
-
-                    Workspaces {
-                        id: workspaces
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                BarGroup {
-                    id: centerRightGroup
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Config.options.bar.showClock
-
-                    ClockPill {
-                        chrome: false
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
                 }
             }
 
-            // RIGHT: tray + status
+            // RIGHT: usage + media + tray + status
             BarGroup {
                 id: rightGroup
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
 
+                ResourcesPill {
+                    chrome: false
+                    visible: Config.options.bar.showResources
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                MediaPill {
+                    chrome: false
+                    visible: Config.options.bar.showMedia && MprisService.hasPlayer
+                    anchors.verticalCenter: parent.verticalCenter
+                }
                 TrayPill {
                     chrome: false
                     visible: Config.options.bar.showTray && TrayService.count > 0
