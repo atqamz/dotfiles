@@ -49,3 +49,20 @@ function score(query, text) {
     // Tiebreaker: prefer shorter strings so exact-ish entries float up.
     return total - text.length * 0.01;
 }
+
+// rank(query, items, keyFn) filters items to those whose key string fuzzy-
+// matches query and returns them ordered best-first. keyFn maps an item to the
+// string to match (defaults to identity for arrays of strings). An empty query
+// returns a copy of items unchanged, preserving the caller's original order.
+// Ties resolve to original index, so equally-scored items keep input order.
+function rank(query, items, keyFn) {
+    if (query.length === 0) return items.slice();
+    var key = keyFn || function (x) { return x; };
+    var scored = [];
+    for (var i = 0; i < items.length; ++i) {
+        var s = score(query, key(items[i]));
+        if (s !== null) scored.push({ item: items[i], s: s, i: i });
+    }
+    scored.sort(function (a, b) { return (b.s - a.s) || (a.i - b.i); });
+    return scored.map(function (x) { return x.item; });
+}

@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import qs.components
+import "../components/Fuzzy.js" as Fuzzy
 
 Scope {
     id: root
@@ -28,17 +29,29 @@ Scope {
     }
 
     readonly property var filteredApps: {
-        const q = root.query.toLowerCase();
-        const all = DesktopEntries.applications.values;
-        const filtered = all.filter(app => {
-            if (app.noDisplay) return false;
-            if (q.length === 0) return true;
-            return app.name.toLowerCase().includes(q)
-                || (app.genericName || "").toLowerCase().includes(q)
-                || (app.comment || "").toLowerCase().includes(q);
-        });
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        return filtered.slice(0, 8);
+        const q = root.query;
+        const visible = DesktopEntries.applications.values.filter(app => !app.noDisplay);
+        if (q.length === 0) {
+            visible.sort((a, b) => a.name.localeCompare(b.name));
+            return visible.slice(0, 8);
+        }
+        // Tiered fuzzy match: a name hit always outranks a genericName hit, which
+        // outranks a comment hit. Within a tier the fuzzy score (then name)
+        // orders results. The 1000-point tier gaps dwarf any single score.
+        const scored = [];
+        for (let i = 0; i < visible.length; ++i) {
+            const app = visible[i];
+            const sn = Fuzzy.score(q, app.name);
+            const sg = Fuzzy.score(q, app.genericName || "");
+            const sc = Fuzzy.score(q, app.comment || "");
+            let best = null;
+            if (sn !== null) best = sn;
+            else if (sg !== null) best = sg - 1000;
+            else if (sc !== null) best = sc - 2000;
+            if (best !== null) scored.push({ app, s: best });
+        }
+        scored.sort((a, b) => (b.s - a.s) || a.app.name.localeCompare(b.app.name));
+        return scored.slice(0, 8).map(x => x.app);
     }
 
     readonly property var resultRows: {

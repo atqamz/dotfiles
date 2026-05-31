@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import qs.components
+import "../components/Fuzzy.js" as Fuzzy
 
 Scope {
     id: root
@@ -14,11 +15,7 @@ Scope {
     property int currentIndex: 0
     property var entries: []
 
-    readonly property var filteredEntries: {
-        const q = root.query.toLowerCase();
-        if (q.length === 0) return root.entries;
-        return root.entries.filter(e => e.preview.toLowerCase().includes(q));
-    }
+    readonly property var filteredEntries: Fuzzy.rank(root.query, root.entries, e => e.preview)
 
     onFilteredEntriesChanged: root.currentIndex = 0
 

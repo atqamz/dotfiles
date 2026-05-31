@@ -15,18 +15,7 @@ Scope {
     property var entries: []
     property string storeDir: Quickshell.env("PASSWORD_STORE_DIR") || (Quickshell.env("HOME") + "/.password-store")
 
-    readonly property var filteredEntries: {
-        const q = root.query;
-        if (q.length === 0) return root.entries;
-        const scored = [];
-        for (let i = 0; i < root.entries.length; ++i) {
-            const s = Fuzzy.score(q, root.entries[i]);
-            if (s !== null) scored.push({ e: root.entries[i], s, i });
-        }
-        // Sort by score desc; original (sorted) order breaks ties.
-        scored.sort((a, b) => (b.s - a.s) || (a.i - b.i));
-        return scored.map(x => x.e);
-    }
+    readonly property var filteredEntries: Fuzzy.rank(root.query, root.entries)
 
     onFilteredEntriesChanged: root.currentIndex = 0
 

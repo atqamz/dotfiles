@@ -8,6 +8,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import qs.components
 import qs.services
+import "../components/Fuzzy.js" as Fuzzy
 
 Scope {
     id: root
@@ -17,9 +18,20 @@ Scope {
     property int currentIndex: 0
 
     readonly property var allFiltered: {
-        const q = root.query.toLowerCase();
+        const q = root.query;
         if (q.length === 0) return Emojis.allEmojis;
-        return Emojis.allEmojis.filter(e => e.name.includes(q) || e.ch === q);
+        // Typing the emoji glyph itself pins an exact match to the top; otherwise
+        // fuzzy-match the CLDR name (underscores read as word boundaries).
+        const all = Emojis.allEmojis;
+        const scored = [];
+        for (let i = 0; i < all.length; ++i) {
+            const e = all[i];
+            if (e.ch === q) { scored.push({ e, s: Infinity, i }); continue; }
+            const s = Fuzzy.score(q, e.name);
+            if (s !== null) scored.push({ e, s, i });
+        }
+        scored.sort((a, b) => (b.s - a.s) || (a.i - b.i));
+        return scored.map(x => x.e);
     }
 
     // Single flat list backing both the grid render and keyboard navigation, so
