@@ -33,6 +33,7 @@ Item {
             leftPadding: Theme.padding.normal
             text: root.text
             color: Theme.text
+            renderType: Text.NativeRendering
             font.pixelSize: Theme.font.size.normal
             font.family: Theme.font.family.sans
             background: null

@@ -129,6 +129,7 @@ Scope {
                             placeholderText: "Filter…"
                             color: Theme.text
                             placeholderTextColor: Theme.textMuted
+                            renderType: Text.NativeRendering
                             font.pixelSize: Theme.font.size.normal
                             font.family: Theme.font.family.sans
                             text: root.query

@@ -180,6 +180,7 @@ Scope {
                             placeholderText: "Search clipboard…"
                             color: Theme.text
                             placeholderTextColor: Theme.textMuted
+                            renderType: Text.NativeRendering
                             font.pixelSize: Theme.font.size.large
                             font.family: Theme.font.family.sans
                             text: root.query

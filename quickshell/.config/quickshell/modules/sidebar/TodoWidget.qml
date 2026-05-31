@@ -213,6 +213,7 @@ Item {
                 Layout.fillWidth: true
                 placeholderText: "New task..."
                 color: Theme.text
+                renderType: Text.NativeRendering
                 font.family: Theme.font.family.sans
                 font.pixelSize: Theme.font.size.normal
 
