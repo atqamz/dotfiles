@@ -10,14 +10,18 @@ StyledRect {
 
     property Item contentItem: null
     property int horizontalPadding: 12
+    // When false the capsule chrome (background, border, radius, padding) is
+    // dropped so the pill can sit bare inside a BarGroup that supplies its own
+    // surface. Content and interaction handlers are unaffected.
+    property bool chrome: true
 
     implicitHeight: 28
-    implicitWidth: (contentItem ? contentItem.implicitWidth : 0) + 2 * horizontalPadding
+    implicitWidth: (contentItem ? contentItem.implicitWidth : 0) + 2 * (chrome ? horizontalPadding : 0)
 
-    color: Theme.surfaceContainer
+    color: chrome ? Theme.surfaceContainer : "transparent"
     border.color: Theme.outlineVariant
-    border.width: 1
-    radius: Theme.radius.full
+    border.width: chrome ? 1 : 0
+    radius: chrome ? Theme.radius.full : 0
 
     onContentItemChanged: {
         if (contentItem) {

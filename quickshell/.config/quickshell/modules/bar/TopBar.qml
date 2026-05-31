@@ -1,6 +1,5 @@
 // quickshell/.config/quickshell/modules/bar/TopBar.qml
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.components
@@ -26,10 +25,11 @@ PanelWindow {
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Top
-    // Reserve the bar's strip so tiled windows never sit underneath it; the
-    // peek bar slides within this always-present bottom gap.
+    // Reserve the bar's strip only while it is revealed; when fully hidden the
+    // zone collapses to 0 so tiled windows reclaim the bottom edge and the bar
+    // peeks back over them on hover.
     exclusionMode: ExclusionMode.Normal
-    exclusiveZone: panel.panelHeight
+    exclusiveZone: peek.fullyHidden ? 0 : panel.panelHeight
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
     Item {
@@ -53,36 +53,97 @@ PanelWindow {
         height: panel.pillHeight
         y: peek.slideFromY
 
-        // One cohesive island centered at the bottom edge. Pills are grouped
-        // by purpose (navigation / now-playing + time / system) with a wider
-        // gap between groups than within them, so the cluster reads as
-        // intentional instead of three things stranded across an empty bar.
-        Row {
-            id: island
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 14
+        // Whole-bar hover region (end-4 model): a parent MouseArea keeps the
+        // bar revealed while the pointer is anywhere over it, including the
+        // gaps between groups. It accepts no buttons, so clicks fall through to
+        // the child groups.
+        MouseArea {
+            id: hoverRegion
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            property bool hovered: containsMouse
 
-            Row {
-                spacing: 6
+            // LEFT: launcher + focused-window title
+            BarGroup {
+                id: leftGroup
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                LauncherPill   { id: launcher;   visible: Config.options.bar.showLauncher;   anchors.verticalCenter: parent.verticalCenter }
-                WorkspacesPill { id: workspaces; visible: Config.options.bar.showWorkspaces; anchors.verticalCenter: parent.verticalCenter }
+
+                LauncherPill {
+                    chrome: false
+                    visible: Config.options.bar.showLauncher
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                ActiveWindow {
+                    id: activeWindow
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
+            // CENTER: resources + media | workspaces | clock
             Row {
-                spacing: 6
+                id: centerRow
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                MediaPill { id: media; visible: Config.options.bar.showMedia && MprisService.hasPlayer; anchors.verticalCenter: parent.verticalCenter }
-                ClockPill { id: clock; visible: Config.options.bar.showClock;                            anchors.verticalCenter: parent.verticalCenter }
+                spacing: 6
+
+                BarGroup {
+                    id: centerLeftGroup
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Config.options.bar.showResources || (Config.options.bar.showMedia && MprisService.hasPlayer)
+
+                    ResourcesPill {
+                        chrome: false
+                        visible: Config.options.bar.showResources
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    MediaPill {
+                        chrome: false
+                        visible: Config.options.bar.showMedia && MprisService.hasPlayer
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                BarGroup {
+                    id: centerGroup
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Config.options.bar.showWorkspaces
+
+                    Workspaces {
+                        id: workspaces
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                BarGroup {
+                    id: centerRightGroup
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Config.options.bar.showClock
+
+                    ClockPill {
+                        chrome: false
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
             }
 
-            Row {
-                spacing: 6
+            // RIGHT: tray + status
+            BarGroup {
+                id: rightGroup
+                anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                ResourcesPill { id: resources; visible: Config.options.bar.showResources;                 anchors.verticalCenter: parent.verticalCenter }
-                TrayPill      { id: tray;      visible: Config.options.bar.showTray && TrayService.count > 0; anchors.verticalCenter: parent.verticalCenter }
-                StatusPill    { id: status;    visible: Config.options.bar.showStatus;                    anchors.verticalCenter: parent.verticalCenter }
+
+                TrayPill {
+                    chrome: false
+                    visible: Config.options.bar.showTray && TrayService.count > 0
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+                StatusPill {
+                    chrome: false
+                    visible: Config.options.bar.showStatus
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
     }
@@ -93,37 +154,13 @@ PanelWindow {
         slideFromY: panel.panelHeight
         slideToY: 2
         hotZoneItem: hotZone
-        watchedItems: [launcher, workspaces, media, clock, resources, tray, status]
+        watchedItems: [hoverRegion]
         dwellMs: 600
     }
 
     Connections {
-        target: launcher
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: workspaces
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: media
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: clock
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: resources
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: tray
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
-    }
-    Connections {
-        target: status
-        function onHoveredChanged() { peek.notifyWatchedHoverChanged(); }
+        target: hoverRegion
+        function onContainsMouseChanged() { peek.notifyWatchedHoverChanged(); }
     }
 
     mask: Region {
