@@ -1,7 +1,6 @@
 // quickshell/.config/quickshell/modules/Clipboard.qml
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import qs.components
@@ -97,202 +96,105 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
-            id: win
-            required property var modelData
-            screen: modelData
-            visible: root.open
+        SearchOverlay {
+            opened: root.open
+            queryText: root.query
+            onQueryEdited: text => root.query = text
+            icon: "content_paste"
+            placeholder: "Search clipboard…"
+            cardWidth: 680
+            cardHeight: 520
+            captureDelete: true
 
-            // Recipe D: drive enter animation off `shown`; the visible property
-            // is already final when the window appears, so a plain Behavior on
-            // it won't animate. Exit is instant (window hides) — exit animation
-            // out of scope (re-skin).
-            property bool shown: false
-            onVisibleChanged: {
-                shown = visible;
-                if (visible) searchField.forceActiveFocus();
-            }
-
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
-            }
-
-            color: "transparent"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-
-            Rectangle {
-                anchors.fill: parent
-                color: Theme.scrim
-                opacity: win.shown ? 1 : 0
-                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.open = false
+            onEscaped: root.open = false
+            onAccepted: root.pasteSelected()
+            onNavigate: key => {
+                if (key === Qt.Key_Down || key === Qt.Key_Tab) {
+                    root.moveSelection(1);
+                } else if (key === Qt.Key_Up || key === Qt.Key_Backtab) {
+                    root.moveSelection(-1);
+                } else if (key === Qt.Key_Delete) {
+                    const list = root.filteredEntries;
+                    if (root.currentIndex >= 0 && root.currentIndex < list.length)
+                        root.deleteEntry(list[root.currentIndex].id);
                 }
             }
 
-            StyledRect {
-                id: card
-                anchors.centerIn: parent
-                width: 680
-                height: 520
-                color: Theme.surfaceContainer
-                border.color: Theme.outlineVariant
-                border.width: 1
-                radius: Theme.radius.large
+            resultView: ListView {
+                anchors.fill: parent
+                clip: true
+                keyNavigationEnabled: false
+                currentIndex: root.currentIndex
+                model: root.filteredEntries
+                spacing: 2
 
-                opacity: win.shown ? 1 : 0
-                scale: win.shown ? 1 : 0.94
-                transformOrigin: Item.Center
-                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
-                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
+                ScrollBar.vertical: StyledScrollBar {}
 
-                MouseArea { anchors.fill: parent }
+                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: Theme.padding.larger
-                    spacing: Theme.spacing.large
+                delegate: StyledRect {
+                    required property var modelData
+                    required property int index
+                    width: ListView.view.width
+                    height: 48
+                    color: index === root.currentIndex ? Theme.surfaceContainerHighest : "transparent"
+                    radius: Theme.radius.normal
+
+                    StateLayer {
+                        pressed: rowMa.pressed
+                        focused: ListView.isCurrentItem
+                    }
 
                     Row {
-                        width: parent.width
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.padding.large
+                        anchors.rightMargin: Theme.padding.large
                         spacing: Theme.spacing.large
+
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.id
+                            color: Theme.textDim
+                            font.pixelSize: Theme.font.size.small
+                            font.family: Theme.font.family.mono
+                            width: 44
+                            elide: Text.ElideRight
+                        }
 
                         MaterialIcon {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "content_paste"
-                            color: Theme.textVariant
-                            font.pixelSize: Theme.font.size.extraLarge
-                            width: 28
+                            text: {
+                                if (modelData.kind === "image") return "image";
+                                if (modelData.kind === "link") return "link";
+                                return "subject";
+                            }
+                            color: Theme.textDim
+                            font.pixelSize: Theme.icon.size.small
+                            width: 22
                         }
 
-                        TextField {
-                            id: searchField
-                            width: parent.width - 28 - parent.spacing
-                            placeholderText: "Search clipboard…"
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.kind === "image" ? "[image]" : modelData.preview
                             color: Theme.text
-                            placeholderTextColor: Theme.textMuted
-                            renderType: Text.NativeRendering
-                            font.pixelSize: Theme.font.size.large
-                            font.family: Theme.font.family.sans
-                            text: root.query
-                            onTextChanged: if (text !== root.query) root.query = text
-                            background: Rectangle {
-                                radius: Theme.radius.small
-                                color: Theme.surfaceContainerHigh
-                                border.width: 1
-                                border.color: searchField.activeFocus ? Theme.primary : Theme.outline
-                                Behavior on border.color { CAnim {} }
-                            }
-                            padding: Theme.padding.normal
-
-                            Keys.onPressed: event => {
-                                if (event.key === Qt.Key_Escape) {
-                                    root.open = false;
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Down) {
-                                    root.moveSelection(1);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Up) {
-                                    root.moveSelection(-1);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    root.pasteSelected();
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Delete) {
-                                    const list = root.filteredEntries;
-                                    if (root.currentIndex >= 0 && root.currentIndex < list.length) {
-                                        root.deleteEntry(list[root.currentIndex].id);
-                                    }
-                                    event.accepted = true;
-                                }
-                            }
+                            font.pixelSize: Theme.font.size.normal
+                            width: parent.width - 44 - 22 - parent.spacing * 3
+                            elide: Text.ElideRight
                         }
                     }
 
-                    ListView {
-                        width: parent.width
-                        height: parent.height - searchField.height - parent.spacing
-                        clip: true
-                        keyNavigationEnabled: false
-                        currentIndex: root.currentIndex
-                        model: root.filteredEntries
-                        spacing: 2
-
-                        ScrollBar.vertical: StyledScrollBar {}
-
-                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
-
-                        delegate: StyledRect {
-                            required property var modelData
-                            required property int index
-                            width: ListView.view.width
-                            height: 48
-                            color: index === root.currentIndex ? Theme.surfaceContainerHighest : "transparent"
-                            radius: Theme.radius.normal
-
-                            StateLayer {
-                                pressed: rowMa.pressed
-                                focused: ListView.isCurrentItem
-                            }
-
-                            Row {
-                                anchors.fill: parent
-                                anchors.leftMargin: Theme.padding.large
-                                anchors.rightMargin: Theme.padding.large
-                                spacing: Theme.spacing.large
-
-                                StyledText {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.id
-                                    color: Theme.textDim
-                                    font.pixelSize: Theme.font.size.small
-                                    font.family: Theme.font.family.mono
-                                    width: 44
-                                    elide: Text.ElideRight
-                                }
-
-                                MaterialIcon {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: {
-                                        if (modelData.kind === "image") return "image";
-                                        if (modelData.kind === "link") return "link";
-                                        return "subject";
-                                    }
-                                    color: Theme.textDim
-                                    font.pixelSize: Theme.icon.size.small
-                                    width: 22
-                                }
-
-                                StyledText {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.kind === "image" ? "[image]" : modelData.preview
-                                    color: Theme.text
-                                    font.pixelSize: Theme.font.size.normal
-                                    width: parent.width - 44 - 22 - parent.spacing * 3
-                                    elide: Text.ElideRight
-                                }
-                            }
-
-                            MouseArea {
-                                id: rowMa
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                onEntered: root.currentIndex = index
-                                onClicked: function(mouse) {
-                                    root.currentIndex = index;
-                                    if (mouse.button === Qt.RightButton) {
-                                        root.deleteEntry(modelData.id);
-                                    } else {
-                                        root.pasteSelected();
-                                    }
-                                }
+                    MouseArea {
+                        id: rowMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onEntered: root.currentIndex = index
+                        onClicked: function(mouse) {
+                            root.currentIndex = index;
+                            if (mouse.button === Qt.RightButton) {
+                                root.deleteEntry(modelData.id);
+                            } else {
+                                root.pasteSelected();
                             }
                         }
                     }

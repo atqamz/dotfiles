@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import qs.components
@@ -80,181 +79,88 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
-            id: win
-            required property var modelData
-            screen: modelData
-            visible: root.open
+        SearchOverlay {
+            opened: root.open
+            queryText: root.query
+            onQueryEdited: text => root.query = text
+            icon: "tab"
+            placeholder: "Search windows…"
+            cardWidth: 680
+            cardHeight: 440
 
-            property bool shown: false
-            onVisibleChanged: {
-                shown = visible;
-                if (visible) searchField.forceActiveFocus();
+            onEscaped: root.open = false
+            onAccepted: root.focusSelected()
+            onNavigate: key => {
+                if (key === Qt.Key_Down || key === Qt.Key_Tab)
+                    root.moveSelection(1);
+                else if (key === Qt.Key_Up || key === Qt.Key_Backtab)
+                    root.moveSelection(-1);
             }
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
-            }
-
-            color: "transparent"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-
-            Rectangle {
+            resultView: ListView {
                 anchors.fill: parent
-                color: Theme.scrim
-                opacity: win.shown ? 1 : 0
-                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
+                clip: true
+                keyNavigationEnabled: false
+                currentIndex: root.currentIndex
+                model: root.filteredWindows
+                spacing: 2
 
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.open = false
-                }
-            }
+                ScrollBar.vertical: StyledScrollBar {}
 
-            StyledRect {
-                id: card
-                anchors.centerIn: parent
-                width: 680
-                height: 440
-                color: Theme.surfaceContainer
-                border.color: Theme.outlineVariant
-                border.width: 1
-                radius: Theme.radius.large
+                onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
 
-                opacity: win.shown ? 1 : 0
-                scale: win.shown ? 1 : 0.94
-                transformOrigin: Item.Center
-                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
-                Behavior on scale { Anim { curve: Theme.anim.spring; duration: Theme.anim.durations.spring } }
+                delegate: StyledRect {
+                    required property var modelData
+                    required property int index
+                    width: ListView.view.width
+                    height: 40
+                    color: index === root.currentIndex ? Theme.surfaceContainerHighest : "transparent"
+                    radius: Theme.radius.normal
 
-                MouseArea { anchors.fill: parent }
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: Theme.padding.larger
-                    spacing: Theme.spacing.large
+                    StateLayer {
+                        pressed: rowMa.pressed
+                        focused: ListView.isCurrentItem
+                    }
 
                     Row {
-                        width: parent.width
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.padding.large
+                        anchors.rightMargin: Theme.padding.large
                         spacing: Theme.spacing.large
 
-                        MaterialIcon {
+                        StyledText {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "tab"
-                            color: Theme.textVariant
-                            font.pixelSize: Theme.font.size.extraLarge
-                            width: 28
+                            text: `[${modelData.workspace}]`
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.font.size.small
+                            width: 56
                         }
-
-                        TextField {
-                            id: searchField
-                            width: parent.width - 28 - parent.spacing
-                            placeholderText: "Search windows…"
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.cls
+                            color: Theme.textVariant
+                            font.pixelSize: Theme.font.size.normal
+                            width: 160
+                            elide: Text.ElideRight
+                        }
+                        StyledText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.title
                             color: Theme.text
-                            placeholderTextColor: Theme.textMuted
-                            renderType: Text.NativeRendering
-                            font.pixelSize: Theme.font.size.large
-                            font.family: Theme.font.family.sans
-                            text: root.query
-                            onTextChanged: if (text !== root.query) root.query = text
-                            background: Rectangle {
-                                radius: Theme.radius.small
-                                color: Theme.surfaceContainerHigh
-                                border.width: 1
-                                border.color: searchField.activeFocus ? Theme.primary : Theme.outline
-                                Behavior on border.color { CAnim {} }
-                            }
-                            padding: Theme.padding.normal
-
-                            Keys.onPressed: event => {
-                                if (event.key === Qt.Key_Escape) {
-                                    root.open = false;
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Down || event.key === Qt.Key_Tab) {
-                                    root.moveSelection(1);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
-                                    root.moveSelection(-1);
-                                    event.accepted = true;
-                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                    root.focusSelected();
-                                    event.accepted = true;
-                                }
-                            }
+                            font.pixelSize: Theme.font.size.normal
+                            width: parent.width - 56 - 160 - parent.spacing * 2
+                            elide: Text.ElideRight
                         }
                     }
 
-                    ListView {
-                        width: parent.width
-                        height: parent.height - searchField.height - parent.spacing
-                        clip: true
-                        keyNavigationEnabled: false
-                        currentIndex: root.currentIndex
-                        model: root.filteredWindows
-                        spacing: 2
-
-                        ScrollBar.vertical: StyledScrollBar {}
-
-                        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
-
-                        delegate: StyledRect {
-                            required property var modelData
-                            required property int index
-                            width: ListView.view.width
-                            height: 40
-                            color: index === root.currentIndex ? Theme.surfaceContainerHighest : "transparent"
-                            radius: Theme.radius.normal
-
-                            StateLayer {
-                                pressed: rowMa.pressed
-                                focused: ListView.isCurrentItem
-                            }
-
-                            Row {
-                                anchors.fill: parent
-                                anchors.leftMargin: Theme.padding.large
-                                anchors.rightMargin: Theme.padding.large
-                                spacing: Theme.spacing.large
-
-                                StyledText {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: `[${modelData.workspace}]`
-                                    color: Theme.textMuted
-                                    font.pixelSize: Theme.font.size.small
-                                    width: 56
-                                }
-                                StyledText {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.cls
-                                    color: Theme.textVariant
-                                    font.pixelSize: Theme.font.size.normal
-                                    width: 160
-                                    elide: Text.ElideRight
-                                }
-                                StyledText {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.title
-                                    color: Theme.text
-                                    font.pixelSize: Theme.font.size.normal
-                                    width: parent.width - 56 - 160 - parent.spacing * 2
-                                    elide: Text.ElideRight
-                                }
-                            }
-
-                            MouseArea {
-                                id: rowMa
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onEntered: root.currentIndex = index
-                                onClicked: {
-                                    root.currentIndex = index;
-                                    root.focusSelected();
-                                }
-                            }
+                    MouseArea {
+                        id: rowMa
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: root.currentIndex = index
+                        onClicked: {
+                            root.currentIndex = index;
+                            root.focusSelected();
                         }
                     }
                 }
