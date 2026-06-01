@@ -21,11 +21,28 @@ Rectangle {
 
     Component.onCompleted: Network.scanWifi()
 
-    // Radio toggles update via the 5s poll; nudge it after a flip for snappiness.
+    // Keep the list fresh while the panel is open.
+    Timer {
+        interval: 10000
+        running: Network.wifiEnabled
+        repeat: true
+        onTriggered: Network.scanWifi()
+    }
+
+    // After a radio flip / connect / disconnect, nudge a state+list refresh a
+    // couple times so the switch and the active row update without waiting for
+    // the global 5s poll.
     Timer {
         id: repoll
-        interval: 800
-        onTriggered: Network.poll()
+        interval: 1300
+        repeat: true
+        triggeredOnStart: false
+        property int ticks: 0
+        onTriggered: {
+            Network.poll();
+            if (++ticks >= 2) { ticks = 0; stop(); }
+        }
+        function kick() { ticks = 0; restart(); }
     }
 
     ColumnLayout {
@@ -83,7 +100,7 @@ Rectangle {
                 checked: Network.wifiEnabled
                 onToggled: {
                     Network.setWifiRadio(checked);
-                    repoll.restart();
+                    repoll.kick();
                 }
             }
 
@@ -179,16 +196,19 @@ Rectangle {
                         id: netMa
                         anchors.fill: parent
                         onClicked: {
+                            const ssid = netEntry.modelData.ssid;
                             if (netEntry.modelData.active) {
-                                Network.disconnectWifi(netEntry.modelData.ssid);
+                                Network.disconnectWifi(ssid);
                                 root.pendingSsid = "";
-                                repoll.restart();
-                            } else if (netEntry.modelData.security.length > 0) {
-                                root.pendingSsid = root.pendingSsid === netEntry.modelData.ssid
-                                    ? "" : netEntry.modelData.ssid;
+                                repoll.kick();
+                            } else if (netEntry.modelData.security.length > 0 && !Network.isSaved(ssid)) {
+                                // Unknown secured network: ask for a password.
+                                root.pendingSsid = root.pendingSsid === ssid ? "" : ssid;
                             } else {
-                                Network.connectWifi(netEntry.modelData.ssid, "");
-                                repoll.restart();
+                                // Open, or a saved profile: nmcli reuses stored creds.
+                                Network.connectWifi(ssid, "");
+                                root.pendingSsid = "";
+                                repoll.kick();
                             }
                         }
                     }
@@ -227,7 +247,7 @@ Rectangle {
                             Network.connectWifi(netEntry.modelData.ssid, text);
                             text = "";
                             root.pendingSsid = "";
-                            repoll.restart();
+                            repoll.kick();
                         }
                         Keys.onReturnPressed: submit()
                         Keys.onEscapePressed: root.pendingSsid = ""

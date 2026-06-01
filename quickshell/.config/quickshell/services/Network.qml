@@ -13,7 +13,14 @@ Singleton {
     readonly property bool connected: state === "connected"
     property bool wifiEnabled: false
     property var wifiNetworks: []
+    property var savedConnections: []
     property bool scanning: false
+
+    // True when a saved wifi profile exists for this SSID, so connecting needs
+    // no password prompt (nmcli reuses the stored credentials).
+    function isSaved(ssid: string): bool {
+        return root.savedConnections.indexOf(ssid) !== -1;
+    }
 
     function setWifiRadio(on: bool): void {
         Quickshell.execDetached(["nmcli", "radio", "wifi", on ? "on" : "off"]);
@@ -32,10 +39,17 @@ Singleton {
         scanProc.running = true;
     }
 
+    // Fast list refresh (no rescan) to pick up the active flag after connect.
+    function refreshWifiList(): void {
+        listProc.running = true;
+    }
+
     function poll(): void {
         stateProc.running = true;
         activeProc.running = true;
         radioProc.running = true;
+        savedProc.running = true;
+        listProc.running = true;
     }
 
     function connectWifi(ssid: string, password: string): void {
@@ -43,6 +57,27 @@ Singleton {
             Quickshell.execDetached(["nmcli", "device", "wifi", "connect", ssid, "password", password]);
         else
             Quickshell.execDetached(["nmcli", "device", "wifi", "connect", ssid]);
+    }
+
+    // Shared parse for both the rescan (scanProc) and the light refresh (listProc).
+    function applyWifiList(text: string): void {
+        const lines = text.trim().split("\n").filter(l => l.length > 0);
+        const seen = {};
+        const nets = [];
+        for (let i = 0; i < lines.length; i++) {
+            const parts = lines[i].split(":");
+            if (parts.length < 4 || !parts[0]) continue;
+            if (seen[parts[0]]) continue;
+            seen[parts[0]] = true;
+            nets.push({
+                ssid: parts[0],
+                signal: parseInt(parts[1]) || 0,
+                security: parts[2] || "",
+                active: parts[3] === "*"
+            });
+        }
+        nets.sort((a, b) => b.signal - a.signal);
+        root.wifiNetworks = nets;
     }
 
     Process {
@@ -80,23 +115,32 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.scanning = false;
+                root.applyWifiList(this.text);
+            }
+        }
+    }
+
+    Process {
+        id: listProc
+        command: ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list", "--rescan", "no"]
+        stdout: StdioCollector {
+            onStreamFinished: root.applyWifiList(this.text)
+        }
+    }
+
+    Process {
+        id: savedProc
+        command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const names = [];
                 const lines = this.text.trim().split("\n").filter(l => l.length > 0);
-                const seen = {};
-                const nets = [];
                 for (let i = 0; i < lines.length; i++) {
                     const parts = lines[i].split(":");
-                    if (parts.length < 4 || !parts[0]) continue;
-                    if (seen[parts[0]]) continue;
-                    seen[parts[0]] = true;
-                    nets.push({
-                        ssid: parts[0],
-                        signal: parseInt(parts[1]) || 0,
-                        security: parts[2] || "",
-                        active: parts[3] === "*"
-                    });
+                    if (parts.length >= 2 && parts[1] === "802-11-wireless")
+                        names.push(parts[0]);
                 }
-                nets.sort((a, b) => b.signal - a.signal);
-                root.wifiNetworks = nets;
+                root.savedConnections = names;
             }
         }
     }
