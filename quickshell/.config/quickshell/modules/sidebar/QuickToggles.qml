@@ -19,12 +19,12 @@ GridLayout {
     QuickToggleTile {
         model: QuickToggleModel {
             name: "WiFi"
-            icon: Network.connected ? "wifi" : "wifi_off"
-            statusText: Network.connected ? Network.activeConnection : "Off"
+            icon: Network.connected || Network.wifiEnabled ? "wifi" : "wifi_off"
+            statusText: Network.connected ? Network.activeConnection : (Network.wifiEnabled ? "Not connected" : "Off")
             toggled: Network.connected
-            mainAction: function() { Network.toggleWifi(); }
+            mainAction: function() { toggleGrid.openWifiDialog(); }
         }
-        onPressAndHold: toggleGrid.openWifiDialog()
+        onPressAndHold: Network.toggleWifi()
     }
 
     QuickToggleTile {
@@ -34,9 +34,9 @@ GridLayout {
             statusText: Bluetooth.connectedDeviceCount > 0 ? Bluetooth.connectedDeviceNames[0] : (Bluetooth.powered ? "On" : "Off")
             available: Bluetooth.available
             toggled: Bluetooth.powered
-            mainAction: function() { Bluetooth.togglePowered(); }
+            mainAction: function() { toggleGrid.openBluetoothDialog(); }
         }
-        onPressAndHold: toggleGrid.openBluetoothDialog()
+        onPressAndHold: Bluetooth.togglePowered()
     }
 
     QuickToggleTile {
@@ -45,15 +45,15 @@ GridLayout {
             icon: Hyprsunset.active ? "bedtime" : "brightness_5"
             statusText: Hyprsunset.active ? (Hyprsunset.temperature + "K") : "Off"
             toggled: Hyprsunset.active
-            mainAction: function() { Hyprsunset.toggle(); }
+            mainAction: function() { toggleGrid.openNightLightDialog(); }
         }
-        onPressAndHold: toggleGrid.openNightLightDialog()
+        onPressAndHold: Hyprsunset.toggle()
     }
 
     QuickToggleTile {
         model: QuickToggleModel {
             name: "Idle"
-            icon: Idle.inhibited ? "coffee" : "schedule"
+            icon: Idle.inhibited ? "local_cafe" : "schedule"
             statusText: Idle.inhibited ? "Inhibited" : "Active"
             toggled: Idle.inhibited
             mainAction: function() { Idle.toggle(); }
@@ -63,7 +63,7 @@ GridLayout {
     QuickToggleTile {
         model: QuickToggleModel {
             name: "DND"
-            icon: NotificationHistory.doNotDisturb ? "do_not_disturb_on" : "do_not_disturb_off"
+            icon: NotificationHistory.doNotDisturb ? "notifications_off" : "notifications"
             statusText: NotificationHistory.doNotDisturb ? "On" : "Off"
             toggled: NotificationHistory.doNotDisturb
             mainAction: function() { NotificationHistory.doNotDisturb = !NotificationHistory.doNotDisturb; }

@@ -9,6 +9,9 @@ Rectangle {
 
     signal dismiss()
 
+    // SSID of the secured network awaiting a password, or "" when none.
+    property string pendingSsid: ""
+
     color: Theme.surfaceContainerHigh
     radius: Theme.radius.large
     border.color: Theme.outlineVariant
@@ -18,6 +21,13 @@ Rectangle {
 
     Component.onCompleted: Network.scanWifi()
 
+    // Radio toggles update via the 5s poll; nudge it after a flip for snappiness.
+    Timer {
+        id: repoll
+        interval: 800
+        onTriggered: Network.poll()
+    }
+
     ColumnLayout {
         id: dialogCol
         anchors.fill: parent
@@ -26,9 +36,10 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
+            spacing: Theme.spacing.normal
 
             StyledText {
-                text: "WiFi Networks"
+                text: "Wi-Fi"
                 font.pixelSize: Theme.font.size.large
                 font.bold: true
             }
@@ -39,10 +50,9 @@ Rectangle {
                 property real radius: Theme.radius.small
                 implicitWidth: refreshIcon.implicitWidth + 2 * Theme.padding.smaller
                 implicitHeight: refreshIcon.implicitHeight + 2 * Theme.padding.smaller
+                opacity: Network.wifiEnabled ? 1 : 0.4
 
-                StateLayer {
-                    pressed: refreshMa.pressed
-                }
+                StateLayer { pressed: refreshMa.pressed }
 
                 MaterialIcon {
                     id: refreshIcon
@@ -63,7 +73,17 @@ Rectangle {
                 MouseArea {
                     id: refreshMa
                     anchors.fill: parent
+                    enabled: Network.wifiEnabled
                     onClicked: Network.scanWifi()
+                }
+            }
+
+            StyledSwitch {
+                id: radioSwitch
+                checked: Network.wifiEnabled
+                onToggled: {
+                    Network.setWifiRadio(checked);
+                    repoll.restart();
                 }
             }
 
@@ -73,79 +93,174 @@ Rectangle {
             }
         }
 
+        Connections {
+            target: Network
+            function onWifiEnabledChanged() { radioSwitch.checked = Network.wifiEnabled; }
+        }
+
         Rectangle {
             Layout.fillWidth: true
             height: 1
             color: Theme.outlineVariant
         }
 
+        // Radio off: list is meaningless, show a single prompt instead.
+        StyledText {
+            visible: !Network.wifiEnabled
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.spacing.small
+            Layout.bottomMargin: Theme.spacing.small
+            horizontalAlignment: Text.AlignHCenter
+            text: "Wi-Fi is off"
+            color: Theme.textMuted
+        }
+
         Repeater {
-            model: Network.wifiNetworks
+            model: Network.wifiEnabled ? Network.wifiNetworks : []
 
-            Rectangle {
-                id: netRow
+            ColumnLayout {
+                id: netEntry
                 required property var modelData
-                required property int index
                 Layout.fillWidth: true
-                height: 40
-                radius: Theme.radius.normal
-                color: modelData.active ? Theme.surfaceContainerHighest : "transparent"
+                spacing: 6
 
-                StateLayer {
-                    pressed: netMa.pressed
-                    focused: netRow.modelData.active
+                Rectangle {
+                    id: netRow
+                    Layout.fillWidth: true
+                    height: 40
+                    radius: Theme.radius.normal
+                    color: netEntry.modelData.active ? Theme.surfaceContainerHighest : "transparent"
+
+                    StateLayer {
+                        pressed: netMa.pressed
+                        focused: netEntry.modelData.active
+                    }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: Theme.padding.normal
+                        anchors.rightMargin: Theme.padding.normal
+                        spacing: Theme.spacing.normal
+
+                        // Only signal_wifi_4_bar exists in Material Icons Round
+                        // (no graded bars), so convey strength via opacity.
+                        MaterialIcon {
+                            text: "wifi"
+                            color: netEntry.modelData.active ? Theme.tertiary : Theme.textVariant
+                            opacity: 0.4 + 0.6 * Math.min(1, netEntry.modelData.signal / 100)
+                            font.pixelSize: Theme.icon.size.small
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: netEntry.modelData.ssid
+                            color: Theme.text
+                            elide: Text.ElideRight
+                        }
+
+                        MaterialIcon {
+                            visible: netEntry.modelData.security.length > 0
+                            text: "lock"
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.icon.size.small
+                        }
+
+                        // Connected networks show a disconnect affordance; others
+                        // a check only when active (which can't co-occur, kept simple).
+                        MaterialIcon {
+                            visible: netEntry.modelData.active
+                            text: "link_off"
+                            color: Theme.tertiary
+                            font.pixelSize: Theme.icon.size.small
+                        }
+                    }
+
+                    MouseArea {
+                        id: netMa
+                        anchors.fill: parent
+                        onClicked: {
+                            if (netEntry.modelData.active) {
+                                Network.disconnectWifi(netEntry.modelData.ssid);
+                                root.pendingSsid = "";
+                                repoll.restart();
+                            } else if (netEntry.modelData.security.length > 0) {
+                                root.pendingSsid = root.pendingSsid === netEntry.modelData.ssid
+                                    ? "" : netEntry.modelData.ssid;
+                            } else {
+                                Network.connectWifi(netEntry.modelData.ssid, "");
+                                repoll.restart();
+                            }
+                        }
+                    }
                 }
 
+                // Inline password prompt for the tapped secured network.
                 RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.padding.normal
-                    anchors.rightMargin: Theme.padding.normal
-                    spacing: Theme.spacing.normal
+                    Layout.fillWidth: true
+                    Layout.leftMargin: Theme.padding.normal
+                    Layout.rightMargin: Theme.padding.normal
+                    visible: root.pendingSsid === netEntry.modelData.ssid
+                    spacing: Theme.spacing.small
 
-                    MaterialIcon {
-                        text: modelData.signal > 75 ? "signal_wifi_4_bar"
-                            : modelData.signal > 50 ? "network_wifi_3_bar"
-                            : modelData.signal > 25 ? "network_wifi_2_bar"
-                            : "network_wifi_1_bar"
-                        color: modelData.active ? Theme.tertiary : Theme.textVariant
-                        font.pixelSize: Theme.icon.size.small
-                    }
-
-                    StyledText {
+                    TextField {
+                        id: pwField
                         Layout.fillWidth: true
-                        text: modelData.ssid
+                        echoMode: TextInput.Password
+                        placeholderText: "Password"
                         color: Theme.text
-                        elide: Text.ElideRight
+                        placeholderTextColor: Theme.textMuted
+                        renderType: Text.NativeRendering
+                        font.family: Theme.font.family.sans
+                        font.pixelSize: Theme.font.size.normal
+                        onVisibleChanged: if (visible) forceActiveFocus()
+
+                        background: Rectangle {
+                            radius: Theme.radius.small
+                            color: Theme.surfaceContainerHighest
+                            border.width: 1
+                            border.color: pwField.activeFocus ? Theme.primary : Theme.outline
+                            Behavior on border.color { CAnim {} }
+                        }
+
+                        function submit() {
+                            if (text.length === 0) return;
+                            Network.connectWifi(netEntry.modelData.ssid, text);
+                            text = "";
+                            root.pendingSsid = "";
+                            repoll.restart();
+                        }
+                        Keys.onReturnPressed: submit()
+                        Keys.onEscapePressed: root.pendingSsid = ""
                     }
 
-                    MaterialIcon {
-                        visible: modelData.security.length > 0
-                        text: "lock"
-                        color: Theme.textMuted
-                        font.pixelSize: Theme.icon.size.small
-                    }
+                    Rectangle {
+                        width: 36; height: 36; radius: Theme.radius.full
+                        color: pwField.text.length > 0 ? Theme.primary : Theme.surfaceContainerHigh
 
-                    MaterialIcon {
-                        visible: modelData.active
-                        text: "check"
-                        color: Theme.tertiary
-                        font.pixelSize: Theme.icon.size.small
-                    }
-                }
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "arrow_forward"
+                            color: pwField.text.length > 0 ? Theme.textOnPrimary : Theme.textMuted
+                            font.pixelSize: Theme.icon.size.small
+                        }
 
-                MouseArea {
-                    id: netMa
-                    anchors.fill: parent
-                    onClicked: {
-                        if (!modelData.active)
-                            Network.connectWifi(modelData.ssid, "");
+                        StateLayer {
+                            pressed: pwSubmit.pressed
+                            tint: pwField.text.length > 0 ? Theme.textOnPrimary : Theme.text
+                        }
+
+                        MouseArea {
+                            id: pwSubmit
+                            anchors.fill: parent
+                            onClicked: pwField.submit()
+                        }
                     }
                 }
             }
         }
 
         StyledText {
-            visible: Network.wifiNetworks.length === 0
+            visible: Network.wifiEnabled && Network.wifiNetworks.length === 0
             Layout.alignment: Qt.AlignHCenter
             text: Network.scanning ? "Scanning..." : "No networks found"
             color: Theme.textMuted

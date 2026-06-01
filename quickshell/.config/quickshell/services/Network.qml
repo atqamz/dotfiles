@@ -11,17 +11,31 @@ Singleton {
     property string connectivity: ""
     property string activeConnection: ""
     readonly property bool connected: state === "connected"
+    property bool wifiEnabled: false
     property var wifiNetworks: []
     property bool scanning: false
 
+    function setWifiRadio(on: bool): void {
+        Quickshell.execDetached(["nmcli", "radio", "wifi", on ? "on" : "off"]);
+    }
+
     function toggleWifi(): void {
-        Quickshell.execDetached(["nmcli", "radio", "wifi",
-            root.state === "connected" ? "off" : "on"]);
+        setWifiRadio(!root.wifiEnabled);
+    }
+
+    function disconnectWifi(ssid: string): void {
+        Quickshell.execDetached(["nmcli", "connection", "down", "id", ssid]);
     }
 
     function scanWifi(): void {
         root.scanning = true;
         scanProc.running = true;
+    }
+
+    function poll(): void {
+        stateProc.running = true;
+        activeProc.running = true;
+        radioProc.running = true;
     }
 
     function connectWifi(ssid: string, password: string): void {
@@ -87,14 +101,19 @@ Singleton {
         }
     }
 
+    Process {
+        id: radioProc
+        command: ["nmcli", "-t", "-f", "WIFI", "radio"]
+        stdout: StdioCollector {
+            onStreamFinished: root.wifiEnabled = this.text.trim() === "enabled"
+        }
+    }
+
     Timer {
         interval: 5000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            stateProc.running = true;
-            activeProc.running = true;
-        }
+        onTriggered: root.poll()
     }
 }
