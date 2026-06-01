@@ -99,36 +99,33 @@ Flickable {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.outlineVariant
-        }
-
+        SectionHeader { label: "Calendar"; Layout.topMargin: Theme.spacing.small }
         CalendarWidget {}
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.outlineVariant
-        }
-
+        SectionHeader { label: "Tasks"; Layout.topMargin: Theme.spacing.small }
         TodoWidget {}
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.outlineVariant
-        }
-
+        SectionHeader { label: "Focus"; Layout.topMargin: Theme.spacing.small }
         PomodoroWidget {}
 
-        Rectangle {
-            Layout.fillWidth: true
-            height: 1
-            color: Theme.outlineVariant
-        }
+        SectionHeader {
+            label: "Notifications"
+            Layout.topMargin: Theme.spacing.small
 
+            StyledText {
+                visible: NotificationHistory.history.length > 0
+                text: NotificationHistory.history.length.toString()
+                font.pixelSize: Theme.font.size.smaller
+                color: Theme.textMuted
+            }
+            IconButton {
+                visible: NotificationHistory.history.length > 0
+                radius: Theme.radius.full
+                padding: Theme.padding.small
+                icon: "clear_all"
+                onClicked: NotificationHistory.clear()
+            }
+        }
         NotificationList {}
     }
 }

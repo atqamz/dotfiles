@@ -103,25 +103,38 @@ Item {
             Layout.preferredHeight: 120
             Layout.alignment: Qt.AlignHCenter
 
-            // Background ring
-            Rectangle {
+            Canvas {
+                id: ring
                 anchors.centerIn: parent
-                width: 100; height: 100; radius: Theme.radius.full
-                color: "transparent"
-                border.color: Theme.outlineVariant
-                border.width: 4
-            }
+                width: 110; height: 110
 
-            // Progress arc (simplified: filled circle clipped)
-            Rectangle {
-                anchors.centerIn: parent
-                width: 100; height: 100; radius: Theme.radius.full
-                color: "transparent"
-                border.color: root.mode === 0 ? Theme.primary : Theme.tertiary
-                border.width: 4
-                opacity: root.progress
+                // Animated 0..1 sweep; smoothed so per-second ticks glide.
+                property real prog: root.progress
+                property color arcColor: root.mode === 0 ? Theme.primary : Theme.tertiary
+                Behavior on prog { Anim { duration: Theme.anim.durations.normal } }
+                onProgChanged: requestPaint()
+                onArcColorChanged: requestPaint()
 
-                Behavior on opacity { Anim { duration: Theme.anim.durations.normal } }
+                onPaint: {
+                    const ctx = getContext("2d");
+                    ctx.reset();
+                    const cx = width / 2, cy = height / 2, r = width / 2 - 4;
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = "round";
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = Theme.outlineVariant;
+                    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+                    ctx.stroke();
+
+                    if (prog > 0) {
+                        const start = -Math.PI / 2;
+                        ctx.beginPath();
+                        ctx.strokeStyle = arcColor;
+                        ctx.arc(cx, cy, r, start, start + 2 * Math.PI * Math.min(prog, 1));
+                        ctx.stroke();
+                    }
+                }
             }
 
             // Time text

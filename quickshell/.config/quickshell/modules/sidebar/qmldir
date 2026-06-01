@@ -7,3 +7,4 @@ CalendarWidget 1.0 CalendarWidget.qml
 TodoWidget 1.0 TodoWidget.qml
 PomodoroWidget 1.0 PomodoroWidget.qml
 NotificationList 1.0 NotificationList.qml
+SectionHeader 1.0 SectionHeader.qml

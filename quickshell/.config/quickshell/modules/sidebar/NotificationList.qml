@@ -15,33 +15,6 @@ Item {
         anchors.right: parent.right
         spacing: 8
 
-        RowLayout {
-            Layout.fillWidth: true
-
-            StyledText {
-                text: "Notifications"
-                font.pixelSize: Theme.font.size.large
-                font.bold: true
-            }
-
-            StyledText {
-                visible: NotificationHistory.history.length > 0
-                text: NotificationHistory.history.length.toString()
-                font.pixelSize: Theme.font.size.smaller
-                color: Theme.textMuted
-            }
-
-            Item { Layout.fillWidth: true }
-
-            IconButton {
-                visible: NotificationHistory.history.length > 0
-                radius: Theme.radius.full
-                padding: Theme.padding.small
-                icon: "clear_all"
-                onClicked: NotificationHistory.clear()
-            }
-        }
-
         Repeater {
             model: NotificationHistory.history.slice(0, 10)
 
