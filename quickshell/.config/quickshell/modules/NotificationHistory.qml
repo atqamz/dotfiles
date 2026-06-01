@@ -26,7 +26,7 @@ Scope {
             required property var modelData
 
             screen: modelData
-            visible: root.open
+            visible: root.open && HyprlandData.isFocusedScreen(modelData)
             color: "transparent"
 
             anchors { top: true; left: true; right: true; bottom: true }

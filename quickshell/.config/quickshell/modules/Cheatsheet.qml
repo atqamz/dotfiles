@@ -51,7 +51,7 @@ Scope {
             id: win
             required property var modelData
             screen: modelData
-            visible: root.open
+            visible: root.open && HyprlandData.isFocusedScreen(modelData)
 
             property bool shown: false
             onVisibleChanged: {

@@ -1,6 +1,5 @@
 // quickshell/.config/quickshell/modules/EmojiPicker.qml
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import QtQuick
 import QtQuick.Controls
@@ -84,9 +83,7 @@ Scope {
         model: Quickshell.screens
 
         SearchOverlay {
-            // Only on the focused monitor — avoids duplicate cards on other
-            // screens and the keyboard-focus split between them.
-            active: !Hyprland.focusedMonitor || modelData.name === Hyprland.focusedMonitor.name
+            // `active` already defaults to focused-monitor only (SearchOverlay).
             opened: root.open
             queryText: root.query
             onQueryEdited: text => {

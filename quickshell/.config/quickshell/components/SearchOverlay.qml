@@ -8,6 +8,7 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
+import qs.services
 
 PanelWindow {
     id: overlay
@@ -15,8 +16,9 @@ PanelWindow {
     required property var modelData
     // Whether the overlay is open. Bind to the caller's shared `open` flag.
     property bool opened: false
-    // Extra visibility gate (e.g. focused-monitor only). ANDed with `opened`.
-    property bool active: true
+    // Extra visibility gate, ANDed with `opened`. Defaults to focused-monitor
+    // only so the card and its exclusive keyboard focus land on one screen.
+    property bool active: HyprlandData.isFocusedScreen(modelData)
     // When true, Delete is forwarded through `navigate` instead of editing the
     // search text (clipboard uses it to remove the selected entry).
     property bool captureDelete: false

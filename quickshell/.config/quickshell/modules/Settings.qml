@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import qs.components
+import qs.services
 import "settings"
 
 Scope {
@@ -23,7 +24,7 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: root.open
+            visible: root.open && HyprlandData.isFocusedScreen(modelData)
             property bool shown: false
             onVisibleChanged: shown = visible
             onShownChanged: if (shown) content.forceActiveFocus()

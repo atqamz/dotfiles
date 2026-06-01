@@ -27,7 +27,7 @@ Scope {
         PanelWindow {
             required property var modelData
             screen: modelData
-            visible: root.open
+            visible: root.open && HyprlandData.isFocusedScreen(modelData)
 
             anchors {
                 top: true

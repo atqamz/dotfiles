@@ -19,6 +19,13 @@ Singleton {
         return root.windowByAddress["0x" + toplevel.HyprlandToplevel.address] || null;
     }
 
+    // True when `screen` is the monitor Hyprland currently has focused. Modal
+    // overlays gate their `visible` on this so they appear (and grab keyboard
+    // focus) on a single monitor instead of duplicating across all of them.
+    function isFocusedScreen(screen): bool {
+        return !Hyprland.focusedMonitor || (screen && screen.name === Hyprland.focusedMonitor.name);
+    }
+
     function refresh() { clientsProc.running = true; monitorsProc.running = true; }
 
     Process {
