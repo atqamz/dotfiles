@@ -94,7 +94,7 @@ Scope {
         PanelWindow {
             required property var modelData
             screen: modelData
-            visible: root.active
+            visible: root.active && HyprlandData.isFocusedScreen(modelData)
 
             anchors {
                 bottom: true
@@ -105,6 +105,9 @@ Scope {
             margins {
                 bottom: 80
             }
+
+            // Float over windows instead of reserving a strip that crops them.
+            exclusiveZone: 0
 
             implicitHeight: 90
             color: "transparent"
