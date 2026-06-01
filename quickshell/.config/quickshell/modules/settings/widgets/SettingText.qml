@@ -38,6 +38,9 @@ Item {
             font.family: Theme.font.family.sans
             background: null
             onEditingFinished: root.edited(text)
+            // Typing drops the `text: root.text` binding; re-establish it on
+            // blur so external changes to root.text show again.
+            onActiveFocusChanged: if (!activeFocus) text = Qt.binding(() => root.text)
         }
     }
 }

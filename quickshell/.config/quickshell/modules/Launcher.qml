@@ -115,7 +115,7 @@ Scope {
             opened: root.open
             queryText: root.query
             onQueryEdited: text => root.query = text
-            icon: root.isShellCmd ? "terminal" : (root.isMath ? "calculate" : "search")
+            icon: root.isShellCmd ? "code" : (root.isMath ? "calculate" : "search")
             placeholder: "Type to search apps, > for shell, or math…"
             cardWidth: 600
             cardHeight: 520
@@ -163,7 +163,7 @@ Scope {
                         MaterialIcon {
                             anchors.verticalCenter: parent.verticalCenter
                             text: {
-                                if (modelData.kind === "shell") return "terminal";
+                                if (modelData.kind === "shell") return "code";
                                 if (modelData.kind === "math") return "calculate";
                                 return "apps";
                             }

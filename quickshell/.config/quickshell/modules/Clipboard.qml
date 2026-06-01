@@ -178,7 +178,7 @@ Scope {
                             text: modelData.kind === "image" ? "[image]" : modelData.preview
                             color: Theme.text
                             font.pixelSize: Theme.font.size.normal
-                            width: parent.width - 44 - 22 - parent.spacing * 3
+                            width: parent.width - 44 - 22 - parent.spacing * 2
                             elide: Text.ElideRight
                         }
                     }
