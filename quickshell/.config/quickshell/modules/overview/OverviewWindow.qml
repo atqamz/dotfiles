@@ -25,13 +25,15 @@ Item {
         if (!monitorData || !widgetMonitor) return 1;
         const widgetWidth = widgetMonitor.transform & 1 ? widgetMonitor.height : widgetMonitor.width;
         const monitorWidth = monitorData.transform & 1 ? monitorData.height : monitorData.width;
-        return (widgetWidth * monitorData.scale) / (monitorWidth * widgetMonitor.scale);
+        const denom = monitorWidth * widgetMonitor.scale;
+        return denom ? (widgetWidth * monitorData.scale) / denom : 1;
     }
     readonly property real heightRatio: {
         if (!monitorData || !widgetMonitor) return 1;
         const widgetHeight = widgetMonitor.transform & 1 ? widgetMonitor.width : widgetMonitor.height;
         const monitorHeight = monitorData.transform & 1 ? monitorData.width : monitorData.height;
-        return (widgetHeight * monitorData.scale) / (monitorHeight * widgetMonitor.scale);
+        const denom = monitorHeight * widgetMonitor.scale;
+        return denom ? (widgetHeight * monitorData.scale) / denom : 1;
     }
     readonly property real xWithin: windowData
         ? Math.max((windowData.at[0] - (monitorData ? monitorData.x : 0) - (monitorData ? monitorData.reserved[0] : 0)) * scale * widthRatio, 0)

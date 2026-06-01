@@ -62,7 +62,7 @@ Item {
             } else if (mouse.button === Qt.MiddleButton) {
                 var e = DockService.resolve(btn.entry.id); if (e) e.execute();
             } else {
-                if (btn.running) {
+                if (btn.running && btn.tops.length > 0) {
                     // First click on an unfocused app focuses it; clicking the
                     // already-active app cycles to its next window.
                     if (btn.active) {

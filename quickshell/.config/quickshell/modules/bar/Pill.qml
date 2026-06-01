@@ -16,7 +16,9 @@ StyledRect {
     property bool chrome: true
 
     implicitHeight: 28
-    implicitWidth: (contentItem ? contentItem.implicitWidth : 0) + 2 * (chrome ? horizontalPadding : 0)
+    // No content means no pill: avoids an empty chrome capsule taking padding width.
+    implicitWidth: contentItem ? contentItem.implicitWidth + 2 * (chrome ? horizontalPadding : 0) : 0
+    visible: contentItem !== null
 
     color: chrome ? Theme.surfaceContainer : "transparent"
     border.color: Theme.outlineVariant
