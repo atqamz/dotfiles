@@ -9,24 +9,33 @@ StyledRect {
     Layout.fillWidth: true
     color: Theme.surfaceContainerHigh
     radius: Theme.radius.large
-    implicitHeight: sliderCol.implicitHeight + 24
+    implicitHeight: sliderCol.implicitHeight + 2 * Theme.padding.larger
 
     ColumnLayout {
         id: sliderCol
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.padding.larger
+        spacing: Theme.spacing.large
 
         RowLayout {
-            spacing: 8
+            Layout.fillWidth: true
+            spacing: Theme.spacing.normal
 
-            MaterialIcon {
-                text: "brightness_6"
-                color: Theme.text
+            // Brightness, icon tracks the level. Not interactive (no toggle).
+            Item {
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
+                MaterialIcon {
+                    anchors.centerIn: parent
+                    text: Brightness.brightness < 0.34 ? "brightness_low"
+                        : Brightness.brightness < 0.67 ? "brightness_medium"
+                        : "brightness_high"
+                    color: Theme.text
+                    font.pixelSize: Theme.icon.size.normal
+                }
             }
 
             StyledSlider {
-                id: brightnessSlider
                 Layout.fillWidth: true
                 from: 0
                 to: 1
@@ -36,18 +45,19 @@ StyledRect {
         }
 
         RowLayout {
-            spacing: 8
+            Layout.fillWidth: true
+            spacing: Theme.spacing.normal
 
             Item {
+                Layout.preferredWidth: 30
+                Layout.preferredHeight: 30
                 property real radius: Theme.radius.full
-                implicitWidth: muteIcon.implicitWidth + 2 * Theme.padding.small
-                implicitHeight: muteIcon.implicitHeight + 2 * Theme.padding.small
 
                 MaterialIcon {
-                    id: muteIcon
                     anchors.centerIn: parent
-                    text: Audio.muted ? "volume_off" : "volume_up"
-                    color: Theme.text
+                    text: Audio.muted ? "volume_off" : (Audio.volume === 0 ? "volume_mute" : Audio.volume < 50 ? "volume_down" : "volume_up")
+                    color: Audio.muted ? Theme.textDim : Theme.text
+                    font.pixelSize: Theme.icon.size.normal
                 }
 
                 StateLayer { pressed: muteTap.pressed }
@@ -60,7 +70,6 @@ StyledRect {
             }
 
             StyledSlider {
-                id: volumeSlider
                 Layout.fillWidth: true
                 from: 0
                 to: 150
