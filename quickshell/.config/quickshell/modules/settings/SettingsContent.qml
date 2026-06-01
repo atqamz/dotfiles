@@ -9,9 +9,9 @@ Item {
 
     readonly property var pages: [
         { name: "Appearance", icon: "palette",   source: "pages/AppearancePage.qml" },
-        { name: "Bar",        icon: "toolbar",    source: "pages/BarPage.qml" },
+        { name: "Bar",        icon: "view_agenda", source: "pages/BarPage.qml" },
         { name: "Dock",       icon: "dock",       source: "pages/DockPage.qml" },
-        { name: "Overview",   icon: "grid_view",  source: "pages/OverviewPage.qml" },
+        { name: "Overview",   icon: "apps",       source: "pages/OverviewPage.qml" },
         { name: "Behavior",   icon: "tune",       source: "pages/BehaviorPage.qml" },
         { name: "About",      icon: "info",       source: "pages/AboutPage.qml" }
     ]
