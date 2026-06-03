@@ -149,6 +149,7 @@ generate_message() {
   msg=$(printf '%b' "$prompt" \
     | claude -p --model claude-haiku-4-5-20251001 --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
     | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+          -e 's/^`//' -e 's/`$//' \
           -e 's/^["'"'"']//' -e 's/["'"'"']$//' \
     | head -n 1)
   if [[ -n "$msg" ]]; then
