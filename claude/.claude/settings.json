@@ -2,7 +2,7 @@
   "permissions": {
     "defaultMode": "auto"
   },
-  "model": "claude-opus-4-6",
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "bash \"/home/atqa/.claude/statusline-command.sh\""
@@ -20,7 +20,7 @@
       }
     }
   },
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "autoCompactEnabled": true,
   "skipAutoPermissionPrompt": true
