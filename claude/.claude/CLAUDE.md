@@ -8,6 +8,7 @@ Defaults. Project CLAUDE.md overrides.
 @context/COMMUNICATION.md
 @context/SECURITY.md
 @context/CONTEXT.md
+@context/MEMORY.md
 @context/GRAPHIFY.md
 
 # Cross-project map
