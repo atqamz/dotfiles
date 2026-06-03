@@ -196,29 +196,33 @@ def generalize(bodies, classification, job):
                   "Output ONLY the rewritten markdown body — no frontmatter, no code fences "
                   "around the whole thing, no preamble, no sign-off.")
     payload = "\n\n---\n\n".join(b.strip() for b in bodies)
-    try:
-        r = subprocess.run(
-            # tools disabled (pure text transform); generous turn budget so denied tool
-            # attempts still leave room to answer instead of tripping the turn limit.
-            # Inputs are small memory notes, so the extra turns cost little.
-            ["claude", "-p", "--model", model, "--max-turns", "8", "--tools", "",
-             "--append-system-prompt", sys_prompt],
-            input=payload[:8000], capture_output=True, text=True, timeout=180,
-        )
+    # The print-mode model flakes nondeterministically (~1/3): sometimes a turn-limit
+    # error, sometimes empty output. Retry a few times before giving up.
+    for attempt in range(3):
+        try:
+            r = subprocess.run(
+                # tools disabled (pure text transform); generous turn budget so denied
+                # tool attempts still leave room to answer. Inputs are small.
+                ["claude", "-p", "--model", model, "--max-turns", "8", "--tools", "",
+                 "--append-system-prompt", sys_prompt],
+                input=payload[:8000], capture_output=True, text=True, timeout=180,
+            )
+        except Exception as e:
+            print(f"[promote-memory] WARN: generalize attempt {attempt+1} raised ({e})", file=sys.stderr)
+            continue
         out = (r.stdout or "").strip()
-        if r.returncode != 0:
-            print(f"[promote-memory] WARN: generalize rc={r.returncode}: {out[:120]}", file=sys.stderr)
-            return None
-        # claude prints control errors (e.g. turn-limit) to stdout with rc=0; reject them.
-        if re.match(r"^Error:\s", out):
-            print(f"[promote-memory] WARN: generalize error: {out[:120]}", file=sys.stderr)
-            return None
+        if r.returncode != 0 or re.match(r"^Error:\s", out) or not out:
+            # claude prints control errors (e.g. turn-limit) to stdout with rc=0; empty
+            # output is the other flake mode. Both are transient -> retry.
+            print(f"[promote-memory] WARN: generalize attempt {attempt+1} no output "
+                  f"(rc={r.returncode}): {out[:80]}", file=sys.stderr)
+            continue
         out = fence_open_re.sub("", out)
         out = fence_close_re.sub("", out)
-        return out.strip() or None
-    except Exception as e:
-        print(f"[promote-memory] WARN: generalize failed ({e})", file=sys.stderr)
-        return None
+        out = out.strip()
+        if out:
+            return out
+    return None
 
 # ----- scan + classify -----
 candidates = []
