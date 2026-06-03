@@ -42,7 +42,7 @@ from pathlib import Path
 root = Path(os.environ["SRC_MEMORY_DIR"])
 raw = Path(os.environ["RAW_DIR"])
 link_re = re.compile(r"\[\[([^\]\|\#]+?)(?:\#[^\]]*)?(?:\|[^\]]*)?\]\]")
-name_re = re.compile(r"^name:\s*(\S+)\s*$", re.M)
+name_re = re.compile(r"^name:\s*(.+?)\s*$", re.M)
 
 # Treat raw corpus files (~/raw/**) as valid cross-scope wikilink targets.
 global_slugs = set()
