@@ -104,8 +104,8 @@ fi
 # -- GSD context bridge (for context-monitor hook) ----------------------------
 
 if [ -n "$session" ]; then
-    printf '{"session_id":"%s","remaining_percentage":%s,"used_pct":%d,"timestamp":%d}' \
-        "$session" "${REMAINING_PCT:-0}" "$pct" "$(date +%s)" \
+    printf '{"session_id":"%s","remaining_percentage":%s,"used_pct":%d,"tokens":%d,"timestamp":%d}' \
+        "$session" "${REMAINING_PCT:-0}" "$pct" "$CURRENT_TOKENS" "$(date +%s)" \
         > "/tmp/claude-ctx-${session}.json" 2>/dev/null
 fi
 

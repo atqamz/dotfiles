@@ -3,6 +3,18 @@
     "defaultMode": "auto"
   },
   "model": "opus",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"/home/atqa/.claude/hooks/context-warn.sh\""
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "bash \"/home/atqa/.claude/statusline-command.sh\""
@@ -23,5 +35,6 @@
   "effortLevel": "high",
   "skipDangerousModePermissionPrompt": true,
   "autoCompactEnabled": true,
+  "autoCompactWindow": 200000,
   "skipAutoPermissionPrompt": true
 }
