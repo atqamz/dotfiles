@@ -6,4 +6,6 @@ Type=oneshot
 Environment=PROMOTE_DRY_RUN=0
 ExecStart=%h/dotfiles/scripts/graphify-sync.sh
 Nice=10
-TimeoutStartSec=15min
+# claude -p extract + per-file commit messages run slower than an API backend;
+# allow generous headroom so the push step is always reached.
+TimeoutStartSec=45min
