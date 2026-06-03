@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # graphify-sync: rebuild graphify-memory + graphify-personal graphs, push ~/raw.
 # Triggered by graphify-sync.timer (daily) or run manually.
-# GEMINI_API_KEY fetched from `pass show dotfiles/api-key/gemini`.
-# Falls back to `claude -p` for per-file commit message generation when gemini fails.
+# All LLM work (graph extract + per-file commit messages) routes through the
+# locally-installed `claude` CLI (`claude -p`), billed to the Claude Code
+# subscription. No API keys required.
 
 set -uo pipefail
 
@@ -17,21 +18,10 @@ log() { echo "[graphify-sync] $*"; }
 warn() { echo "[graphify-sync] WARN: $*" >&2; }
 err() { echo "[graphify-sync] ERROR: $*" >&2; }
 
-if [[ -z "${GEMINI_API_KEY:-}" ]] && command -v pass >/dev/null 2>&1; then
-  GEMINI_API_KEY="$(pass show dotfiles/api-key/gemini 2>/dev/null || true)"
-  [[ -n "$GEMINI_API_KEY" ]] && export GEMINI_API_KEY
-fi
-
-HAS_GEMINI=0; HAS_CLAUDE=0
-[[ -n "${GEMINI_API_KEY:-}" ]] && HAS_GEMINI=1
-command -v claude >/dev/null 2>&1 && HAS_CLAUDE=1
-
-if [[ $HAS_GEMINI -eq 0 && $HAS_CLAUDE -eq 0 ]]; then
-  err "no LLM available (need GEMINI_API_KEY via pass, or claude CLI on PATH); aborting"
+if ! command -v claude >/dev/null 2>&1; then
+  err "claude CLI not on PATH; required for graph extract and commit messages; aborting"
   exit 1
 fi
-[[ $HAS_GEMINI -eq 0 ]] && warn "GEMINI_API_KEY unavailable; commit-message gen uses claude -p only, graphify extract will be skipped"
-[[ $HAS_CLAUDE -eq 0 ]] && warn "claude CLI not on PATH; gemini only (no fallback for commit messages)"
 
 #----- 1. memory: rsync + rebuild graph
 log "memory: rsync auto-memory into workspace"
@@ -99,30 +89,18 @@ else:
 PY
 
 log "memory: graphify extract"
-if [[ $HAS_GEMINI -eq 1 ]]; then
-  ( cd "$MEMORY_WS" && "$GRAPHIFY_BIN" extract . --backend gemini ) || warn "memory extract failed; continuing"
-else
-  warn "no GEMINI_API_KEY; skipping memory extract (no headless extract fallback wired)"
-fi
+( cd "$MEMORY_WS" && "$GRAPHIFY_BIN" extract . --backend claude-cli ) || warn "memory extract failed; continuing"
 
 #----- 1.5. promote: lift generalizable memory entries into ~/raw/from-memory/
 # DRY_RUN=1 by default during 7-day burn-in window; flip PROMOTE_DRY_RUN=0 in service env to enable writes.
 log "promote: scan memory for promotable entries"
-if [[ $HAS_CLAUDE -eq 1 ]]; then
-  DRY_RUN="${PROMOTE_DRY_RUN:-1}" PROMOTE_MODEL="${PROMOTE_MODEL:-claude-sonnet-4-6}" \
-    "$HOME/dotfiles/scripts/promote-memory.sh" || warn "promote-memory failed; continuing"
-else
-  warn "claude CLI not on PATH; skipping promote-memory"
-fi
+DRY_RUN="${PROMOTE_DRY_RUN:-1}" PROMOTE_MODEL="${PROMOTE_MODEL:-claude-sonnet-4-6}" \
+  "$HOME/dotfiles/scripts/promote-memory.sh" || warn "promote-memory failed; continuing"
 
 #----- 2. raw: rebuild personal corpus graph
 log "raw: graphify extract"
-if [[ $HAS_GEMINI -eq 1 ]]; then
-  if ! ( cd "$RAW" && "$GRAPHIFY_BIN" extract . --backend gemini ); then
-    warn "raw extract failed; will still commit/push file changes"
-  fi
-else
-  warn "no GEMINI_API_KEY; skipping raw extract (still continuing with commit/push)"
+if ! ( cd "$RAW" && "$GRAPHIFY_BIN" extract . --backend claude-cli ); then
+  warn "raw extract failed; will still commit/push file changes"
 fi
 
 #----- 3. raw: per-file semantic commit + push
@@ -166,52 +144,16 @@ generate_message() {
     *)      prompt="Write a Conventional Commits subject line describing this diff for '$path'. Constraints: imperative, lowercase, no period, max 60 characters. Use 'update' if no clearer type fits. Diff:\n$context" ;;
   esac
 
-  # Tier 1: Gemini (cheap, fast).
-  if [[ $HAS_GEMINI -eq 1 ]]; then
-    msg=$(GEMINI_PROMPT="$prompt" GEMINI_SYS="$COMMIT_SYS_PROMPT" python3 <<'PY' 2>/dev/null
-import os, sys
-from openai import OpenAI
-client = OpenAI(
-    api_key=os.environ["GEMINI_API_KEY"],
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-)
-try:
-    r = client.chat.completions.create(
-        model="gemini-2.0-flash",
-        messages=[
-            {"role": "system", "content": os.environ["GEMINI_SYS"]},
-            {"role": "user", "content": os.environ["GEMINI_PROMPT"]},
-        ],
-        max_tokens=40,
-        temperature=0.2,
-    )
-    out = (r.choices[0].message.content or "").strip().strip('"').strip("'").splitlines()
-    out = out[0] if out else ""
-    if not out:
-        sys.exit(2)
-    print(out[:60])
-except Exception:
-    sys.exit(2)
-PY
-    )
-    if [[ -n "$msg" ]]; then
-      echo "$msg"
-      return 0
-    fi
-  fi
-
-  # Tier 2: claude -p (text-only, single turn, no tool use).
+  # claude -p (text-only, single turn, no tool use).
   # Pinned to haiku — short subject-line gen, personal-memory policy disallows opus.
-  if [[ $HAS_CLAUDE -eq 1 ]]; then
-    msg=$(printf '%b' "$prompt" \
-      | claude -p --model claude-haiku-4-5-20251001 --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
-      | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
-            -e 's/^["'"'"']//' -e 's/["'"'"']$//' \
-      | head -n 1)
-    if [[ -n "$msg" ]]; then
-      echo "${msg:0:60}"
-      return 0
-    fi
+  msg=$(printf '%b' "$prompt" \
+    | claude -p --model claude-haiku-4-5-20251001 --max-turns 1 --append-system-prompt "$COMMIT_SYS_PROMPT" 2>/dev/null \
+    | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' \
+          -e 's/^["'"'"']//' -e 's/["'"'"']$//' \
+    | head -n 1)
+  if [[ -n "$msg" ]]; then
+    echo "${msg:0:60}"
+    return 0
   fi
 
   return 2
