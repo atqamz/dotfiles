@@ -101,6 +101,22 @@ link_re = re.compile(r"\[\[([^\]\|\#]+?)(?:\#[^\]]*)?(?:\|([^\]]*))?\]\]")
 fm_re = re.compile(r"^---\n(.*?)\n---\n?(.*)$", re.S)
 fence_open_re = re.compile(r"^```[a-zA-Z0-9]*\n")
 fence_close_re = re.compile(r"\n```\s*$")
+preamble_re = re.compile(r"(?i)^(rewriting|here('?s| is)|i'?ll|i am|sure|okay|ok|let me|"
+                         r"now[,:]?|done|rewritten|got it|certainly)\b")
+
+def strip_preamble(text):
+    """Drop a leading conversational narration line the agentic model sometimes emits
+    before the real body, plus a trailing '---' divider if it used one to separate."""
+    lines = text.split("\n")
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i < len(lines) and preamble_re.match(lines[i].strip()):
+        for j in range(i + 1, len(lines)):
+            if lines[j].strip() == "---":
+                return "\n".join(lines[j + 1:]).strip()
+        return "\n".join(lines[i + 1:]).strip()
+    return text.strip()
 
 def parse_frontmatter(text):
     m = fm_re.match(text)
@@ -193,8 +209,10 @@ def generalize(bodies, classification, job):
     sys_prompt = ("You rewrite a personal-memory note for a personal knowledge corpus. "
                   f"{merge_instr}{scope_instr} "
                   "Preserve concrete technical detail (names, URLs, versions, commands). "
-                  "Output ONLY the rewritten markdown body — no frontmatter, no code fences "
-                  "around the whole thing, no preamble, no sign-off.")
+                  "Respond with ONLY the rewritten markdown body. Do NOT narrate, "
+                  "acknowledge, or describe what you are doing. Your entire response must "
+                  "be the note body itself — no frontmatter, no code fences around the "
+                  "whole thing, no preamble line, no sign-off.")
     payload = "\n\n---\n\n".join(b.strip() for b in bodies)
     # The print-mode model flakes nondeterministically (~1/3): sometimes a turn-limit
     # error, sometimes empty output. Retry a few times before giving up.
@@ -219,7 +237,7 @@ def generalize(bodies, classification, job):
             continue
         out = fence_open_re.sub("", out)
         out = fence_close_re.sub("", out)
-        out = out.strip()
+        out = strip_preamble(out)
         if out:
             return out
     return None
