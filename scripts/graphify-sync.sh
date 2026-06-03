@@ -34,6 +34,9 @@ rsync -a --delete \
   --exclude='*' \
   "$SRC_MEMORY" "$MEMORY_DST" || { err "memory rsync failed"; exit 1; }
 
+log "memory: regenerate cross-project map (~/.claude/PROJECTS.md)"
+"$HOME/dotfiles/scripts/gen-projects-registry.sh" || warn "projects-registry gen failed; continuing"
+
 log "memory: dangling-wikilink check"
 SRC_MEMORY_DIR="$SRC_MEMORY" RAW_DIR="$RAW" python3 <<'PY' || warn "wikilink check errored"
 import os, re, sys
