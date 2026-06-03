@@ -2,7 +2,7 @@
 # Claude Code detailed statusline
 #
 # Line 1: Model (context size)
-# Line 2: progress bar pct% | dir (branch)
+# Line 2: tokens (pct%) | dir (branch)
 #
 # Usage limits (5hr + weekly) live in the waybar custom/claude_usage
 # module now — no point showing them twice.
@@ -77,15 +77,19 @@ if [ "$USAGE" != "null" ] && [ -n "$USAGE" ]; then
     pct=$((CURRENT_TOKENS * 100 / EFFECTIVE))
     [ "$pct" -gt 100 ] && pct=100
 else
+    CURRENT_TOKENS=20000
     pct=$((20000 * 100 / EFFECTIVE))
     pct_prefix="~"
 fi
 
-# Progress bar (10 segments)
-bar=""
-filled=$((pct / 10))
-for ((i = 0; i < filled; i++)); do bar+="█"; done
-for ((i = filled; i < 10; i++)); do bar+="░"; done
+# Human-readable token count (e.g. "45.2K", "1.3M")
+if [ "$CURRENT_TOKENS" -ge 1000000 ]; then
+    tokens_label=$(awk "BEGIN{printf \"%.1fM\", $CURRENT_TOKENS/1000000}")
+elif [ "$CURRENT_TOKENS" -ge 1000 ]; then
+    tokens_label=$(awk "BEGIN{printf \"%.1fK\", $CURRENT_TOKENS/1000}")
+else
+    tokens_label="$CURRENT_TOKENS"
+fi
 
 if [ "$pct" -lt 50 ]; then
     C_CTX='\033[32m'
@@ -113,6 +117,6 @@ line1="${C_ACCENT}${model}${C_GRAY} (${ctx_label})${C_RESET}"
 # Line 2: progress bar pct% | dir (branch)
 dir_part="${C_GRAY}${dir}"
 [ -n "$branch" ] && dir_part="${dir_part} (${branch})"
-line2="${C_CTX}${bar} ${pct_prefix}${pct}%${C_RESET} ${C_GRAY}|${C_RESET} ${dir_part}${C_RESET}"
+line2="${C_CTX}${pct_prefix}${tokens_label} (${pct}%)${C_RESET} ${C_GRAY}|${C_RESET} ${dir_part}${C_RESET}"
 
 printf '%b\n%b\n' "$line1" "$line2"
