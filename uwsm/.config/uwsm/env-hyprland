@@ -1,0 +1,12 @@
+# uwsm hyprland-specific environment (POSIX sh), sourced after env.
+# Suffix `hyprland` = XDG_CURRENT_DESKTOP lowercased (uwsm start -D Hyprland).
+# Inert on the non-uwsm Fedora host; see ./env for the dual-source rationale.
+
+# Cursor sizing (Xcursor + hyprcursor).
+export XCURSOR_SIZE=24
+export HYPRCURSOR_SIZE=24
+
+# Workspace-grid geometry read by hypr-workspace-pair / hypr-workspace-grid.
+export HYPR_WS_ROWS=A,B,C,D,E,F,G,H
+export HYPR_WS_COLS=10
+export HYPR_WS_PAIR_OFFSET=4

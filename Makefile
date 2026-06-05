@@ -1,4 +1,4 @@
-STOW_DIRS = bash claude git hypr opencode quickshell readline scripts swappy tmux zed
+STOW_DIRS = bash claude git hypr opencode quickshell readline scripts swappy tmux uwsm zed
 
 # files or directories that might conflict with stow and should be backed up
 BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .config/hypr .config/hypr/host.lua .config/opencode .config/quickshell .config/zed/settings.json .config/zed/keymap.json .gitconfig .inputrc .tmux.conf

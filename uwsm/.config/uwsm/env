@@ -1,0 +1,31 @@
+# uwsm graphical-session environment (POSIX sh, sourced by `uwsm start`).
+#
+# Sourced ONLY when the session is launched under uwsm (NixOS/pavg15, where
+# programs.hyprland.withUWSM = true). On the Fedora host (sfx14) hyprland is
+# launched directly from a wayland-sessions entry, uwsm never runs, and this
+# file is inert -- there hyprland.lua's hl.env(...) remains the env mechanism.
+#
+# Why a separate file at all: under uwsm, hl.env(...) reaches the compositor
+# but NOT the systemd/dbus activation environment, so user services
+# (sops-nix.service, gpg-agent, dispatched scripts) would miss it. uwsm sources
+# this and imports the result into the activation environment. Values here
+# intentionally mirror the shared block in hyprland.lua (dual, non-breaking).
+
+# Render / VA-API offload onto the discrete NVIDIA GPU.
+export LIBVA_DRIVER_NAME=nvidia
+export GBM_BACKEND=nvidia-drm
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+
+# User scripts on PATH so hyprland-dispatched bare-name commands (screenshot,
+# qs, power-profile, ...) resolve in the activation environment.
+export PATH="$HOME/.local/bin/scripts:$HOME/.local/bin:$HOME/bin:$PATH"
+
+# Flatpak app / desktop-entry discovery. Prepend, never clobber the value the
+# system already populated (on NixOS /run/current-system/sw/share et al).
+export XDG_DATA_DIRS="$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+
+# SSH through gpg-agent (NixOS HM services.gpg-agent enableSshSupport). Computed
+# from gpgconf so it tracks the real socket instead of a hardcoded path.
+if command -v gpgconf >/dev/null 2>&1; then
+    export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+fi
