@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# Log out of the Wayland session.
+#
+# Under uwsm (NixOS pavg15) the compositor runs inside the uwsm-managed session
+# scope: `hyprctl dispatch exit` kills hyprland but leaves graphical-session.target
+# and the user units uwsm started still running. `uwsm stop` tears the whole
+# session down cleanly. On the Fedora host hyprland is launched directly from a
+# wayland-sessions entry (no active uwsm session), so fall back to dispatching exit.
+script_dir="$(dirname "$(readlink -f "$0")")"
+source "${BASH_COMMON:-$script_dir/bash-common}"
+
+if has_cmd uwsm && uwsm check is-active 2>/dev/null; then
+  exec uwsm stop
+else
+  require_cmd hyprctl
+  exec hyprctl dispatch exit
+fi

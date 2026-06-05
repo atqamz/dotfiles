@@ -16,7 +16,7 @@ Scope {
 
     readonly property var actions: [
         { label: "Lock",     icon: "lock",              cmd: ["hyprlock"],                 confirm: false },
-        { label: "Logout",   icon: "exit_to_app",       cmd: ["hyprctl", "dispatch", "exit"], confirm: false },
+        { label: "Logout",   icon: "exit_to_app",       cmd: ["session-logout"],           confirm: false },
         { label: "Suspend",  icon: "bedtime",           cmd: ["systemctl", "suspend"],     confirm: false },
         { label: "Reboot",   icon: "refresh",           cmd: ["systemctl", "reboot"],      confirm: true },
         { label: "Shutdown", icon: "power_settings_new", cmd: ["systemctl", "poweroff"],   confirm: true }

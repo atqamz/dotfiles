@@ -34,3 +34,4 @@ notifications, workspace helpers, web app manager, and utility scripts.
 - localsend (optional, file sharing)
 - cmatrix or cbonsai (optional, screensaver)
 - imagemagick (optional, image transcoding)
+- uwsm (optional, graceful logout when the session is launched via uwsm)
