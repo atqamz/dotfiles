@@ -21,10 +21,10 @@ if [ -d ~/.bashrc.d ]; then
 fi
 unset rc
 
-# ssh-agent
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval "$(ssh-agent -s)" > /dev/null
-    ssh-add ~/.ssh/id_ed25519 2>/dev/null
+# ssh via gpg-agent (enable-ssh-support); set the socket if a graphical session
+# manager didn't already export it (e.g. a bare tty login).
+if [ -z "$SSH_AUTH_SOCK" ] && command -v gpgconf >/dev/null 2>&1; then
+    export SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
 fi
 
 # gpg pinentry tty fallback

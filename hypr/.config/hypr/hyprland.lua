@@ -28,7 +28,7 @@ hl.env("HYPR_WS_COLS", "10")
 hl.env("HYPR_WS_PAIR_OFFSET", "4")
 -- $HOME / $XDG_RUNTIME_DIR / $PATH do NOT auto-expand in lua strings; resolve via os.getenv().
 hl.env("PATH", os.getenv("HOME") .. "/.local/bin/scripts:" .. os.getenv("HOME") .. "/.local/bin:" .. os.getenv("PATH"))
-hl.env("SSH_AUTH_SOCK", os.getenv("XDG_RUNTIME_DIR") .. "/ssh-agent.socket")
+hl.env("SSH_AUTH_SOCK", os.getenv("XDG_RUNTIME_DIR") .. "/gnupg/S.gpg-agent.ssh")
 hl.env("XDG_DATA_DIRS", os.getenv("HOME") .. "/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share")
 
 local terminal    = "alacritty"
@@ -43,7 +43,6 @@ local powerMenu   = "qs ipc call session toggle"
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("qs")
-    hl.exec_cmd("sshadd")
     hl.exec_cmd("cliphist-watch")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("udiskie &")
