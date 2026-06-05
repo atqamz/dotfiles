@@ -12,3 +12,7 @@ hypr/.config/hypr/host.lua
 
 # Quickshell runtime state (emoji recents, etc.)
 quickshell/.config/quickshell/state/
+
+# graphify output cache, left behind when /graphify runs with this repo as CWD.
+# Never part of the dotfiles; graphify-sync.sh already skips it.
+graphify-out/
