@@ -17,6 +17,7 @@ Personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/).
 | `scripts` | Helper scripts (`~/.local/bin/scripts`) |
 | `swappy` | Screenshot editor configuration |
 | `tmux` | Terminal multiplexer |
+| `zed` | Zed editor settings and keymap |
 
 Each module has its own `README.md` with setup notes and dependencies.
 
