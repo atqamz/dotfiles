@@ -8,7 +8,7 @@ gnupg/.gnupg/*
 
 # Per-host hyprland symlink created by `make host-link`.
 # Lands here due to stow tree-folding `~/.config/hypr` to this dir.
-hypr/.config/hypr/host.conf
+hypr/.config/hypr/host.lua
 
 # Quickshell runtime state (emoji recents, etc.)
 quickshell/.config/quickshell/state/

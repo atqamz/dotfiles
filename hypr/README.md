@@ -3,19 +3,26 @@
 Hyprland window manager configuration including lock screen and idle
 settings. Stows into `~/.config/hypr/`.
 
+The compositor config is Lua (`hyprland.lua`), required since Hyprland 0.55
+retired the hyprlang window-rule matcher grammar. `hypridle.conf` and
+`hyprlock.conf` stay hyprlang — they configure separate tools, not the
+compositor.
+
 ## Per-host config
 
-`hyprland.conf` holds shared settings only. Host-specific fragments
-(monitor layout, workspace pinning, touchpad/touchscreen devices, host-only
-keybinds) live in `hosts/<hostname>.conf` and are pulled in via:
+`hyprland.lua` holds shared settings only. Host-specific fragments (monitor
+layout, workspace pinning, touchpad/touchscreen devices, host-only keybinds)
+live in `hosts/<hostname>.lua` and are pulled in at the end of
+`hyprland.lua` via:
 
-```
-source = ~/.config/hypr/host.conf
+```lua
+require("host")
 ```
 
-at the end of `hyprland.conf`. The `host.conf` entry is a relative symlink
-to `hosts/$(hostname -s).conf` created by the top-level `Makefile` after
-`stow` runs (mirrors the `gnupg/` symlink pattern).
+`host.lua` is a relative symlink to `hosts/$(hostname -s).lua` created by the
+top-level `Makefile` after `stow` runs (mirrors the `gnupg/` symlink pattern).
+Each `require`d file is a separate Lua scope, so a host file re-declares any
+locals it needs (e.g. `mainMod`).
 
 Supported hostnames:
 
@@ -24,10 +31,9 @@ Supported hostnames:
 - `pavg15` — HP Pavilion Gaming 15 (AMD Ryzen + GTX 1650). Built-in eDP-1
   1920x1080.
 
-Adding a new host: drop `hosts/<short-hostname>.conf` and run `make`. If
-the hostname has no corresponding fragment, hyprland logs an error sourcing
-the dangling `host.conf` symlink but otherwise keeps running on the shared
-core + monitor fallback.
+Adding a new host: drop `hosts/<short-hostname>.lua` and run `make`. If the
+hostname has no corresponding fragment, `require("host")` errors on the
+dangling symlink; the shared core + monitor fallback still load.
 
 ## Dependencies
 

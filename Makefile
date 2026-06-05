@@ -1,7 +1,7 @@
 STOW_DIRS = bash claude git hypr opencode quickshell readline scripts swappy tmux
 
 # files or directories that might conflict with stow and should be backed up
-BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .config/hypr .config/hypr/host.conf .config/opencode .config/quickshell .gitconfig .inputrc .tmux.conf
+BACKUP_TARGETS = .bashrc .claude/CLAUDE.md .claude/settings.json .claude/statusline-command.sh .config/hypr .config/hypr/host.lua .config/opencode .config/quickshell .gitconfig .inputrc .tmux.conf
 
 # gnupg requires a real directory with strict permissions, so stow's directory
 # folding cannot be used. Symlink individual config files instead.
@@ -35,15 +35,15 @@ delete:
 host-link:
 	@mkdir -p $$HOME/.config/hypr
 	@host=$$(hostname -s); \
-	target="hosts/$$host.conf"; \
+	target="hosts/$$host.lua"; \
 	if [ ! -e $$HOME/.config/hypr/$$target ]; then \
 		echo "WARN: $$HOME/.config/hypr/$$target missing (no per-host fragment for $$host)"; \
 	fi; \
-	ln -sfn $$target $$HOME/.config/hypr/host.conf; \
-	echo "LINK: .config/hypr/host.conf => $$target"
+	ln -sfn $$target $$HOME/.config/hypr/host.lua; \
+	echo "LINK: .config/hypr/host.lua => $$target"
 
 host-unlink:
-	@rm -f $$HOME/.config/hypr/host.conf
-	@echo "UNLINK: .config/hypr/host.conf"
+	@rm -f $$HOME/.config/hypr/host.lua
+	@echo "UNLINK: .config/hypr/host.lua"
 
 .PHONY: all stow delete host-link host-unlink
