@@ -136,6 +136,12 @@ fi
 
 log "raw: ${#CHANGED[@]} change(s) to process"
 
+# Commit signing and the push both authenticate through gpg-agent. The daily
+# timer fires while the laptop is in use, so a cold cache just pops the normal
+# pinentry GUI and the passphrase is typed; a warm 24h cache prompts for
+# nothing. With no display up, gpg/ssh error out, the file is skipped, and the
+# Persistent timer retries after the next login. No key material lives on disk.
+
 COMMIT_SYS_PROMPT="You generate concise git commit subject lines. Output the subject line only — no quotes, no markdown, no trailing period. Max 60 chars."
 
 generate_message() {
