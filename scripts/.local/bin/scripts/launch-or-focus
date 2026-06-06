@@ -18,7 +18,7 @@ addr=$(hyprctl clients -j | jq -r --arg p "$pattern" \
   '.[] | select((.class | test("\\b" + $p + "\\b"; "i")) or (.title | test("\\b" + $p + "\\b"; "i"))) | .address' | head -n1)
 
 if [ -n "$addr" ]; then
-  hyprctl dispatch focuswindow "address:$addr" >/dev/null
+  hyprctl dispatch "hl.dsp.focus{window=\"address:$addr\"}" >/dev/null
 else
   setsid bash -c "$command" >/dev/null 2>&1 &
 fi

@@ -114,7 +114,7 @@ case "$cmd" in
     target_col="$arg"
     pair_row_index=$((primary_row + pair_offset))
     pair_id=$((pair_row_index * cols + target_col))
-    hyprctl dispatch workspace "$pair_id"
+    hyprctl dispatch "hl.dsp.focus{workspace=$pair_id}"
     hypr-workspace-grid goto "$target_col"
     ;;
   row)
@@ -131,7 +131,7 @@ case "$cmd" in
     fi
     pair_row_index=$((target_row_index + pair_offset))
     pair_id=$((pair_row_index * cols + target_col))
-    hyprctl dispatch workspace "$pair_id"
+    hyprctl dispatch "hl.dsp.focus{workspace=$pair_id}"
     hypr-workspace-grid row "$arg" "$target_col"
     ;;
   cycle)
@@ -140,7 +140,7 @@ case "$cmd" in
     target_row_index=$(((primary_row + 1) % pair_offset))
     pair_row_index=$((target_row_index + pair_offset))
     pair_id=$((pair_row_index * cols + target_col))
-    hyprctl dispatch workspace "$pair_id"
+    hyprctl dispatch "hl.dsp.focus{workspace=$pair_id}"
     hypr-workspace-grid row "$((target_row_index + 1))" "$target_col"
     ;;
   *)

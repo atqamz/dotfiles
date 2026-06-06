@@ -199,14 +199,14 @@ esac
 
 target_id=$((target_row_index * cols + target_col))
 if [[ "$cmd" == "move" ]]; then
-  hyprctl dispatch movetoworkspace "$target_id"
+  hyprctl dispatch "hl.dsp.window.move{workspace=$target_id}"
 else
-  hyprctl dispatch workspace "$target_id"
+  hyprctl dispatch "hl.dsp.focus{workspace=$target_id}"
 fi
 
 if [[ "${HYPR_WS_RENAME:-1}" != "0" ]]; then
   target_label="${rows[$target_row_index]}${target_col}"
-  hyprctl dispatch renameworkspace "$target_id" "$target_label" >/dev/null 2>&1 || true
+  hyprctl dispatch "hl.dsp.workspace.rename{workspace=$target_id,name=\"$target_label\"}" >/dev/null 2>&1 || true
 fi
 
 if [[ "$update_state" -eq 1 ]]; then

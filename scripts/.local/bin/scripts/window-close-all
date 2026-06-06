@@ -7,5 +7,5 @@ require_cmd hyprctl
 require_cmd jq
 
 hyprctl clients -j | jq -r '.[].address' | while read -r addr; do
-  hyprctl dispatch closewindow "address:$addr" >/dev/null
+  hyprctl dispatch "hl.dsp.window.close{window=\"address:$addr\"}" >/dev/null
 done
