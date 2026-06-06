@@ -60,9 +60,11 @@ ln -s ~/password-store ~/.password-store
 
 ### SSH agent
 
-```sh
-systemctl --user enable --now ssh-agent.service
-```
+SSH is served by gpg-agent (`enable-ssh-support` in `gnupg/.gnupg/gpg-agent.conf`),
+not a standalone `ssh-agent`. The personal SSH identity is the GPG `[A]` auth
+subkey — append its keygrip to `~/.gnupg/sshcontrol` once per machine (see
+`gnupg/README.md`). `SSH_AUTH_SOCK` is exported by `bash/.bashrc` (and the `uwsm`
+env module under uwsm sessions).
 
 ### Fonts
 
