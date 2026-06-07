@@ -223,7 +223,7 @@ Scope {
                                 StyledText {
                                     anchors.centerIn: parent
                                     text: HyprlandKeybinds.categories.length === 0
-                                          ? "No keybinds parsed (add # Section: headers to hyprland.conf)"
+                                          ? "No keybinds parsed (add -- Section: headers to hyprland.lua)"
                                           : "No matches"
                                     color: Theme.textMuted
                                     font.pixelSize: Theme.font.size.normal
