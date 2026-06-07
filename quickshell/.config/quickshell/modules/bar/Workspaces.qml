@@ -56,9 +56,9 @@ Item {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
         onWheel: event => {
             if (event.angleDelta.y < 0)
-                Hyprland.dispatch("workspace r+1");
+                Hyprland.dispatch('hl.dsp.focus({workspace="r+1"})');
             else if (event.angleDelta.y > 0)
-                Hyprland.dispatch("workspace r-1");
+                Hyprland.dispatch('hl.dsp.focus({workspace="r-1"})');
         }
     }
 
@@ -124,7 +124,7 @@ Item {
                          : ((root.occupied[cell.index] ?? false) ? Theme.textVariant : Theme.textDim)
                 }
 
-                TapHandler { onTapped: Hyprland.dispatch("workspace " + cell.wsId); }
+                TapHandler { onTapped: Hyprland.dispatch("hl.dsp.focus({workspace=" + cell.wsId + "})"); }
             }
         }
     }

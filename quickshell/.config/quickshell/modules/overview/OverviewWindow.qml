@@ -104,7 +104,7 @@ Item {
             win.Drag.active = false;
             var target = win.dropTarget;
             if (target !== -1 && win.windowData && target !== win.windowData.workspace.id) {
-                Hyprland.dispatch("movetoworkspacesilent " + target + ",address:" + win.addr);
+                Hyprland.dispatch("hl.dsp.window.move({workspace=" + target + ', window="address:' + win.addr + '", silent=true})');
             }
             // drag.target broke the x/y bindings; restore them so the tile stays
             // reactive (Behavior animates the snap-back / move-to-new-cell). A
@@ -115,10 +115,10 @@ Item {
         onClicked: function (mouse) {
             if (!win.windowData) return;
             if (mouse.button === Qt.LeftButton) {
-                Hyprland.dispatch("focuswindow address:" + win.addr);
+                Hyprland.dispatch('hl.dsp.focus({window="address:' + win.addr + '"})');
                 win.requestClose();
             } else if (mouse.button === Qt.MiddleButton) {
-                Hyprland.dispatch("closewindow address:" + win.addr);
+                Hyprland.dispatch('hl.dsp.window.close({window="address:' + win.addr + '"})');
             }
         }
     }

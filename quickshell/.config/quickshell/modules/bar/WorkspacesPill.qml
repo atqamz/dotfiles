@@ -52,7 +52,7 @@ Pill {
 
                 TapHandler {
                     id: wsTap
-                    onTapped: Hyprland.dispatch("workspace " + dot.wsId)
+                    onTapped: Hyprland.dispatch("hl.dsp.focus({workspace=" + dot.wsId + "})")
                 }
             }
         }

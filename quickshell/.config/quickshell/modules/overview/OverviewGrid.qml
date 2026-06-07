@@ -76,7 +76,7 @@ Item {
                             MouseArea {
                                 id: cellMa
                                 anchors.fill: parent
-                                onClicked: { Hyprland.dispatch("workspace " + cell.wsId); root.requestClose(); }
+                                onClicked: { Hyprland.dispatch("hl.dsp.focus({workspace=" + cell.wsId + "})"); root.requestClose(); }
                             }
                             DropArea {
                                 anchors.fill: parent
