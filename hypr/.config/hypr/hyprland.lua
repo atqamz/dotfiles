@@ -1,8 +1,9 @@
 -- Hyprland 0.55 Lua config (migrated from hyprland.conf).
 -- Shared core. Per-host monitors/workspaces/devices live in hosts/<hostname>.lua,
--- required at EOF via the `host` symlink. Each require()d file is a SEPARATE lua
--- scope (per wiki Start.md), so locals defined here (mainMod, program vars) do NOT
--- cross into host files; host files re-declare what they need.
+-- resolved at EOF by the live hostname (no mutable symlink to mispoint). Each
+-- require()d file is a SEPARATE lua scope (per wiki Start.md), so locals defined
+-- here (mainMod, program vars) do NOT cross into host files; host files re-declare
+-- what they need.
 
 --------------------
 --- FALLBACK MON ---
@@ -339,5 +340,25 @@ hl.window_rule({
 -----------------
 
 -- Required last so per-host monitors/workspaces/devices override or extend the
--- shared core. `host.lua` is symlinked by `make` to hosts/<hostname>.lua.
-require("host")
+-- shared core. Resolved by live hostname rather than a symlink: /etc/hostname is
+-- authoritative on Fedora (sfx14) and NixOS (pavg15); HOSTNAME env is the fallback.
+-- Domain suffix stripped. A missing or broken host module logs but never aborts
+-- the shared core. This removes the old `host.lua` symlink, which could be
+-- (and once was) hand-pointed at the wrong host's file.
+local function host_name()
+    local h
+    local f = io.open("/etc/hostname")
+    if f then h = f:read("l"); f:close() end
+    if not h or h == "" then h = os.getenv("HOSTNAME") end
+    return h and h:match("^[^.%s]+") or nil
+end
+
+local host = host_name()
+if host then
+    local ok, err = pcall(require, "hosts." .. host)
+    if not ok then
+        print("hyprland.lua: host module 'hosts." .. host .. "' failed: " .. tostring(err))
+    end
+else
+    print("hyprland.lua: could not resolve hostname; no per-host config loaded")
+end

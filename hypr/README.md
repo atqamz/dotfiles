@@ -12,28 +12,30 @@ compositor.
 
 `hyprland.lua` holds shared settings only. Host-specific fragments (monitor
 layout, workspace pinning, touchpad/touchscreen devices, host-only keybinds)
-live in `hosts/<hostname>.lua` and are pulled in at the end of
-`hyprland.lua` via:
+live in `hosts/<hostname>.lua` and are pulled in at the end of `hyprland.lua`
+by resolving the live hostname at runtime — no symlink:
 
 ```lua
-require("host")
+local host = host_name()           -- /etc/hostname, falling back to $HOSTNAME
+if host then pcall(require, "hosts." .. host) end
 ```
 
-`host.lua` is a relative symlink to `hosts/$(hostname -s).lua` created by the
-top-level `Makefile` after `stow` runs (mirrors the `gnupg/` symlink pattern).
 Each `require`d file is a separate Lua scope, so a host file re-declares any
-locals it needs (e.g. `mainMod`).
+locals it needs (e.g. `mainMod`). Resolving by hostname instead of a mutable
+`host.lua` symlink means the wrong host's fragment can never be loaded — the
+file that runs is always the one named after the running machine.
 
 Supported hostnames:
 
 - `sfx14` — Acer Swift X14 (Intel iGPU + RTX 4050). Built-in eDP-1
-  1920x1200@120, optional external DP-1 (Wacom/touch panel) and HDMI-A-1.
+  2880x1800@120 scale 1.5, optional external DP-1 (Wacom/touch panel) and
+  HDMI-A-1.
 - `pavg15` — HP Pavilion Gaming 15 (AMD Ryzen + GTX 1650). Built-in eDP-1
   1920x1080.
 
-Adding a new host: drop `hosts/<short-hostname>.lua` and run `make`. If the
-hostname has no corresponding fragment, `require("host")` errors on the
-dangling symlink; the shared core + monitor fallback still load.
+Adding a new host: drop `hosts/<short-hostname>.lua` — nothing else to wire up.
+If no fragment matches the hostname, `require` is skipped with a log line; the
+shared core + monitor fallback still load.
 
 ## Dependencies
 

@@ -11,16 +11,27 @@ Singleton {
     property var categories: []
 
     // Source files (lua provider, since the hyprlang -> 0.55 cutover). The shared
-    // core lives in hyprland.lua; per-host binds live in host.lua (symlink ->
-    // hosts/<hostname>.lua). Both are parsed and their categories concatenated.
+    // core lives in hyprland.lua; per-host binds live in hosts/<hostname>.lua,
+    // resolved by the live hostname exactly as hyprland.lua does (the old host.lua
+    // symlink is gone). Both are parsed and their categories concatenated.
     property string _mainText: ""
     property string _hostText: ""
     property bool _mainLoaded: false
     property bool _hostLoaded: false
+    property string _host: ""
 
     function reload(): void {
+        hostnameFile.reload();
         mainFile.reload();
         hostFile.reload();
+    }
+
+    // Hostname source: /etc/hostname (authoritative on Fedora + NixOS), domain
+    // suffix stripped. Drives the per-host fragment path below.
+    FileView {
+        id: hostnameFile
+        path: "/etc/hostname"
+        onLoaded: root._host = this.text().trim().split(".")[0]
     }
 
     FileView {
@@ -33,7 +44,9 @@ Singleton {
 
     FileView {
         id: hostFile
-        path: Quickshell.env("HOME") + "/.config/hypr/host.lua"
+        path: root._host.length > 0
+              ? Quickshell.env("HOME") + "/.config/hypr/hosts/" + root._host + ".lua"
+              : ""
         watchChanges: true
         onFileChanged: hostFile.reload()
         onLoaded: { root._hostText = this.text(); root._hostLoaded = true; root._rebuild(); }
