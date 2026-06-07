@@ -16,8 +16,13 @@ fi
 
 external_count=$(hyprctl monitors -j | jq '[.[] | select(.name | contains("eDP") | not)] | length')
 
+# The lua config provider rejects `hyprctl keyword`; reconfigure the monitor by
+# evaluating hl.monitor() instead. It applies before the dispatcher wrapper prints
+# its harmless "expected a dispatcher" line, so swallow all output.
+mon_eval() { hyprctl dispatch "$1" >/dev/null 2>&1 || true; }
+
 on() {
-  hyprctl keyword monitor "$internal,preferred,auto,1" >/dev/null
+  mon_eval "$(printf 'hl.monitor({output="%s", mode="preferred", position="auto", scale=1})' "$internal")"
   toggle internal-monitor-off off
   notify-send -u low "Internal display enabled"
 }
@@ -27,7 +32,7 @@ off() {
     notify-send -u low "Cannot disable only active display"
     exit 1
   fi
-  hyprctl keyword monitor "$internal,disable" >/dev/null
+  mon_eval "$(printf 'hl.monitor({output="%s", disabled=true})' "$internal")"
   toggle internal-monitor-off on
   notify-send -u low "Internal display disabled"
 }

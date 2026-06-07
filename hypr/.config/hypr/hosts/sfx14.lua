@@ -11,8 +11,13 @@ local mainMod = "SUPER"
 --- MONITORS ---
 --------------
 
-hl.monitor({ output = "eDP-1", mode = "1920x1200@120", position = "0x0", scale = 1 })
-hl.monitor({ output = "DP-1", mode = "1920x1200@60", position = "-1920x0", scale = 1 })
+-- eDP-1 native is 2880x1800@120; scale 1.5 -> 1920x1200 logical (clean integers).
+-- The old 1920x1200 mode does not exist on this panel, so Hyprland fell back to
+-- 1920x1080 and letterboxed the 16:10 display (pillbox top/bottom).
+hl.monitor({ output = "eDP-1", mode = "2880x1800@120", position = "0x0", scale = 1.5 })
+-- DP-1 (RTK USB-C portable touch panel) native is 2240x1400@60; scale 1.25 ->
+-- 1792x1120 logical. 1920x1200 was never a valid DP-1 mode.
+hl.monitor({ output = "DP-1", mode = "2240x1400@60", position = "-1792x0", scale = 1.25 })
 hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "1920x0", scale = 1 })
 
 
@@ -36,12 +41,11 @@ hl.device({ name = "syna7db5:00-06cb:ceb1-touchpad", accel_profile = "custom 0.5
 --- HOST KEYBINDS ---
 --------------------
 
--- Reposition DP-1 left/right of eDP-1.
-hl.bind(mainMod .. " + SHIFT + comma", hl.dsp.exec_cmd('hyprctl keyword monitor "DP-1,1920x1200@60,-1920x0,1"'))
-hl.bind(mainMod .. " + SHIFT + period", hl.dsp.exec_cmd('hyprctl keyword monitor "DP-1,1920x1200@60,1920x0,1"'))
-
--- VNC into pavg15.
-hl.bind(mainMod .. " + CTRL + ALT + 0", hl.dsp.exec_cmd("vnc-pavg15"))
+-- Reposition DP-1 left/right of eDP-1 (eDP-1 logical width is 1920, DP-1 is 1792).
+-- `hyprctl keyword` is rejected under the lua provider, so shell out to a lua eval
+-- of hl.monitor(); the dispatcher wrapper's harmless error is sent to /dev/null.
+hl.bind(mainMod .. " + SHIFT + comma", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="2240x1400@60", position="-1792x0", scale=1.25})' >/dev/null 2>&1]]))
+hl.bind(mainMod .. " + SHIFT + period", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="2240x1400@60", position="1920x0", scale=1.25})' >/dev/null 2>&1]]))
 
 
 ----------------
