@@ -14,5 +14,7 @@ if has_cmd uwsm && uwsm check is-active 2>/dev/null; then
   exec uwsm stop
 else
   require_cmd hyprctl
-  exec hyprctl dispatch exit
+  # Under the lua provider `dispatch exit` parses as `hl.dispatch(exit)` and errors
+  # (exit is nil); evaluate the lua exit dispatcher instead.
+  exec hyprctl dispatch 'hl.dsp.exit()'
 fi
