@@ -16,13 +16,20 @@ fi
 
 external_count=$(hyprctl monitors -j | jq '[.[] | select(.name | contains("eDP") | not)] | length')
 
+# Per-host scale of the internal panel (sfx14 eDP-1 wants 1.5). The script is
+# host-agnostic, so persist the live scale before disabling and restore it on
+# re-enable instead of hardcoding scale=1 (which brought the panel back tiny).
+scale_state="$HOME/.local/state/toggles/internal-monitor-scale"
+
 # The lua config provider rejects `hyprctl keyword`; reconfigure the monitor by
 # evaluating hl.monitor() instead. It applies before the dispatcher wrapper prints
 # its harmless "expected a dispatcher" line, so swallow all output.
 mon_eval() { hyprctl dispatch "$1" >/dev/null 2>&1 || true; }
 
 on() {
-  mon_eval "$(printf 'hl.monitor({output="%s", mode="preferred", position="auto", scale=1})' "$internal")"
+  scale="$(cat "$scale_state" 2>/dev/null)"
+  [ -n "$scale" ] || scale=1
+  mon_eval "$(printf 'hl.monitor({output="%s", mode="preferred", position="auto", scale=%s})' "$internal" "$scale")"
   toggle internal-monitor-off off
   notify-send -u low "Internal display enabled"
 }
@@ -31,6 +38,11 @@ off() {
   if (( external_count == 0 )); then
     notify-send -u low "Cannot disable only active display"
     exit 1
+  fi
+  scale="$(hyprctl monitors -j | jq -r --arg n "$internal" '.[] | select(.name==$n).scale')"
+  if [ -n "$scale" ] && [ "$scale" != "null" ]; then
+    mkdir -p "$(dirname "$scale_state")"
+    printf '%s\n' "$scale" > "$scale_state"
   fi
   mon_eval "$(printf 'hl.monitor({output="%s", disabled=true})' "$internal")"
   toggle internal-monitor-off on
