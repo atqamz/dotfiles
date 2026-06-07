@@ -8,21 +8,28 @@ require_cmd jq
 
 gaps_state="$HOME/.local/state/toggles/gaps-in-value"
 
+# The lua config provider rejects `hyprctl keyword`; set gaps by evaluating
+# hl.config() instead. The dispatcher wrapper prints a harmless "expected a
+# dispatcher" line after the call applies, so swallow all output.
+set_gaps() { hyprctl dispatch "$(printf 'hl.config({general={gaps_in=%s}})' "$1")" >/dev/null 2>&1 || true; }
+
 if toggle gaps-off status; then
   # Gaps are currently zeroed: restore the value saved when they were turned
-  # off, so the toggle tracks whatever hyprland.conf configures (fallback 2).
+  # off, so the toggle tracks whatever the config configures (fallback 2).
   restore="$(cat "$gaps_state" 2>/dev/null)"
   [ -n "$restore" ] || restore=2
-  hyprctl keyword general:gaps_in "$restore" >/dev/null
+  set_gaps "$restore"
   toggle gaps-off off
 else
-  # Capture the live (configured) gaps before zeroing. Skip the save when the
-  # value is already all-zero so a double-toggle can't lose the real value.
-  cur="$(hyprctl getoption general:gaps_in -j | jq -r '.custom // empty')"
+  # Capture the live (configured) gaps before zeroing. Under 0.55 gaps_in is a
+  # CSS-style gap reported as `.css` ("5 5 5 5"); take the first component as the
+  # single int to restore. Skip the save when already all-zero so a double-toggle
+  # can't lose the real value.
+  cur="$(hyprctl getoption general:gaps_in -j | jq -r '.css // empty' | awk '{print $1}')"
   if printf '%s' "$cur" | grep -q '[1-9]'; then
     mkdir -p "$(dirname "$gaps_state")"
     printf '%s\n' "$cur" > "$gaps_state"
   fi
-  hyprctl keyword general:gaps_in 0 >/dev/null
+  set_gaps 0
   toggle gaps-off on
 fi

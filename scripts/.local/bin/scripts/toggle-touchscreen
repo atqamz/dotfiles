@@ -16,14 +16,19 @@ fi
 
 action="${1:-toggle}"
 
+# The lua config provider rejects `hyprctl keyword`; set device props by evaluating
+# hl.device() instead. The dispatcher wrapper prints a harmless "expected a
+# dispatcher" line after the call applies, so swallow all output.
+dev_eval() { hyprctl dispatch "$(printf 'hl.device({name="%s", enabled=%s})' "$device" "$1")" >/dev/null 2>&1 || true; }
+
 enable() {
-  hyprctl keyword "device[$device]:enabled" true >/dev/null
+  dev_eval true
   toggle touchscreen-off off
   notify-send -u low "Touchscreen enabled"
 }
 
 disable() {
-  hyprctl keyword "device[$device]:enabled" false >/dev/null
+  dev_eval false
   toggle touchscreen-off on
   notify-send -u low "Touchscreen disabled"
 }

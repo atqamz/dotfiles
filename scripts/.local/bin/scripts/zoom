@@ -29,4 +29,7 @@ case "${1:---in}" in
     ;;
 esac
 
-hyprctl keyword cursor:zoom_factor "$new" >/dev/null
+# The lua config provider rejects `hyprctl keyword`; set the value by evaluating
+# hl.config() instead. The dispatcher wrapper prints a harmless "expected a
+# dispatcher" line after the call applies, so swallow all output.
+hyprctl dispatch "$(printf 'hl.config({cursor={zoom_factor=%s}})' "$new")" >/dev/null 2>&1 || true
