@@ -48,7 +48,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("udiskie &")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("hypr-workspace-pair row 1")
-    hl.exec_cmd("hypr-vnc-passthrough")
 end)
 
 
@@ -319,14 +318,6 @@ hl.bind("XF86AudioNext", hl.dsp.exec_cmd("qs ipc call mpris next"), { locked = t
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("qs ipc call mpris playPause"), { locked = true })
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("qs ipc call mpris playPause"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("qs ipc call mpris previous"), { locked = true })
-
--- Section: VNC passthrough (managed by hypr-vnc-passthrough daemon)
--- Empty submap -- all keys forwarded to focused VNC window.
--- Escape hatch: Ctrl+Alt exits passthrough if daemon dies.
-hl.define_submap("passthrough", function()
-    hl.bind("CTRL + Alt_L", hl.dsp.submap("reset"))
-end)
-
 
 ----------------------------
 --- WINDOWS AND WORKSPACES ---

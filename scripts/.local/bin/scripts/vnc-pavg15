@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-set -eu
-if pkill -f 'vncviewer pavg15:5900'; then
-  exit 0
-fi
-exec vncviewer pavg15:5900
