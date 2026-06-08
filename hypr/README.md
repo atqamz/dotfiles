@@ -27,9 +27,10 @@ file that runs is always the one named after the running machine.
 
 Supported hostnames:
 
-- `sfx14` — Acer Swift X14 (Intel iGPU + RTX 4050). Built-in eDP-1
-  2880x1800@120 scale 1.5, optional external DP-1 (Wacom/touch panel) and
-  HDMI-A-1.
+- `sfx14` — Acer Swift X14 (Intel iGPU + RTX 4050). Built-in eDP-1 driven at
+  1920x1200@120 scale 1 (panel native is 2880x1800; integer scale avoids the
+  XWayland fractional-upscale blur), optional external DP-1 (Wacom/touch panel)
+  and HDMI-A-1.
 - `pavg15` — HP Pavilion Gaming 15 (AMD Ryzen + GTX 1650). Built-in eDP-1
   1920x1080.
 

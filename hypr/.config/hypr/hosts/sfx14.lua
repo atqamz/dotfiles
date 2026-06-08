@@ -1,7 +1,7 @@
 -- sfx14: Acer Swift X14 -- Intel iGPU + RTX 4050
 -- Built-in eDP-1, optional external DP-1 (Wacom/touch panel), optional HDMI-A-1.
 --
--- This file is require()d from hyprland.lua (via the `host` symlink) and runs in
+-- This file is require()d from hyprland.lua (resolved by hostname) and runs in
 -- its OWN lua scope: locals from hyprland.lua (mainMod, program vars) do NOT reach
 -- here, so anything referenced below is re-declared locally.
 
@@ -11,13 +11,14 @@ local mainMod = "SUPER"
 --- MONITORS ---
 --------------
 
--- eDP-1 native is 2880x1800@120; scale 1.5 -> 1920x1200 logical (clean integers).
--- The old 1920x1200 mode does not exist on this panel, so Hyprland fell back to
--- 1920x1080 and letterboxed the 16:10 display (pillbox top/bottom).
-hl.monitor({ output = "eDP-1", mode = "2880x1800@120", position = "0x0", scale = 1.5 })
--- DP-1 (RTK USB-C portable touch panel) native is 2240x1400@60; scale 1.25 ->
--- 1792x1120 logical. 1920x1200 was never a valid DP-1 mode.
-hl.monitor({ output = "DP-1", mode = "2240x1400@60", position = "-1792x0", scale = 1.25 })
+-- Both panels run an integer-scale (scale 1) custom mode and let the panel's own
+-- scaler upscale to native. Fractional scale (1.5 / 1.25) bitmap-upscales XWayland
+-- surfaces (Avalonia/SourceGit) so they go blurry; scale 1 keeps them crisp.
+-- eDP-1 native is 2880x1800@120 (16:10); 1920x1200 is the same ratio, no letterbox.
+hl.monitor({ output = "eDP-1", mode = "1920x1200@120", position = "0x0", scale = 1 })
+-- DP-1 (RTK USB-C portable touch panel) native is 2240x1400@60 (16:10); 1792x1120
+-- is the same ratio.
+hl.monitor({ output = "DP-1", mode = "1792x1120@60", position = "-1792x0", scale = 1 })
 hl.monitor({ output = "HDMI-A-1", mode = "1920x1080@60", position = "1920x0", scale = 1 })
 
 
@@ -44,8 +45,8 @@ hl.device({ name = "syna7db5:00-06cb:ceb1-touchpad", accel_profile = "custom 0.5
 -- Reposition DP-1 left/right of eDP-1 (eDP-1 logical width is 1920, DP-1 is 1792).
 -- `hyprctl keyword` is rejected under the lua provider, so shell out to a lua eval
 -- of hl.monitor(); the dispatcher wrapper's harmless error is sent to /dev/null.
-hl.bind(mainMod .. " + SHIFT + comma", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="2240x1400@60", position="-1792x0", scale=1.25})' >/dev/null 2>&1]]))
-hl.bind(mainMod .. " + SHIFT + period", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="2240x1400@60", position="1920x0", scale=1.25})' >/dev/null 2>&1]]))
+hl.bind(mainMod .. " + SHIFT + comma", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="1792x1120@60", position="-1792x0", scale=1})' >/dev/null 2>&1]]))
+hl.bind(mainMod .. " + SHIFT + period", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.monitor({output="DP-1", mode="1792x1120@60", position="1920x0", scale=1})' >/dev/null 2>&1]]))
 
 
 ----------------
