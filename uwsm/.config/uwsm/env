@@ -16,12 +16,22 @@ export LIBVA_DRIVER_NAME=nvidia
 export GBM_BACKEND=nvidia-drm
 export __GLX_VENDOR_LIBRARY_NAME=nvidia
 
+# greetd launches `uwsm start` with a minimal env that never sourced the login
+# profile, so the OS + Home-Manager session variables are absent here -- most
+# visibly XDG_DATA_DIRS (without the profile share dirs quickshell's
+# DesktopEntries finds zero .desktop files => empty app launcher) and the
+# cursor theme (XCURSOR_THEME / HYPRCURSOR_THEME). Pull both layers in first so
+# the PATH / XDG_DATA_DIRS prepends below build on a populated value. Guarded so
+# the file stays inert on hosts without them.
+[ -f /etc/set-environment ] && . /etc/set-environment
+[ -f "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ] && . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+
 # User scripts on PATH so hyprland-dispatched bare-name commands (screenshot,
 # qs, power-profile, ...) resolve in the activation environment.
 export PATH="$HOME/.local/bin/scripts:$HOME/.local/bin:$HOME/bin:$PATH"
 
 # Flatpak app / desktop-entry discovery. Prepend, never clobber the value the
-# system already populated (on NixOS /run/current-system/sw/share et al).
+# sourced profile above populated (on NixOS /run/current-system/sw/share et al).
 export XDG_DATA_DIRS="$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
 # SSH through gpg-agent (NixOS HM services.gpg-agent enableSshSupport). Computed
