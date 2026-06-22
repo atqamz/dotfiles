@@ -29,7 +29,7 @@ hl.config({
 })
 
 -- windowrule "center 1, match:float 1, match:xwayland 0": center floating non-xwayland windows.
-hl.window_rule({ match = { floating = true, xwayland = false }, center = true })
+hl.window_rule({ match = { float = true, xwayland = false }, center = true })
 
 hl.gesture({ fingers = 3, direction = "vertical", action = "workspace" })
 
