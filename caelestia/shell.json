@@ -1,7 +1,7 @@
 {
     "appearance": {
         "transparency": {
-            "enabled": true
+            "enabled": false
         }
     },
     "background": {
@@ -25,7 +25,7 @@
         }
     },
     "border": {
-        "thickness": 4
+        "rounding": 0
     },
     "general": {
         "idle": {
