@@ -13,7 +13,6 @@ hl.config({
     },
     animations = {
         enabled = true,
-        animation = { "workspaces, 1, 6, default, slidevert" },
     },
     input = {
         kb_layout = "us",
@@ -21,6 +20,8 @@ hl.config({
         touchpad = { natural_scroll = true },
     },
 })
+
+hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "default", style = "slidevert" })
 
 hl.window_rule({ match = { float = true, xwayland = false }, center = true })
 
