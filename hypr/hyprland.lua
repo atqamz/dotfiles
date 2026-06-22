@@ -4,12 +4,24 @@ hl.env("HYPRCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
 hl.env("XCURSOR_SIZE", "24")
 
+local function scheme_colour(key, fallback)
+    local f = io.open(os.getenv("HOME") .. "/.local/state/caelestia/scheme.json")
+    if not f then return fallback end
+    local data = f:read("a")
+    f:close()
+    return data:match('"' .. key .. '"%s*:%s*"(%x+)"') or fallback
+end
+
 hl.config({
     general = {
         gaps_in = 4,
         gaps_out = 8,
         border_size = 2,
         layout = "dwindle",
+        col = {
+            active_border = "rgba(" .. scheme_colour("primary", "c2c1ff") .. "ee)",
+            inactive_border = "rgba(" .. scheme_colour("surfaceContainerHigh", "2a292e") .. "aa)",
+        },
     },
     animations = {
         enabled = true,
