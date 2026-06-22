@@ -1,0 +1,44 @@
+{
+    "appearance": {
+        "transparency": {
+            "enabled": true
+        }
+    },
+    "background": {
+        "wallpaperEnabled": true
+    },
+    "bar": {
+        "clock": {
+            "background": true,
+            "showDate": true
+        },
+        "persistent": false,
+        "status": {
+            "showAudio": true,
+            "showLockStatus": false,
+            "showMicrophone": true
+        },
+        "tray": {
+            "background": true,
+            "compact": false,
+            "recolour": true
+        }
+    },
+    "border": {
+        "thickness": 4
+    },
+    "general": {
+        "idle": {
+            "lockBeforeSleep": false,
+            "timeouts": [
+            ]
+        }
+    },
+    "paths": {
+        "wallpaperDir": "~/Pictures/Wallpapers"
+    },
+    "services": {
+        "useFahrenheit": false,
+        "useTwelveHourClock": false
+    }
+}
