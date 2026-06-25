@@ -41,7 +41,7 @@ hl.gesture({ fingers = 3, direction = "vertical", action = "workspace" })
 
 local mod = "SUPER"
 local terminal = "ghostty"
-local fileExplorer = "ghostty -e yazi"
+local fileExplorer = "thunar"
 
 hl.bind(mod .. " + Return", hl.dsp.exec_cmd(terminal))
 hl.bind(mod .. " + E", hl.dsp.exec_cmd(fileExplorer))
