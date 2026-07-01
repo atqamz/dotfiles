@@ -4,7 +4,7 @@ if command -v gpgconf &> /dev/null
 end
 
 set -l ninerouter_key /run/secrets/ninerouter-api-key
-test -r "$ninerouter_key" && set -gx NINEROUTER_API_KEY (cat "$ninerouter_key" | string collect --trim)
+test -r "$ninerouter_key" && set -gx NINEROUTER_API_KEY (string trim < "$ninerouter_key")
 
 if status is-interactive
     command -v starship &> /dev/null && starship init fish | source
