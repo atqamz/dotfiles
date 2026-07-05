@@ -24,10 +24,10 @@ hl.config({
         },
     },
     animations = {
-        enabled = true,
+        enabled = false,
     },
     input = {
-        kb_layout = "us",
+        kb_file = "/home/atqa/dotfiles/hypr/caps-ctrl.xkb",
         follow_mouse = 1,
         touchpad = { natural_scroll = true },
     },
