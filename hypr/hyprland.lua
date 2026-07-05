@@ -26,6 +26,9 @@ hl.config({
     animations = {
         enabled = false,
     },
+    misc = {
+        disable_autoreload = true,
+    },
     input = {
         kb_file = "/home/atqa/dotfiles/hypr/caps-ctrl.xkb",
         follow_mouse = 1,
