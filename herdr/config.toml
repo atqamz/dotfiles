@@ -8,7 +8,7 @@ name = "catppuccin"
 auto_switch = false
 
 [ui]
-agent_panel_sort = "priority"
+agent_panel_sort = "spaces"
 mouse_capture = true
 
 [session]
