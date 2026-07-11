@@ -30,7 +30,11 @@
     "general": {
         "idle": {
             "lockBeforeSleep": false,
-            "timeouts": [
+            "timeouts": []
+        },
+        "apps": {
+            "explorer": [
+                "thunar"
             ]
         }
     },
