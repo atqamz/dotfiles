@@ -28,13 +28,14 @@
         "rounding": 0
     },
     "general": {
-        "idle": {
-            "lockBeforeSleep": false,
-            "timeouts": []
-        },
         "apps": {
             "explorer": [
                 "thunar"
+            ]
+        },
+        "idle": {
+            "lockBeforeSleep": false,
+            "timeouts": [
             ]
         }
     },
