@@ -8,13 +8,26 @@
         "wallpaperEnabled": true
     },
     "bar": {
+        "activeWindow": {
+            "compact": true,
+            "inverted": false,
+            "showOnHover": false
+        },
         "clock": {
             "background": true,
             "showDate": true
         },
-        "persistent": false,
+        "dragThreshold": 0,
+        "persistent": true,
+        "popouts": {
+            "activeWindow": false,
+            "statusIcons": true
+        },
+        "showOnHover": false,
         "status": {
             "showAudio": true,
+            "showBattery": true,
+            "showKbLayout": false,
             "showLockStatus": false,
             "showMicrophone": true
         },
@@ -22,15 +35,35 @@
             "background": true,
             "compact": false,
             "recolour": true
+        },
+        "workspaces": {
+            "activeIndicator": true,
+            "activeTrail": false,
+            "maxWindowIcons": 5,
+            "occupiedBg": false,
+            "perMonitorWorkspaces": true,
+            "showWindows": false,
+            "showWindowsOnSpecialWorkspaces": false,
+            "shown": 5
         }
     },
     "border": {
         "rounding": 0
     },
+    "dashboard": {
+        "dragThreshold": 0,
+        "showOnHover": true
+    },
     "general": {
         "apps": {
             "explorer": [
                 "thunar"
+            ],
+            "terminal": [
+                "wezterm",
+                "start",
+                "--cwd",
+                "."
             ]
         },
         "idle": {
@@ -39,11 +72,34 @@
             ]
         }
     },
+    "launcher": {
+        "dragThreshold": 0,
+        "useFuzzy": {
+            "actions": true,
+            "apps": true,
+            "schemes": true,
+            "variants": true,
+            "wallpapers": true
+        }
+    },
+    "notifs": {
+        "defaultExpireTimeout": 5000
+    },
     "paths": {
         "wallpaperDir": "~/Pictures/Wallpapers"
     },
     "services": {
+        "defaultPlayer": "Mozilla zen",
         "useFahrenheit": false,
         "useTwelveHourClock": false
+    },
+    "sidebar": {
+        "dragThreshold": 0,
+        "enabled": true
+    },
+    "utilities": {
+        "toasts": {
+            "nowPlaying": true
+        }
     }
 }
