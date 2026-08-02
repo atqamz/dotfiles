@@ -56,6 +56,7 @@ hl.bind(mod .. " + V", hl.dsp.exec_cmd("caelestia clipboard"))
 hl.bind(mod .. " + ALT + V", hl.dsp.exec_cmd([[sh -c 'cliphist wipe && notify-send Clipboard "History cleared" || true']]))
 hl.bind(mod .. " + period", hl.dsp.exec_cmd("caelestia emoji --picker"))
 hl.bind(mod .. " + ALT + P", hl.dsp.exec_cmd("passmenu"))
+hl.bind(mod .. " + R", hl.dsp.exec_cmd("reading-mode"))
 
 hl.bind(mod .. " + SHIFT + Q", hl.dsp.window.close())
 hl.bind(mod .. " + Q", hl.dsp.window.float({ action = "toggle" }))
